@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIVE: M1 Pro Radio</title>
+    <script src="https://cdn.jsdelivr.net/npm/icecast-metadata-player@1.17.13/build/icecast-metadata-player-1.17.13.main.min.js"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        h1 { color: #06b6d4; margin-bottom: 10px; }
+        #metadata { font-size: 1.2rem; margin: 20px 0; color: #94a3b8; height: 30px; }
+        button { background: #06b6d4; color: #0f172a; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        button:hover { background: #22d3ee; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>📻 M1 Pro Radio</h1>
+        <div id="metadata">Loading stream...</div>
+        <button id="btn">▶ Start Listening</button>
+    </div>
+
+    <script>
+        // CHANGE THIS TO YOUR NGROK URL
+        const streamUrl = "https://drizzly-waving-compress.ngrok-free.dev/stream.mp3.m3u";
+
+        const metadataEl = document.getElementById("metadata");
+        const btn = document.getElementById("btn");
+
+        // SMART METADATA: This ignores empty names so the site won't "flash"
+        const onMetadata = (metadata) => {
+            if (metadata.StreamTitle && metadata.StreamTitle.trim() !== "") {
+                metadataEl.innerText = "🎵 " + metadata.StreamTitle;
+            }
+        };
+
+        const player = new IcecastMetadataPlayer(streamUrl, { onMetadata });
+        let playing = false;
+
+        btn.onclick = () => {
+            if (!playing) {
+                player.play();
+                btn.innerText = "⏸ Stop Station";
+            } else {
+                player.stop();
+                btn.innerText = "▶ Start Listening";
+            }
+            playing = !playing;
+        };
+    </script>
+</body>
+</html>
+Initial Website
