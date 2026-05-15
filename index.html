@@ -5,21 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CUCEU</title>
     <style>
-        /* Matches the clean brutalist style of the radio page */
+        /* PLAIN WHITE BRUTALIST MAC BACKGROUND */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             background-color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
-        /* Massive main branding */
+        /* --- MAC OS TOP MENU BAR --- */
+        .mac-topbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 35px;
+            background: #ffffff;
+            border-bottom: 3px solid #000; /* Brutalist thick border */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            font-weight: 700;
+            font-size: 14px;
+            color: #000;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .apple-logo {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Cute little SVG icons for Wi-Fi and Battery */
+        .icon {
+            display: flex;
+            align-items: center;
+        }
+
+        /* --- THE MASSIVE CENTER LOGO --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         h1 {
             font-size: clamp(5rem, 20vw, 20rem);
             font-weight: 900;
@@ -28,51 +75,152 @@
             margin: 0;
             color: #000;
             line-height: 0.8;
+            cursor: default;
         }
 
-        p {
-            font-size: clamp(1rem, 2vw, 1.5rem);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-top: 20px;
-            margin-bottom: 60px;
-            color: #000;
+        /* --- THE BRUTALIST MAC DOCK --- */
+        .mac-dock-container {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
-        /* The Portal Button */
-        a.portal-btn {
-            background-color: #000;
-            color: #fff;
-            text-decoration: none; /* Removes the ugly blue link underline */
+        .mac-dock {
+            background: #ffffff;
             border: 4px solid #000;
-            padding: 25px 50px;
-            font-size: 1.5rem;
+            border-radius: 25px;
+            padding: 15px 25px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 8px 8px 0 #d3d3d3; /* Sleek grey shadow */
+            align-items: flex-end;
+        }
+
+        /* The App itself */
+        .dock-app {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+
+        /* The actual app square icon */
+        .app-icon {
+            width: 65px;
+            height: 65px;
+            background: #000;
+            color: #fff;
+            border-radius: 16px; /* Mac style rounded corners */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            box-shadow: 10px 10px 0 #8aff00; /* Signature neon green shadow */
-            transition: all 0.2s ease;
-            cursor: pointer;
+            letter-spacing: -1px;
+            border: 3px solid #000;
+            box-shadow: inset 0 0 0 2px #fff; /* Inner white border */
+            transition: transform 0.2s ease;
         }
 
-        a.portal-btn:hover {
-            transform: translate(-5px, -5px);
-            box-shadow: 15px 15px 0 #8aff00;
+        /* The little dot under open Mac apps */
+        .app-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: #000;
+            border-radius: 50%;
+            margin-top: 8px;
         }
 
-        a.portal-btn:active {
-            transform: translate(5px, 5px);
-            box-shadow: 0 0 0 #8aff00;
+        /* Tooltip Name that pops up */
+        .app-tooltip {
+            position: absolute;
+            top: -45px;
+            background: #ffffff;
+            border: 3px solid #000;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+
+        /* The Mac Hover Bounce Effect! */
+        .dock-app:hover {
+            transform: translateY(-15px) scale(1.1);
+        }
+
+        .dock-app:hover .app-tooltip {
+            opacity: 1;
+        }
+
+        .dock-app:active .app-icon {
+            transform: scale(0.9);
+            background: #333;
         }
     </style>
 </head>
 <body>
 
-    <h1>CUCEU</h1>
-    <p>pame ligoo</p>
-    
-    <a href="/fm" class="portal-btn">.fm</a>
+    <div class="mac-topbar">
+        <div class="topbar-left">
+            <span class="apple-logo"></span>
+            <span>CUCEU Studio</span>
+        </div>
+        <div class="topbar-right">
+            <div class="icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+            </div>
+            <div class="icon">
+                <svg width="24" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line><rect x="4" y="9" width="12" height="6" fill="currentColor"></rect></svg>
+            </div>
+            <span id="mac-clock">Sat 12:40 AM</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1>CUCEU</h1>
+    </div>
+
+    <div class="mac-dock-container">
+        <div class="mac-dock">
+            <a href="/fm" class="dock-app">
+                <div class="app-tooltip">CUCEU.fm</div>
+                <div class="app-icon">.fm</div>
+                <div class="app-indicator"></div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const day = days[now.getDay()];
+            
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            const timeString = `${day} ${hours}:${minutes} ${ampm}`;
+            document.getElementById('mac-clock').innerText = timeString;
+        }
+
+        // Run instantly, then update every second
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
 
 </body>
 </html>
