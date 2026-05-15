@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
-    <script src="https://cdn.jsdelivr.net/npm/icecast-metadata-player@1.17.13/build/icecast-metadata-player-1.17.13.main.min.js"></script>
     <style>
         /* The slowly moving pastel background */
         body {
@@ -45,14 +44,13 @@
             font-size: 2.5rem;
             font-weight: 800;
             letter-spacing: -1px;
-            color: #ff6b81; /* Cute strawberry accent color */
+            color: #ff6b81;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
 
-        /* The little pulsing live dot */
         .status-dot {
             width: 12px;
             height: 12px;
@@ -67,15 +65,13 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 107, 129, 0); }
         }
 
-        #metadata {
+        p {
             font-size: 1.2rem;
             margin: 25px 0;
             font-weight: 500;
-            min-height: 30px;
             color: #555;
         }
 
-        /* The cute floating button */
         button {
             background: #ff6b81;
             color: white;
@@ -99,34 +95,26 @@
 <body>
     <div class="card">
         <h1><div class="status-dot"></div>cuceuFM</h1>
-        <div id="metadata">Waiting for the vibe...</div>
+        <p>✨ LIVE ON AIR ✨</p>
         <button id="btn">▶ Tune In</button>
     </div>
 
+    <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
+
     <script>
-        // NOTE: Keep your current ngrok link here just for testing!
-        // We will swap this out for your cloudflare link once the domain is active.
-       const streamUrl = "https://stream.cuceu.co.uk/stream.mp3";
-
-        const metadataEl = document.getElementById("metadata");
         const btn = document.getElementById("btn");
-
-        const onMetadata = (metadata) => {
-            if (metadata.StreamTitle && metadata.StreamTitle.trim() !== "") {
-                // Added little sparkles around the song name ✨
-                metadataEl.innerText = "✨ " + metadata.StreamTitle + " ✨";
-            }
-        };
-
-        const player = new IcecastMetadataPlayer(streamUrl, { onMetadata });
+        const player = document.getElementById("radioPlayer");
         let playing = false;
 
         btn.onclick = () => {
             if (!playing) {
+                // Adds a random number so it always grabs the live feed, not a cached version
+                player.src = "https://stream.cuceu.co.uk/stream.mp3?" + new Date().getTime();
                 player.play();
                 btn.innerText = "⏸ Disconnect";
             } else {
-                player.stop();
+                player.pause();
+                player.src = ""; 
                 btn.innerText = "▶ Tune In";
             }
             playing = !playing;
@@ -134,4 +122,3 @@
     </script>
 </body>
 </html>
-
