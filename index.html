@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
     <style>
-        /* Apply your specific psychedelic screenshot as a fixed background */
+        /* The Psychedelic Background */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* Keeps the background static */
+            overflow: hidden;
             background-image: url('https://raw.githubusercontent.com/cuceu/m1-pirate-radio/main/Screenshot%202026-05-15%20at%2015.41.22.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            font-family: 'Helvetica Neue', Arial, sans-serif; /* Keep it clean but impactful */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
-        /* Pure minimalism - no card, just centered content directly on the graphic */
+        /* Centered Brutalist Container */
         .main-container {
             position: absolute;
             top: 50%;
@@ -26,78 +26,76 @@
             transform: translate(-50%, -50%);
             text-align: center;
             width: 90%;
-            max-width: 800px; /* Big constraint for massive text */
+            max-width: 900px; 
         }
 
-        /* MASSIVE, BOLD, IN-YOUR-FACE TYPOGRAPHY */
+        /* MASSIVE LOGO */
         h1 {
-            font-size: 15vw; /* Scales with screen size, it will be huge */
+            font-size: 15vw; 
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: -5px; /* Tightly packed for impact */
+            letter-spacing: -5px; 
             margin: 0;
-            color: #000; /* Black text for maximum contrast against the graphic */
-            
-            /* Optional funky text outline - try enabling this if black is hard to read:
-               -webkit-text-stroke: 2px #fff; 
-               color: transparent; 
-            */
+            color: #000; 
+            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff; /* Added a hard white outline so it pops off the background! */
         }
 
-        /* The small, minimalist live indicator */
+        /* The Live Track ID Container */
         .live-status {
             font-size: 1.5rem;
             text-transform: uppercase;
-            letter-spacing: 5px;
+            letter-spacing: 3px;
+            font-weight: 800;
             margin-top: -10px;
             margin-bottom: 50px;
-            color: #fff; /* White status text */
-            display: flex;
+            color: #000; 
+            background: #fff; /* Wrapped it in a white box like a sticker */
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            padding: 10px 20px;
+            border: 3px solid #000;
         }
 
         .pulse-dot {
             height: 15px;
             width: 15px;
-            background-color: #000; /* Black dot */
+            background-color: #ff0000; /* Red dot for that classic recording vibe */
             border-radius: 50%;
-            animation: pulse-black 1.5s infinite;
+            animation: pulse-red 1.5s infinite;
         }
 
-        @keyframes pulse-black {
-            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
-            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+        @keyframes pulse-red {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
-        /* BIG, FUNKY, BLOCKY BUTTON (Neo-Brutalism Style) */
+        /* BIG BLOCKY BUTTON */
         button {
-            background-color: #000; /* Black button */
-            color: #fff; /* White play icon */
-            border: 4px solid #fff; /* Thick white border for pop */
-            padding: 30px 60px;
+            background-color: #000; 
+            color: #fff; 
+            border: 4px solid #fff; 
+            padding: 25px 50px;
             font-size: 1.2rem;
             text-transform: uppercase;
             font-weight: 800;
             letter-spacing: 3px;
             cursor: pointer;
-            border-radius: 0; /* Boxy, non-rounded corner looks harder */
-            
-            /* Funky hover offset effect */
+            border-radius: 0; 
             box-shadow: 10px 10px 0 #fff;
             transition: all 0.2s ease;
         }
 
         button:hover {
-            transform: translate(-5px, -5px); /* Moves up and left */
-            box-shadow: 15px 15px 0 #fff; /* Shadow gets bigger */
+            transform: translate(-5px, -5px); 
+            box-shadow: 15px 15px 0 #fff; 
         }
 
         button:active {
-            transform: translate(5px, 5px); /* Simulates clicking the block down */
-            box-shadow: 0px 0px 0 #fff; /* Shadow disappears */
+            transform: translate(5px, 5px); 
+            box-shadow: 0px 0px 0 #fff; 
         }
 
     </style>
@@ -107,22 +105,22 @@
     <div class="main-container">
         <h1>CUCEU FM</h1>
         <div class="live-status">
-            <div class="pulse-dot"></div> Live On Air
+            <div class="pulse-dot"></div> <span id="song-title">Loading Vibe...</span>
         </div>
-        
+        <br>
         <button id="btn">▶ Listen</button>
     </div>
 
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
     <script>
+        // --- AUDIO PLAYER LOGIC ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         let playing = false;
 
         btn.onclick = () => {
             if (!playing) {
-                // Instantly grabs the live stream
                 player.src = "https://stream.cuceu.co.uk/stream.mp3?" + new Date().getTime();
                 player.play();
                 btn.innerText = "⏸ Pause";
@@ -133,6 +131,35 @@
             }
             playing = !playing;
         };
+
+        // --- LIVE SONG NAME GRABBER ---
+        function fetchSongData() {
+            // We use a random number at the end so it doesn't get stuck on an old song
+            fetch("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime())
+                .then(response => response.json())
+                .then(data => {
+                    let title = "LIVE ON AIR"; // Default text
+                    let source = data.icestats.source;
+                    
+                    if (source) {
+                        // Icecast formatting magic
+                        if (Array.isArray(source)) {
+                            title = source[0].title || "LIVE ON AIR";
+                        } else {
+                            title = source.title || "LIVE ON AIR";
+                        }
+                    }
+                    document.getElementById('song-title').innerText = title;
+                })
+                .catch(err => {
+                    console.log("Waiting for stream data...");
+                    document.getElementById('song-title').innerText = "LIVE ON AIR";
+                });
+        }
+
+        // Run the grabber immediately, and then check again every 10 seconds
+        fetchSongData();
+        setInterval(fetchSongData, 10000);
     </script>
 </body>
 </html>
