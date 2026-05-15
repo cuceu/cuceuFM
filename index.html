@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
     <style>
-        /* The Psychedelic Brat Background + Bulletproof Fallback */
+        /* PLAIN WHITE BRUTALIST BACKGROUND */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
-            /* Brat Blue Fallback Color */
-            background-color: #1200ff; 
-            /* Relative link - looks for the image inside your GitHub folder */
-            background-image: url('Screenshot%202026-05-15%20at%2015.41.22.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-color: #ffffff; /* Clean, stark white */
             font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
@@ -26,12 +20,12 @@
             position: absolute;
             width: 100%;
             background: #000;
-            color: #8aff00; /* Neon Brat Green */
+            color: #8aff00; /* Neon Brat Green pops against the black tape */
             overflow: hidden;
             white-space: nowrap;
             padding: 12px 0;
-            border-top: 4px solid #fff;
-            border-bottom: 4px solid #fff;
+            border-top: 4px solid #000;
+            border-bottom: 4px solid #000;
             z-index: 10;
             box-sizing: border-box;
         }
@@ -69,16 +63,23 @@
             align-items: center;
         }
 
-        /* BULLETPROOF LOGO - Won't stack anymore! */
+        /* EVEN BIGGER LOGO WITH CUSTOM .fm */
         h1 {
-            font-size: clamp(3rem, 12vw, 12rem); /* Dynamically shrinks so it always fits */
-            white-space: nowrap; /* Forces it to stay on one line */
+            font-size: clamp(4rem, 16vw, 18rem); /* Scaled up massively */
+            white-space: nowrap; 
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: -5px; 
             margin: 0;
             color: #000; 
-            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;
+            /* Removed the white text-shadow since the background is white now */
+        }
+
+        /* The smaller, lowercase .fm */
+        .fm-text {
+            font-size: 0.5em; /* Makes it half the size of CUCEU */
+            text-transform: lowercase;
+            letter-spacing: -2px;
         }
 
         /* Center Live Status Box */
@@ -99,8 +100,6 @@
             border: 3px solid #000;
             max-width: 90%;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .pulse-dot {
@@ -122,7 +121,7 @@
         button {
             background-color: #000; 
             color: #fff; 
-            border: 4px solid #fff; 
+            border: 4px solid #000; 
             padding: 20px 40px;
             font-size: 1.2rem;
             text-transform: uppercase;
@@ -130,37 +129,38 @@
             letter-spacing: 3px;
             cursor: pointer;
             border-radius: 0; 
-            box-shadow: 8px 8px 0 #fff;
+            box-shadow: 8px 8px 0 #8aff00; /* Neon green shadow for the white background */
             transition: all 0.2s ease;
         }
 
         button:hover {
             transform: translate(-4px, -4px); 
-            box-shadow: 12px 12px 0 #fff; 
+            box-shadow: 12px 12px 0 #8aff00; 
         }
 
         button:active {
             transform: translate(4px, 4px); 
-            box-shadow: 0px 0px 0 #fff; 
+            box-shadow: 0px 0px 0 #8aff00; 
         }
     </style>
 </head>
 <body>
 
     <div class="ticker-tape ticker-top">
-        <div class="ticker-text song-display">WAITING FOR SATELLITE UPLINK...</div>
+        <div class="ticker-text">WAITING FOR SATELLITE UPLINK...</div>
     </div>
 
     <div class="main-container">
-        <h1>CUCEU FM</h1>
+        <h1>CUCEU<span class="fm-text">.fm</span></h1>
+        
         <div class="live-status">
-            <div class="pulse-dot"></div> <span class="song-display">Loading Vibe...</span>
+            <div class="pulse-dot"></div> <span id="center-status">LOADING...</span>
         </div>
         <button id="btn">▶ Listen</button>
     </div>
 
     <div class="ticker-tape ticker-bottom">
-        <div class="ticker-text song-display">WAITING FOR SATELLITE UPLINK...</div>
+        <div class="ticker-text">WAITING FOR SATELLITE UPLINK...</div>
     </div>
 
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
@@ -168,42 +168,56 @@
     <script>
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
+        const centerStatus = document.getElementById("center-status");
+        
         let playing = false;
+        let dataLoaded = false;
 
+        // Button Click Logic
         btn.onclick = () => {
             if (!playing) {
-                // Simplified clean URL to stop the browser from blocking it
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Pause";
+                centerStatus.innerText = "LIVE ON AIR"; // Boom.
             } else {
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
+                centerStatus.innerText = dataLoaded ? "READY" : "LOADING..."; 
             }
             playing = !playing;
         };
 
+        // --- THE HACKER CHEAT CODE ---
         function fetchSongData() {
-            fetch("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime())
+            // Uses a free proxy to instantly bypass the browser blocks
+            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
+            
+            fetch("https://api.allorigins.win/raw?url=" + targetUrl)
                 .then(response => response.json())
                 .then(data => {
+                    dataLoaded = true;
+                    
+                    // If they haven't hit play yet, switch from "LOADING..." to "READY"
+                    if (!playing) {
+                        centerStatus.innerText = "READY"; 
+                    }
+
                     let title = "LIVE ON AIR"; 
                     let source = data.icestats.source;
                     if (source) {
                         title = Array.isArray(source) ? (source[0].title || "LIVE ON AIR") : (source.title || "LIVE ON AIR");
                     }
-                    const displays = document.querySelectorAll('.song-display');
-                    displays.forEach(el => {
-                        if (el.classList.contains('ticker-text')) {
-                            el.innerText = `+++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++`;
-                        } else {
-                            el.innerText = title;
-                        }
+                    
+                    // Updates ONLY the scrolling tapes at the top and bottom with the song name
+                    const tapes = document.querySelectorAll('.ticker-text');
+                    tapes.forEach(el => {
+                        el.innerText = `+++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++`;
                     });
                 })
                 .catch(err => {
-                    console.log("Waiting for Cloudflare CORS rule...");
+                    console.log("Sneaking past the bouncer...");
                 });
         }
 
