@@ -11,41 +11,48 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
-            background-color: #ffffff; /* Clean, stark white */
+            background-color: #ffffff; 
             font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
-        /* --- TICKER TAPE CSS --- */
+        /* --- SEAMLESS INFINITE TICKER TAPE CSS --- */
         .ticker-tape {
             position: absolute;
             width: 100%;
             background: #000;
-            color: #8aff00; /* Neon Brat Green pops against the black tape */
+            color: #ffffff; /* Text is now white! */
             overflow: hidden;
-            white-space: nowrap;
             padding: 12px 0;
             border-top: 4px solid #000;
             border-bottom: 4px solid #000;
             z-index: 10;
             box-sizing: border-box;
+            display: flex;
         }
 
         .ticker-top { top: 0; }
         .ticker-bottom { bottom: 0; }
 
-        .ticker-text {
-            display: inline-block;
+        /* The wrapper that holds the duplicating text for a gapless loop */
+        .marquee-wrapper {
+            display: flex;
+            white-space: nowrap;
+            animation: marquee 30s linear infinite;
+            width: fit-content;
+        }
+
+        .song-display {
             font-size: 1.8rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
-            padding-left: 100%;
-            animation: marquee 20s linear infinite; 
+            padding-right: 20px; /* Small gap between the repeating string */
         }
 
+        /* Moves exactly half its width and then resets invisibly to create the endless loop */
         @keyframes marquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
+            100% { transform: translateX(-50%); }
         }
 
         /* --- MAIN BRUTALIST UI --- */
@@ -63,25 +70,26 @@
             align-items: center;
         }
 
-        /* EVEN BIGGER LOGO WITH CUSTOM .fm */
+        /* THICKER, BOLDER LOGO */
         h1 {
-            font-size: clamp(4rem, 16vw, 18rem); /* Scaled up massively */
+            font-size: clamp(4rem, 16vw, 18rem); 
             white-space: nowrap; 
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: -5px; 
             margin: 0;
             color: #000; 
+            -webkit-text-stroke: 4px #000; /* This makes the font extra thick! */
         }
 
-        /* The smaller, lowercase .fm */
         .fm-text {
-            font-size: 0.5em; /* Makes it half the size of CUCEU */
+            font-size: 0.5em; 
             text-transform: lowercase;
             letter-spacing: -2px;
+            -webkit-text-stroke: 0px; /* Keeps the .fm part clean and readable */
         }
 
-        /* Center Live Status Box */
+        /* Center Status Box */
         .live-status {
             font-size: clamp(1rem, 3vw, 1.5rem);
             text-transform: uppercase;
@@ -128,25 +136,28 @@
             letter-spacing: 3px;
             cursor: pointer;
             border-radius: 0; 
-            box-shadow: 8px 8px 0 #8aff00; /* Neon green shadow for the white background */
+            box-shadow: 8px 8px 0 #d3d3d3; /* Sleek, minimal light-grey shadow */
             transition: all 0.2s ease;
         }
 
         button:hover {
             transform: translate(-4px, -4px); 
-            box-shadow: 12px 12px 0 #8aff00; 
+            box-shadow: 12px 12px 0 #d3d3d3; 
         }
 
         button:active {
             transform: translate(4px, 4px); 
-            box-shadow: 0px 0px 0 #8aff00; 
+            box-shadow: 0px 0px 0 #d3d3d3; 
         }
     </style>
 </head>
 <body>
 
     <div class="ticker-tape ticker-top">
-        <div class="ticker-text">WAITING FOR SATELLITE UPLINK...</div>
+        <div class="marquee-wrapper">
+            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+        </div>
     </div>
 
     <div class="main-container">
@@ -159,7 +170,10 @@
     </div>
 
     <div class="ticker-tape ticker-bottom">
-        <div class="ticker-text">WAITING FOR SATELLITE UPLINK...</div>
+        <div class="marquee-wrapper">
+            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+        </div>
     </div>
 
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
@@ -172,13 +186,12 @@
         let playing = false;
         let dataLoaded = false;
 
-        // Button Click Logic
         btn.onclick = () => {
             if (!playing) {
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Pause";
-                centerStatus.innerText = "LIVE ON AIR"; // Boom.
+                centerStatus.innerText = "ON AIR"; 
             } else {
                 player.pause();
                 player.src = ""; 
@@ -188,15 +201,12 @@
             playing = !playing;
         };
 
-        // --- THE UNSTUCK HACKER PROXY ---
         function fetchSongData() {
-            // 1. We trick Icecast into thinking every request is brand new
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
-            
-            // 2. We trick the PROXY into thinking every request is brand new so it never gets stuck
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
             
-            fetch(proxyUrl)
+            // Added cache: 'no-store' to aggressively force the browser not to cache the text
+            fetch(proxyUrl, { cache: "no-store" })
                 .then(response => response.json())
                 .then(data => {
                     dataLoaded = true;
@@ -205,15 +215,18 @@
                         centerStatus.innerText = "READY"; 
                     }
 
-                    let title = "LIVE ON AIR"; 
+                    let title = "ON AIR"; 
                     let source = data.icestats.source;
                     if (source) {
-                        title = Array.isArray(source) ? (source[0].title || "LIVE ON AIR") : (source.title || "LIVE ON AIR");
+                        title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
                     }
                     
-                    const tapes = document.querySelectorAll('.ticker-text');
+                    // Creates a massive block of repeating text so the seamless gapless loop works perfectly
+                    const massiveTextBlock = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
+
+                    const tapes = document.querySelectorAll('.song-display');
                     tapes.forEach(el => {
-                        el.innerText = `+++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++`;
+                        el.innerText = massiveTextBlock;
                     });
                 })
                 .catch(err => {
@@ -221,8 +234,10 @@
                 });
         }
 
+        // Fetch instantly, and then check aggressively every 5 seconds (5000ms)
         fetchSongData();
-        setInterval(fetchSongData, 10000);
+        setInterval(fetchSongData, 5000);
     </script>
 </body>
+</html>
 </html>
