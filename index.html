@@ -3,35 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LIVE: M1 Pro Radio</title>
+    <title>cuceuFM</title>
     <script src="https://cdn.jsdelivr.net/npm/icecast-metadata-player@1.17.13/build/icecast-metadata-player-1.17.13.main.min.js"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        h1 { color: #06b6d4; margin-bottom: 10px; }
-        #metadata { font-size: 1.2rem; margin: 20px 0; color: #94a3b8; height: 30px; }
-        button { background: #06b6d4; color: #0f172a; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-        button:hover { background: #22d3ee; }
+        /* The slowly moving pastel background */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Helvetica Neue', sans-serif;
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #333;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* The frosted glass card */
+        .card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 50px;
+            border-radius: 35px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 350px;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #ff6b81; /* Cute strawberry accent color */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* The little pulsing live dot */
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #ff6b81;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 107, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 107, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 107, 129, 0); }
+        }
+
+        #metadata {
+            font-size: 1.2rem;
+            margin: 25px 0;
+            font-weight: 500;
+            min-height: 30px;
+            color: #555;
+        }
+
+        /* The cute floating button */
+        button {
+            background: #ff6b81;
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 107, 129, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 25px rgba(255, 107, 129, 0.4);
+            background: #ff4760;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>cuceuFM</h1>
-        <div id="metadata">Downloading it ...</div>
-        <button id="btn">▶ Connect </button>
+        <h1><div class="status-dot"></div>cuceuFM</h1>
+        <div id="metadata">Waiting for the vibe...</div>
+        <button id="btn">▶ Tune In</button>
     </div>
 
     <script>
-        // CHANGE THIS TO YOUR NGROK URL
+        // NOTE: Keep your current ngrok link here just for testing!
+        // We will swap this out for your cloudflare link once the domain is active.
         const streamUrl = "https://drizzly-waving-compress.ngrok-free.dev/stream.mp3";
 
         const metadataEl = document.getElementById("metadata");
         const btn = document.getElementById("btn");
 
-        // SMART METADATA: This ignores empty names so the site won't "flash"
         const onMetadata = (metadata) => {
             if (metadata.StreamTitle && metadata.StreamTitle.trim() !== "") {
-                metadataEl.innerText = "🎵 " + metadata.StreamTitle;
+                // Added little sparkles around the song name ✨
+                metadataEl.innerText = "✨ " + metadata.StreamTitle + " ✨";
             }
         };
 
@@ -41,10 +124,10 @@
         btn.onclick = () => {
             if (!playing) {
                 player.play();
-                btn.innerText = "⏸ Remove Connection Consent";
+                btn.innerText = "⏸ Disconnect";
             } else {
                 player.stop();
-                btn.innerText = "▶ Connect to the frequency";
+                btn.innerText = "▶ Tune In";
             }
             playing = !playing;
         };
