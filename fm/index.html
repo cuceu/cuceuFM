@@ -72,7 +72,6 @@
             letter-spacing: -5px; 
             margin: 0;
             color: #000; 
-            /* Removed the white text-shadow since the background is white now */
         }
 
         /* The smaller, lowercase .fm */
@@ -189,10 +188,15 @@
             playing = !playing;
         };
 
-        // --- THE DIRECT CONNECTION ---
+        // --- THE UNSTUCK HACKER PROXY ---
         function fetchSongData() {
-            // No more proxy! Going straight to your server with a time-stamp to force a fresh pull every time
-            fetch("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime())
+            // 1. We trick Icecast into thinking every request is brand new
+            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
+            
+            // 2. We trick the PROXY into thinking every request is brand new so it never gets stuck
+            const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
+            
+            fetch(proxyUrl)
                 .then(response => response.json())
                 .then(data => {
                     dataLoaded = true;
@@ -213,7 +217,7 @@
                     });
                 })
                 .catch(err => {
-                    console.log("Waiting for the beat drop...");
+                    console.log("Sneaking past the bouncer...");
                 });
         }
 
