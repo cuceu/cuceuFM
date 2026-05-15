@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
     <style>
-        /* The Psychedelic Brat Background */
+        /* The Psychedelic Brat Background + Bulletproof Fallback */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
-            background-image: url('https://raw.githubusercontent.com/cuceu/m1-pirate-radio/main/Screenshot%202026-05-15%20at%2015.41.22.png');
+            /* Brat Blue Fallback Color */
+            background-color: #1200ff; 
+            /* Relative link - looks for the image inside your GitHub folder */
+            background-image: url('Screenshot%202026-05-15%20at%2015.41.22.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -23,7 +26,7 @@
             position: absolute;
             width: 100%;
             background: #000;
-            color: #8aff00; /* Neon Brat Green to match the graphic! */
+            color: #8aff00; /* Neon Brat Green */
             overflow: hidden;
             white-space: nowrap;
             padding: 12px 0;
@@ -42,8 +45,8 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
-            padding-left: 100%; /* Starts off-screen to the right */
-            animation: marquee 25s linear infinite; /* 25s controls the speed */
+            padding-left: 100%;
+            animation: marquee 20s linear infinite; 
         }
 
         @keyframes marquee {
@@ -58,13 +61,18 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            width: 90%;
-            max-width: 900px; 
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* MASSIVE LOGO */
+        /* BULLETPROOF LOGO - Won't stack anymore! */
         h1 {
-            font-size: 15vw; 
+            font-size: clamp(3rem, 12vw, 12rem); /* Dynamically shrinks so it always fits */
+            white-space: nowrap; /* Forces it to stay on one line */
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: -5px; 
@@ -75,12 +83,12 @@
 
         /* Center Live Status Box */
         .live-status {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
             text-transform: uppercase;
             letter-spacing: 3px;
             font-weight: 800;
-            margin-top: -10px;
-            margin-bottom: 50px;
+            margin-top: -5px;
+            margin-bottom: 40px;
             color: #000; 
             background: #fff; 
             display: inline-flex;
@@ -89,6 +97,10 @@
             gap: 12px;
             padding: 10px 20px;
             border: 3px solid #000;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .pulse-dot {
@@ -96,6 +108,7 @@
             width: 15px;
             background-color: #ff0000; 
             border-radius: 50%;
+            flex-shrink: 0;
             animation: pulse-red 1.5s infinite;
         }
 
@@ -110,24 +123,24 @@
             background-color: #000; 
             color: #fff; 
             border: 4px solid #fff; 
-            padding: 25px 50px;
+            padding: 20px 40px;
             font-size: 1.2rem;
             text-transform: uppercase;
             font-weight: 800;
             letter-spacing: 3px;
             cursor: pointer;
             border-radius: 0; 
-            box-shadow: 10px 10px 0 #fff;
+            box-shadow: 8px 8px 0 #fff;
             transition: all 0.2s ease;
         }
 
         button:hover {
-            transform: translate(-5px, -5px); 
-            box-shadow: 15px 15px 0 #fff; 
+            transform: translate(-4px, -4px); 
+            box-shadow: 12px 12px 0 #fff; 
         }
 
         button:active {
-            transform: translate(5px, 5px); 
+            transform: translate(4px, 4px); 
             box-shadow: 0px 0px 0 #fff; 
         }
     </style>
@@ -143,7 +156,6 @@
         <div class="live-status">
             <div class="pulse-dot"></div> <span class="song-display">Loading Vibe...</span>
         </div>
-        <br>
         <button id="btn">▶ Listen</button>
     </div>
 
@@ -154,14 +166,14 @@
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
     <script>
-        // --- AUDIO PLAYER LOGIC ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         let playing = false;
 
         btn.onclick = () => {
             if (!playing) {
-                player.src = "https://stream.cuceu.co.uk/stream.mp3?" + new Date().getTime();
+                // Simplified clean URL to stop the browser from blocking it
+                player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Pause";
             } else {
@@ -172,16 +184,31 @@
             playing = !playing;
         };
 
-        // --- LIVE SONG NAME GRABBER ---
         function fetchSongData() {
             fetch("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime())
                 .then(response => response.json())
                 .then(data => {
                     let title = "LIVE ON AIR"; 
                     let source = data.icestats.source;
-                    
                     if (source) {
-                        if (Array.isArray(source)) {
-                            title = source[0].title || "LIVE ON AIR";
+                        title = Array.isArray(source) ? (source[0].title || "LIVE ON AIR") : (source.title || "LIVE ON AIR");
+                    }
+                    const displays = document.querySelectorAll('.song-display');
+                    displays.forEach(el => {
+                        if (el.classList.contains('ticker-text')) {
+                            el.innerText = `+++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++`;
                         } else {
-                            title =
+                            el.innerText = title;
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.log("Waiting for Cloudflare CORS rule...");
+                });
+        }
+
+        fetchSongData();
+        setInterval(fetchSongData, 10000);
+    </script>
+</body>
+</html>
