@@ -24,7 +24,7 @@
             width: 100%;
             height: 35px;
             background: #ffffff;
-            border-bottom: 3px solid #000; /* Brutalist thick border */
+            border-bottom: 3px solid #000; 
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -53,7 +53,6 @@
             gap: 15px;
         }
 
-        /* Cute little SVG icons for Wi-Fi and Battery */
         .icon {
             display: flex;
             align-items: center;
@@ -85,6 +84,7 @@
             width: 100%;
             display: flex;
             justify-content: center;
+            z-index: 10;
         }
 
         .mac-dock {
@@ -94,11 +94,10 @@
             padding: 15px 25px;
             display: flex;
             gap: 20px;
-            box-shadow: 8px 8px 0 #d3d3d3; /* Sleek grey shadow */
+            box-shadow: 8px 8px 0 #d3d3d3; 
             align-items: flex-end;
         }
 
-        /* The App itself */
         .dock-app {
             text-decoration: none;
             display: flex;
@@ -109,13 +108,12 @@
             position: relative;
         }
 
-        /* The actual app square icon */
         .app-icon {
             width: 65px;
             height: 65px;
             background: #000;
             color: #fff;
-            border-radius: 16px; /* Mac style rounded corners */
+            border-radius: 16px; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -123,11 +121,10 @@
             font-weight: 900;
             letter-spacing: -1px;
             border: 3px solid #000;
-            box-shadow: inset 0 0 0 2px #fff; /* Inner white border */
+            box-shadow: inset 0 0 0 2px #fff; 
             transition: transform 0.2s ease;
         }
 
-        /* The little dot under open Mac apps */
         .app-indicator {
             width: 6px;
             height: 6px;
@@ -136,7 +133,6 @@
             margin-top: 8px;
         }
 
-        /* Tooltip Name that pops up */
         .app-tooltip {
             position: absolute;
             top: -45px;
@@ -152,7 +148,6 @@
             white-space: nowrap;
         }
 
-        /* The Mac Hover Bounce Effect! */
         .dock-app:hover {
             transform: translateY(-15px) scale(1.1);
         }
@@ -164,6 +159,28 @@
         .dock-app:active .app-icon {
             transform: scale(0.9);
             background: #333;
+        }
+
+        /* --- THE GENIE OVERLAY ANIMATION --- */
+        .genie-overlay {
+            position: fixed;
+            bottom: 45px; 
+            left: 50%;
+            margin-left: -32.5px; /* Perfect center alignment with the icon */
+            width: 65px;
+            height: 65px;
+            background-color: #000;
+            border-radius: 16px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transform-origin: bottom center;
+            transition: all 0.6s cubic-bezier(0.8, 0, 0.2, 1); /* Sexy Mac-like easing */
+        }
+
+        .genie-overlay.expand {
+            opacity: 1;
+            transform: scale(50); /* Massively scales the black box to swallow the screen */
         }
     </style>
 </head>
@@ -191,7 +208,7 @@
 
     <div class="mac-dock-container">
         <div class="mac-dock">
-            <a href="/fm" class="dock-app">
+            <a href="/fm" class="dock-app" id="fm-app">
                 <div class="app-tooltip">CUCEU.fm</div>
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
@@ -199,7 +216,10 @@
         </div>
     </div>
 
+    <div id="genie" class="genie-overlay"></div>
+
     <script>
+        // Clock Logic
         function updateClock() {
             const now = new Date();
             const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -210,16 +230,30 @@
             const ampm = hours >= 12 ? 'PM' : 'AM';
             
             hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            hours = hours ? hours : 12; 
             minutes = minutes < 10 ? '0' + minutes : minutes;
             
             const timeString = `${day} ${hours}:${minutes} ${ampm}`;
             document.getElementById('mac-clock').innerText = timeString;
         }
-
-        // Run instantly, then update every second
         updateClock();
         setInterval(updateClock, 1000);
+
+        // --- THE GENIE TRANSITION MAGIC ---
+        const appIcon = document.getElementById('fm-app');
+        const genieOverlay = document.getElementById('genie');
+
+        appIcon.addEventListener('click', (e) => {
+            e.preventDefault(); // Stop the immediate page load
+            
+            // Trigger the explosion
+            genieOverlay.classList.add('expand');
+            
+            // Wait exactly 550ms for the black screen to fill, then teleport to the radio room
+            setTimeout(() => {
+                window.location.href = "/fm";
+            }, 550); 
+        });
     </script>
 
 </body>
