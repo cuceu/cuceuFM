@@ -189,17 +189,14 @@
             playing = !playing;
         };
 
-        // --- THE HACKER CHEAT CODE ---
+        // --- THE DIRECT CONNECTION ---
         function fetchSongData() {
-            // Uses a free proxy to instantly bypass the browser blocks
-            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
-            
-            fetch("https://api.allorigins.win/raw?url=" + targetUrl)
+            // No more proxy! Going straight to your server with a time-stamp to force a fresh pull every time
+            fetch("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime())
                 .then(response => response.json())
                 .then(data => {
                     dataLoaded = true;
                     
-                    // If they haven't hit play yet, switch from "LOADING..." to "READY"
                     if (!playing) {
                         centerStatus.innerText = "READY"; 
                     }
@@ -210,14 +207,13 @@
                         title = Array.isArray(source) ? (source[0].title || "LIVE ON AIR") : (source.title || "LIVE ON AIR");
                     }
                     
-                    // Updates ONLY the scrolling tapes at the top and bottom with the song name
                     const tapes = document.querySelectorAll('.ticker-text');
                     tapes.forEach(el => {
                         el.innerText = `+++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++ NOW PLAYING: ${title} +++`;
                     });
                 })
                 .catch(err => {
-                    console.log("Sneaking past the bouncer...");
+                    console.log("Waiting for the beat drop...");
                 });
         }
 
