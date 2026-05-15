@@ -20,7 +20,7 @@
             position: absolute;
             width: 100%;
             background: #000;
-            color: #ffffff; /* Text is now white! */
+            color: #ffffff;
             overflow: hidden;
             padding: 12px 0;
             border-top: 4px solid #000;
@@ -37,7 +37,8 @@
         .marquee-wrapper {
             display: flex;
             white-space: nowrap;
-            animation: marquee 30s linear infinite;
+            /* SLOWED DOWN: Changed from 30s to 50s for a chill glide */
+            animation: marquee 50s linear infinite;
             width: fit-content;
         }
 
@@ -46,10 +47,9 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
-            padding-right: 20px; /* Small gap between the repeating string */
+            padding-right: 20px; 
         }
 
-        /* Moves exactly half its width and then resets invisibly to create the endless loop */
         @keyframes marquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
@@ -79,14 +79,14 @@
             letter-spacing: -5px; 
             margin: 0;
             color: #000; 
-            -webkit-text-stroke: 4px #000; /* This makes the font extra thick! */
+            -webkit-text-stroke: 4px #000; 
         }
 
         .fm-text {
             font-size: 0.5em; 
             text-transform: lowercase;
             letter-spacing: -2px;
-            -webkit-text-stroke: 0px; /* Keeps the .fm part clean and readable */
+            -webkit-text-stroke: 0px; 
         }
 
         /* Center Status Box */
@@ -136,7 +136,7 @@
             letter-spacing: 3px;
             cursor: pointer;
             border-radius: 0; 
-            box-shadow: 8px 8px 0 #d3d3d3; /* Sleek, minimal light-grey shadow */
+            box-shadow: 8px 8px 0 #d3d3d3; 
             transition: all 0.2s ease;
         }
 
@@ -205,7 +205,6 @@
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
             
-            // Added cache: 'no-store' to aggressively force the browser not to cache the text
             fetch(proxyUrl, { cache: "no-store" })
                 .then(response => response.json())
                 .then(data => {
@@ -221,7 +220,6 @@
                         title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
                     }
                     
-                    // Creates a massive block of repeating text so the seamless gapless loop works perfectly
                     const massiveTextBlock = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
 
                     const tapes = document.querySelectorAll('.song-display');
@@ -234,10 +232,8 @@
                 });
         }
 
-        // Fetch instantly, and then check aggressively every 5 seconds (5000ms)
         fetchSongData();
         setInterval(fetchSongData, 5000);
     </script>
 </body>
-</html>
 </html>
