@@ -18,7 +18,7 @@
             color: #000000;
         }
 
-        /* --- FLOATING STATUS AREA (Clock Only) --- */
+        /* --- FLOATING STATUS AREA --- */
         .status-area {
             position: absolute;
             top: 25px;
@@ -48,6 +48,7 @@
             transform-origin: center center;
             position: relative;
             z-index: 5;
+            padding: 100px 0; /* Prevents cutoff from vertical scaling */
         }
 
         #cuceu-logo-wrapper.glide-down {
@@ -56,28 +57,28 @@
         }
 
         h1#cuceu-logo {
-            font-size: clamp(5rem, 20vw, 20rem);
-            font-weight: 900; /* Bolder */
+            font-size: clamp(8rem, 25vw, 25rem); /* Significantly bigger */
+            font-weight: 900; 
             text-transform: uppercase;
-            letter-spacing: -8px;
+            letter-spacing: -18px; /* Tighter spacing for that touching look */
             margin: 0;
             color: #000000;
             white-space: nowrap;
             line-height: 0.8;
             cursor: default;
-            transform: scaleY(1.4); /* Stretched vertically */
-            animation: marqueeLogo 30s linear infinite; /* 20% Slower */
+            transform: scaleY(1.6); /* Even more stretched vertically */
+            animation: marqueeLogo 35s linear infinite; 
         }
 
         @keyframes marqueeLogo {
-            0% { transform: translateX(0) scaleY(1.4); }
-            100% { transform: translateX(-50%) scaleY(1.4); }
+            0% { transform: translateX(0) scaleY(1.6); }
+            100% { transform: translateX(-50%) scaleY(1.6); }
         }
 
         /* --- THE PREMIUM MIDNIGHT DOCK --- */
         .mac-dock-container {
             position: absolute;
-            bottom: 20px;
+            bottom: 25px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -89,10 +90,10 @@
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 30px;
-            padding: 15px 25px;
+            border-radius: 35px;
+            padding: 12px 20px;
             display: flex;
-            gap: 20px;
+            gap: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             align-items: flex-end;
         }
@@ -107,9 +108,10 @@
             position: relative;
         }
 
+        /* Icon sizing bumped up */
         .app-icon {
-            width: 65px;
-            height: 65px;
+            width: 75px; 
+            height: 75px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -125,11 +127,36 @@
             transition: transform 0.2s ease;
         }
 
-        /* --- NOTIFICATION BADGE ON ICON --- */
+        /* Tooltip text styling */
+        .app-tooltip {
+            position: absolute;
+            top: -45px;
+            background: rgba(30, 30, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+
+        .dock-app:hover .app-tooltip { opacity: 1; }
+
+        /* Icon specific colors for aesthetics */
+        .icon-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .icon-trash { background: rgba(255, 255, 255, 0.15); font-size: 2.2rem; }
+
+        /* --- NOTIFICATION BADGE --- */
         .app-badge {
             position: absolute;
             top: -6px;
-            right: -18px;
+            right: -10px;
             background: rgba(20, 20, 25, 0.85);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -144,13 +171,11 @@
             z-index: 15;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             pointer-events: none;
-            opacity: 0; /* Hidden by default until loaded */
+            opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .app-badge.visible {
-            opacity: 1;
-        }
+        .app-badge.visible { opacity: 1; }
 
         .recording-dot {
             width: 6px;
@@ -160,12 +185,7 @@
             animation: subtle-pulse 2s infinite ease-in-out;
         }
 
-        /* Offline state styles */
-        .app-badge.offline .recording-dot {
-            background-color: #777;
-            animation: none;
-            box-shadow: none;
-        }
+        .app-badge.offline .recording-dot { background-color: #777; animation: none; }
 
         @keyframes subtle-pulse {
             0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
@@ -185,14 +205,14 @@
         .dock-app:hover { transform: translateY(-15px) scale(1.1); }
         .dock-app:active .app-icon { transform: scale(0.9); filter: brightness(0.8); }
 
-        /* --- THE LIQUID GLASS GENIE FIX --- */
+        /* --- GENIE OVERLAY --- */
         .genie-overlay {
             position: fixed;
             bottom: 45px; 
             left: 50%;
-            margin-left: -32.5px; 
-            width: 65px;
-            height: 65px;
+            margin-left: -37.5px; /* Half of 75px */
+            width: 75px;
+            height: 75px;
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(40px); 
             border-radius: 18px;
@@ -218,14 +238,22 @@
     <div class="main-content">
         <div id="cuceu-logo-wrapper">
             <h1 id="cuceu-logo">
-                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
+                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
             </h1>
         </div>
     </div>
 
     <div class="mac-dock-container">
         <div class="mac-dock">
+            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
+                <div class="app-tooltip">Instagram</div>
+                <div class="app-icon icon-ig">
+                    <svg width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </div>
+            </a>
+
             <a href="/fm" class="dock-app" id="fm-app">
+                <div class="app-tooltip">cuceuFM</div>
                 <div class="app-badge" id="fm-badge">
                     <div class="recording-dot"></div>
                     <span id="fm-badge-text"></span>
@@ -233,13 +261,17 @@
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
             </a>
+
+            <a href="https://www.croydon.gov.uk/rubbish-and-recycling/bins/check-your-bin-collection-days" target="_blank" class="dock-app">
+                <div class="app-tooltip">Bin Day</div>
+                <div class="app-icon icon-trash">🗑️</div>
+            </a>
         </div>
     </div>
 
     <div id="genie" class="genie-overlay"></div>
 
     <script>
-        // --- Clock Script ---
         function updateClock() {
             const now = new Date();
             const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -251,7 +283,6 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // --- App Launch Animation ---
         const appIcon = document.getElementById('fm-app');
         const appWrapper = document.getElementById('cuceu-logo-wrapper');
         const genieOverlay = document.getElementById('genie');
@@ -270,30 +301,22 @@
             }
         });
 
-        // --- Background Prefetch & Badge Status ---
         function checkStreamStatus() {
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
 
             fetch(proxyUrl, { cache: "no-store" })
-                .then(res => {
-                    if (!res.ok) throw new Error("Offline");
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(data => {
                     let source = data.icestats.source;
                     if (source) {
                         let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-                        // Save to browser memory for instant load on the /fm page
                         sessionStorage.setItem('cuceu_fm_title', title);
                         sessionStorage.setItem('cuceu_fm_status', 'online');
-                        
                         document.getElementById('fm-badge-text').innerText = "ON AIR";
                         document.getElementById('fm-badge').classList.remove('offline');
                         document.getElementById('fm-badge').classList.add('visible');
-                    } else {
-                        throw new Error("No source"); 
-                    }
+                    } else { throw new Error(); }
                 })
                 .catch(() => {
                     sessionStorage.setItem('cuceu_fm_status', 'offline');
@@ -301,11 +324,8 @@
                     document.getElementById('fm-badge').classList.add('offline', 'visible');
                 });
         }
-        
-        // Polling slightly slower (8s) to prevent proxy bans
         checkStreamStatus();
-        setInterval(checkStreamStatus, 8000);
+        setInterval(checkStreamStatus, 15000);
     </script>
-
 </body>
 </html>
