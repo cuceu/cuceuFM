@@ -27,7 +27,6 @@
             100% { opacity: 1; transform: translateY(0); } 
         }
 
-        /* --- FLOATING STATUS AREA --- */
         .status-area {
             position: absolute;
             top: 75px; 
@@ -42,7 +41,6 @@
             letter-spacing: 1px;
         }
 
-        /* --- SEAMLESS INFINITE TICKER TAPE --- */
         .ticker-tape {
             position: absolute;
             width: 100%;
@@ -89,7 +87,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* --- MAIN BRUTALIST UI (FIXED CENTERING) --- */
         .main-container {
             position: absolute;
             top: 50%;
@@ -175,7 +172,6 @@
         button:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 #d3d3d3; }
         button:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0 #d3d3d3; }
 
-        /* --- RECENTLY PLAYED DROPDOWN (CENTERED) --- */
         .history-dropdown {
             width: 320px;
             border: 4px solid #000;
@@ -243,13 +239,10 @@
 
         <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
-            
             <div class="live-status">
                 <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CHECKING...</span>
             </div>
-            
             <button id="btn">▶ Listen</button>
-
             <details class="history-dropdown">
                 <summary>Recently Played</summary>
                 <ul id="history-list">
@@ -269,7 +262,6 @@
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
 <script>
-    // --- 1. SETTINGS & CLOCK ---
     function updateClock() {
         const now = new Date();
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
@@ -285,18 +277,21 @@
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", fetchInterval = null; 
 
-    // --- 2. GLOBAL HISTORY FETCH ---
     function fetchGlobalHistory() {
         const histUrl = "https://stream.cuceu.co.uk/history.json?nocache=" + new Date().getTime();
-        
+        console.log("Attempting to fetch history from:", histUrl);
+
         fetch(histUrl, { 
             method: 'GET',
             mode: 'cors',
             headers: { 'Accept': 'application/json' }
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
-            console.log("History Updated:", data);
+            console.log("Raw history data received:", data);
             if (data && Array.isArray(data)) {
                 const cleanData = data.filter(t => t && t.trim() !== "");
                 if (cleanData.length > 0) {
@@ -306,10 +301,11 @@
                 }
             }
         })
-        .catch(err => console.log("History pending..."));
+        .catch(err => {
+            console.error("HISTORY SYNC FAILED:", err);
+        });
     }
 
-    // --- 3. TICKER ENGINE ---
     function updateTicker(baseString, instant = false) {
         const newFullString = Array(15).fill(baseString + " ").join('');
         if (currentTrackText !== newFullString) {
@@ -329,23 +325,17 @@
         }
     }
     
-    // --- 4. THE LISTEN BUTTON (RESTORED) ---
     btn.onclick = () => {
         if (!playing) {
             player.src = "https://stream.cuceu.co.uk/stream.mp3"; 
             player.play();
             btn.innerText = "⏸ Disconnect"; 
             centerStatus.innerText = "CONNECTING..."; 
-            
-            if (!isOnline || currentTrackText.includes("STANDBY")) {
-                updateTicker("Retrieving song information...");
-            }
-            
+            if (!isOnline || currentTrackText.includes("STANDBY")) updateTicker("Retrieving song information...");
             fetchSongData(); 
             fetchInterval = setInterval(fetchSongData, 12000); 
         } else {
-            player.pause(); 
-            player.src = ""; 
+            player.pause(); player.src = ""; 
             btn.innerText = "▶ Listen";
             centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
             pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
@@ -355,7 +345,6 @@
         playing = !playing;
     };
 
-    // Listen for actual audio starting
     player.addEventListener('playing', () => { 
         if (playing) { 
             centerStatus.innerText = "ON AIR"; 
@@ -363,7 +352,6 @@
         } 
     });
 
-    // --- 5. DATA SYNC ---
     function processData(data) {
         let source = data.icestats ? data.icestats.source : null;
         if (!source) return; 
@@ -373,7 +361,6 @@
             pulseIndicator.className = "pulse-dot live"; 
         }
         let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-        
         if (newTitle !== currentTitle && newTitle !== "ON AIR") { 
             currentTitle = newTitle; 
             fetchGlobalHistory(); 
@@ -384,18 +371,14 @@
     function fetchSongData() {
         const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
         fetch(targetUrl, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-            const p1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
-            fetch(p1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-                isOnline = false; 
-                if (!playing) { 
-                    centerStatus.innerText = "OFFLINE"; 
-                    pulseIndicator.className = "pulse-dot"; 
-                }
-            });
+            isOnline = false; 
+            if (!playing) { 
+                centerStatus.innerText = "OFFLINE"; 
+                pulseIndicator.className = "pulse-dot"; 
+            }
         });
     }
 
-    // --- 6. INITIALIZE ---
     fetchGlobalHistory();
     fetchSongData();
     setInterval(fetchSongData, 15000);
