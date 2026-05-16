@@ -13,10 +13,8 @@
             overflow: hidden;
             background-color: #ffffff; 
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            /* Removed the animation from the body to fix the Chromium rendering bug! */
         }
 
-        /* The safe wrapper that handles the transition */
         #app-wrapper {
             width: 100%;
             height: 100%;
@@ -134,7 +132,7 @@
         .pulse-dot {
             height: 12px;
             width: 12px;
-            background-color: #777; /* Default offline grey */
+            background-color: #777; 
             border-radius: 50%;
             flex-shrink: 0;
         }
@@ -213,7 +211,7 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // --- DOM Elements ---
+        // --- DOM Elements & Variables ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         const centerStatus = document.getElementById("center-status");
@@ -221,25 +219,11 @@
         const tapes = document.querySelectorAll('.song-display');
         
         let playing = false;
-        let isOnline = false;
         let currentTrackText = "";
         let errorCount = 0;
+        let fetchInterval = null; // Controls the background fetching
 
-        // --- Ticker Initial Text ---
-        const initText = Array(15).fill("+++ Retrieving song information... ").join('');
-        tapes.forEach(el => el.innerText = initText);
-        currentTrackText = initText;
-
-        // --- Instant Memory Load ---
-        const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
-        const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
-
-        if (cachedStatus === 'online' && cachedTitle) {
-            isOnline = true;
-            centerStatus.innerText = "READY";
-            updateTicker(`+++ NOW PLAYING: ${cachedTitle} `);
-        }
-
+        // --- Initialization: Pure Standby ---
         function updateTicker(baseString) {
             const newText = Array(15).fill(baseString).join('');
             if (currentTrackText !== newText) {
@@ -247,6 +231,7 @@
                 currentTrackText = newText;
             }
         }
+        updateTicker("+++ STANDBY ");
 
         // --- AUDIO SYNC EVENTS ---
         player.addEventListener('playing', () => {
@@ -265,63 +250,75 @@
         // --- Play/Pause Logic ---
         btn.onclick = () => {
             if (!playing) {
+                // START PLAYING
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Disconnect";
                 centerStatus.innerText = "CONNECTING..."; 
-                pulseIndicator.classList.remove('active'); 
                 
+                // Update ticker to searching state
+                updateTicker("+++ Retrieving song information... ");
+                
+                // Kick off the metadata loop
                 fetchSongData();
+                fetchInterval = setInterval(fetchSongData, 5000);
+
             } else {
+                // STOP PLAYING (Return to Standby)
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
-                centerStatus.innerText = isOnline ? "READY" : "OFFLINE"; 
+                centerStatus.innerText = "STANDBY"; 
                 pulseIndicator.classList.remove('active'); 
+                
+                // Shut down the background fetching
+                clearInterval(fetchInterval);
+                updateTicker("+++ STANDBY ");
             }
             playing = !playing;
         };
 
-        // --- PROXY FETCH ---
-        function fetchSongData() {
-            const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
-            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
+        // --- DUAL-FETCH METADATA ENGINE ---
+        function processData(data) {
+            let source = data.icestats ? data.icestats.source : null;
+            if (!source) return; // Ignore Icecast hiccups during song changes
             
-            fetch(proxyUrl, { cache: "no-store" })
-                .then(response => {
-                    if (!response.ok) throw new Error("Stream offline");
-                    return response.json();
-                })
-                .then(data => {
-                    let source = data.icestats.source;
-                    
-                    if (!source) {
-                        if (isOnline) return; 
-                        throw new Error("Stream offline"); 
-                    }
-                    
-                    errorCount = 0; 
-                    isOnline = true;
-                    if (!playing && centerStatus.innerText !== "READY") centerStatus.innerText = "READY"; 
-
-                    let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-                    updateTicker(`+++ NOW PLAYING: ${title} `);
-                })
-                .catch(err => {
-                    errorCount++;
-                    if (errorCount >= 3) {
-                        isOnline = false;
-                        if (!playing) {
-                            centerStatus.innerText = "OFFLINE";
-                            updateTicker("+++ STATION OFFLINE ");
-                        } else {
-                            updateTicker("+++ METADATA UNAVAILABLE ");
-                        }
-                    }
-                });
+            errorCount = 0; 
+            let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+            updateTicker(`+++ NOW PLAYING: ${title} `);
         }
 
-        setInterval(fetchSongData, 5000); 
+        function handleFetchError() {
+            errorCount++;
+            if (errorCount >= 3) {
+                updateTicker("+++ METADATA UNAVAILABLE ");
+            }
+        }
+
+        function fetchSongData() {
+            if (!playing) return; // Safety check
+
+            const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
+            
+            // Attempt 1: Direct Fetch (Fastest, avoids Cloudflare Bot blocks)
+            fetch(targetUrl, { cache: "no-store" })
+                .then(res => {
+                    if (!res.ok) throw new Error("Direct fetch failed");
+                    return res.json();
+                })
+                .then(processData)
+                .catch(err => {
+                    // Attempt 2: Fallback to allorigins if Direct is blocked by CORS
+                    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                    fetch(proxyUrl, { cache: "no-store" })
+                        .then(res => {
+                            if (!res.ok) throw new Error("Proxy failed");
+                            return res.json();
+                        })
+                        .then(processData)
+                        .catch(handleFetchError);
+                });
+        }
     </script>
 </body>
 </html>
