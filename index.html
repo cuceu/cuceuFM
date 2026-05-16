@@ -5,38 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CUCEU</title>
     <style>
-        /* PLAIN WHITE BRUTALIST MAC BACKGROUND */
+        /* PREMIUM DARK MODE MAC BACKGROUND */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            background-color: #ffffff;
+            /* Deep, cinematic midnight gradient */
+            background: radial-gradient(circle at 50% -20%, #2a2a3d, #000000);
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            color: #ffffff;
         }
 
-        /* --- MAC OS TOP MENU BAR --- */
+        /* --- FROSTED GLASS TOP MENU BAR --- */
         .mac-topbar {
             position: absolute;
             top: 0;
             width: 100%;
             height: 35px;
-            background: #ffffff;
-            border-bottom: 3px solid #000; 
+            /* Authentic macOS frosted glass */
+            background: rgba(20, 20, 25, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
             box-sizing: border-box;
-            font-weight: 700;
+            font-weight: 500;
             font-size: 14px;
-            color: #000;
+            letter-spacing: 0.5px;
             z-index: 100;
         }
 
-        .topbar-left {
+        .topbar-left, .topbar-right {
             display: flex;
             align-items: center;
             gap: 15px;
@@ -47,18 +52,13 @@
             margin-bottom: 2px;
         }
 
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
         .icon {
             display: flex;
             align-items: center;
+            opacity: 0.8;
         }
 
-        /* --- THE MASSIVE CENTER LOGO --- */
+        /* --- THE SLEEK CENTER LOGO --- */
         .main-content {
             flex-grow: 1;
             display: flex;
@@ -72,12 +72,16 @@
             text-transform: uppercase;
             letter-spacing: -8px;
             margin: 0;
-            color: #000;
-            line-height: 0.8;
+            /* Soft silver gradient for the text */
+            background: linear-gradient(to bottom, #ffffff, #777777);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Cinematic drop shadow */
+            filter: drop-shadow(0px 20px 30px rgba(0,0,0,0.8));
             cursor: default;
         }
 
-        /* --- THE BRUTALIST MAC DOCK --- */
+        /* --- THE PREMIUM FROSTED DOCK --- */
         .mac-dock-container {
             position: absolute;
             bottom: 20px;
@@ -88,13 +92,15 @@
         }
 
         .mac-dock {
-            background: #ffffff;
-            border: 4px solid #000;
-            border-radius: 25px;
+            background: rgba(30, 30, 35, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
             padding: 15px 25px;
             display: flex;
             gap: 20px;
-            box-shadow: 8px 8px 0 #d3d3d3; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
             align-items: flex-end;
         }
 
@@ -103,49 +109,53 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #000;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
         }
 
+        /* Glowing Neon App Icon */
         .app-icon {
             width: 65px;
             height: 65px;
-            background: #000;
-            color: #fff;
-            border-radius: 16px; 
+            /* Glowing Brat-green 3D gradient */
+            background: linear-gradient(135deg, #8aff00, #00cc66);
+            color: #000;
+            border-radius: 18px; 
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.8rem;
             font-weight: 900;
             letter-spacing: -1px;
-            border: 3px solid #000;
-            box-shadow: inset 0 0 0 2px #fff; 
+            box-shadow: 0 10px 20px rgba(138, 255, 0, 0.3), inset 0 2px 4px rgba(255,255,255,0.6); 
             transition: transform 0.2s ease;
         }
 
         .app-indicator {
-            width: 6px;
-            height: 6px;
-            background-color: #000;
+            width: 5px;
+            height: 5px;
+            background-color: #8aff00; /* Neon indicator dot */
             border-radius: 50%;
             margin-top: 8px;
+            box-shadow: 0 0 8px #8aff00;
         }
 
         .app-tooltip {
             position: absolute;
             top: -45px;
-            background: #ffffff;
-            border: 3px solid #000;
-            padding: 5px 12px;
+            background: rgba(30, 30, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
             border-radius: 8px;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 600;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
             white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
         .dock-app:hover {
@@ -158,10 +168,10 @@
 
         .dock-app:active .app-icon {
             transform: scale(0.9);
-            background: #333;
+            filter: brightness(0.8);
         }
 
-        /* --- THE LIQUID GLASS GENIE OVERLAY --- */
+        /* --- THE BRIGHT WHITE GENIE FIX --- */
         .genie-overlay {
             position: fixed;
             bottom: 45px; 
@@ -170,13 +180,12 @@
             width: 65px;
             height: 65px;
             
-            /* Liquid Glass Effect */
-            background: rgba(0, 0, 0, 0.4); /* Semi-transparent dark tint */
-            backdrop-filter: blur(25px); /* Creates the heavy glass blur */
-            -webkit-backdrop-filter: blur(25px); /* Safari support for the blur */
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle glass edge shine */
+            /* Expands into pure frosted white to match the radio page */
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px); 
             
-            border-radius: 16px;
+            border-radius: 18px;
             z-index: 1000;
             pointer-events: none;
             opacity: 0;
@@ -186,7 +195,7 @@
 
         .genie-overlay.expand {
             opacity: 1;
-            transform: scale(50); 
+            transform: scale(60); /* Swallows the screen in white light */
         }
     </style>
 </head>
@@ -199,10 +208,10 @@
         </div>
         <div class="topbar-right">
             <div class="icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
             </div>
             <div class="icon">
-                <svg width="24" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line><rect x="4" y="9" width="12" height="6" fill="currentColor"></rect></svg>
+                <svg width="24" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line><rect x="4" y="9" width="12" height="6" fill="currentColor"></rect></svg>
             </div>
             <span id="mac-clock">Sat 12:40 AM</span>
         </div>
@@ -225,44 +234,33 @@
     <div id="genie" class="genie-overlay"></div>
 
     <script>
-        // Clock Logic
         function updateClock() {
             const now = new Date();
             const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             const day = days[now.getDay()];
-            
             let hours = now.getHours();
             let minutes = now.getMinutes();
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            
             hours = hours % 12;
             hours = hours ? hours : 12; 
             minutes = minutes < 10 ? '0' + minutes : minutes;
-            
-            const timeString = `${day} ${hours}:${minutes} ${ampm}`;
-            document.getElementById('mac-clock').innerText = timeString;
+            document.getElementById('mac-clock').innerText = `${day} ${hours}:${minutes} ${ampm}`;
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        // --- THE GENIE TRANSITION MAGIC ---
         const appIcon = document.getElementById('fm-app');
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
             e.preventDefault(); 
-            
-            // Trigger the liquid glass explosion
             genieOverlay.classList.add('expand');
-            
-            // Wait exactly 550ms, then teleport
+            // Delays the jump just long enough for the white screen to cover everything
             setTimeout(() => {
                 window.location.href = "/fm";
             }, 550); 
         });
 
-        // --- THE BACK-BUTTON FIX ---
-        // If the browser tries to load this page from the cache (like when pressing back), instantly reset the animation
         window.addEventListener('pageshow', (event) => {
             if (event.persisted) {
                 genieOverlay.classList.remove('expand');
