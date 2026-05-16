@@ -9,10 +9,32 @@
             margin: 0; padding: 0; height: 100%; overflow: hidden;
             background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;
         }
+        
+        /* --- THE BOUNCING ALBUM ART --- */
+        #bouncing-art {
+            position: absolute;
+            width: 180px; /* Size of the CD logo */
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.15);
+            z-index: 1; /* Puts it behind the main text but above the background */
+            opacity: 0; /* Hidden until loaded */
+            transition: opacity 1s ease-in-out;
+            top: 0; left: 0;
+            will-change: transform; /* Helps the browser animate it smoothly */
+        }
+
         #app-wrapper {
             width: 100%; height: 100%; position: relative;
+            z-index: 10; /* Keeps the UI above the bouncing image */
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            pointer-events: none; /* Lets you click 'through' the invisible parts */
         }
+        
+        /* Re-enable clicking for actual buttons and menus */
+        .main-container, .status-area { pointer-events: auto; }
+
         @keyframes continuityGlide {
             0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); }
         }
@@ -42,7 +64,6 @@
         .main-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; width: 100%; padding: 0 20px;
-            /* The magic fix for the off-center bug! */
             box-sizing: border-box; 
             display: flex; flex-direction: column; align-items: center;
         }
@@ -77,10 +98,9 @@
             cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
         
-        /* --- THE SMOOTH PUSH DROPDOWN --- */
         .history-wrapper {
             width: 100%;
-            max-width: 360px; /* Keeps it exactly the size you want */
+            max-width: 360px;
             z-index: 50;
         }
         #history-toggle {
@@ -96,14 +116,11 @@
         }
         
         #history-list { 
-            /* This is no longer floating, it's back in the layout! */
             width: 100%;
             background: #fff; margin: 0; list-style: none;
             box-sizing: border-box; text-align: left;
-            
-            /* The magic smooth slide/fade setup */
             max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
-            border: 0px solid #000; /* Hides border when closed */
+            border: 0px solid #000; 
             box-shadow: 0px 0px 0 #d3d3d3;
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
@@ -121,6 +138,9 @@
     </style>
 </head>
 <body>
+
+    <img id="bouncing-art" src="" alt="Album Art">
+
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
@@ -141,11 +161,11 @@
                     <li class="history-item" style="border:none; text-align:center; color:#ccc;">Loading history...</li>
                 </ul>
             </div>
-            
         </div>
         
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
     </div>
+    
     <audio id="radioPlayer" preload="none"></audio>
 
 <script>
@@ -163,11 +183,40 @@
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
           historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
-          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee");
+          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee"),
+          bouncingArt = document.getElementById("bouncing-art");
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
-    // Dropdown Logic
+    // --- DVD BOUNCE LOGIC ---
+    let artX = 50, artY = 150; // Starting position
+    let artDX = 1.5, artDY = 1.5; // Speed of the bounce
+    let isBouncing = false;
+
+    function animateBounce() {
+        if (!isBouncing) return;
+        
+        // 180 is the width/height of the image in CSS
+        const boundsX = window.innerWidth - 180;
+        const boundsY = window.innerHeight - 180;
+
+        artX += artDX;
+        artY += artDY;
+
+        // Bounce off walls!
+        if (artX <= 0 || artX >= boundsX) {
+            artDX *= -1;
+            artX = Math.max(0, Math.min(artX, boundsX));
+        }
+        if (artY <= 0 || artY >= boundsY) {
+            artDY *= -1;
+            artY = Math.max(0, Math.min(artY, boundsY));
+        }
+
+        bouncingArt.style.transform = `translate(${artX}px, ${artY}px)`;
+        requestAnimationFrame(animateBounce); // Loops infinitely matching monitor refresh rate
+    }
+
     historyToggle.onclick = () => {
         historyList.classList.toggle("open");
         historyToggle.querySelector("span").innerText = historyList.classList.contains("open") ? "▲" : "▼";
@@ -177,6 +226,13 @@
         const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
         if (!response.ok) throw new Error("Direct fetch failed");
         return await response.json();
+    }
+    
+    // Fetch specifically for text files
+    async function textFetch(url) {
+        const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) throw new Error("Text fetch failed");
+        return await response.text();
     }
 
     async function fetchGlobalHistory() {
@@ -188,8 +244,31 @@
                     historyList.innerHTML = cleanData.map(track => `<li class="history-item">${track}</li>`).join('');
                 }
             }
+        } catch(e) {}
+    }
+
+    // Grab the new artwork text file generated by Mac
+    async function fetchArtwork() {
+        try {
+            const url = await textFetch(`${STREAM_BASE}/artwork.txt`);
+            const cleanUrl = url.trim();
+            
+            if (cleanUrl && cleanUrl.startsWith('http')) {
+                if (bouncingArt.src !== cleanUrl) {
+                    bouncingArt.src = cleanUrl;
+                    bouncingArt.onload = () => {
+                        bouncingArt.style.opacity = 0.6; // Slightly faded
+                        if (!isBouncing) {
+                            isBouncing = true;
+                            animateBounce(); // Start the bounce if it isn't running!
+                        }
+                    };
+                }
+            } else {
+                bouncingArt.style.opacity = 0; // Hide if no image is found
+            }
         } catch(e) {
-            console.warn("History not ready yet.");
+            bouncingArt.style.opacity = 0;
         }
     }
 
@@ -237,6 +316,7 @@
             if (newTitle !== currentTitle) { 
                 currentTitle = newTitle; 
                 fetchGlobalHistory(); 
+                fetchArtwork(); // Grab the new artwork whenever the song changes!
             }
             updateTicker(`NOW PLAYING: ${newTitle}`);
         } catch (e) {
@@ -244,6 +324,7 @@
             if (!playing) { 
                 setStatus("OFFLINE", "");
                 updateTicker("STANDBY");
+                bouncingArt.style.opacity = 0; // Hide art if offline
             }
         }
     }
@@ -263,6 +344,7 @@
     player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
 
     fetchGlobalHistory();
+    fetchArtwork();
     updateTicker("STANDBY");
     fetchSongData();
     setInterval(fetchSongData, 3000);
