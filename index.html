@@ -18,7 +18,7 @@
             color: #000000;
         }
 
-        /* --- FLOATING STATUS AREA (Clock & On Air Badge) --- */
+        /* --- FLOATING STATUS AREA (Clock Only) --- */
         .status-area {
             position: absolute;
             top: 25px;
@@ -31,33 +31,6 @@
             color: #000000;
             z-index: 100;
             letter-spacing: 0.5px;
-        }
-
-        /* --- NEW: SUBTLE ON AIR BADGE --- */
-        .on-air-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 10px; /* Tiny letters to match badge size */
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #000000;
-            padding-right: 5px;
-        }
-
-        .recording-dot {
-            width: 7px;
-            height: 7px;
-            background-color: #ff3b30; /* Classic iOS notification red */
-            border-radius: 50%;
-            /* Subtle breathing pulse animation */
-            animation: subtle-pulse 2s infinite ease-in-out;
-        }
-
-        @keyframes subtle-pulse {
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); }
-            50% { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(255, 59, 48, 0); }
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
         /* --- THE STARK CENTER LOGO --- */
@@ -146,6 +119,42 @@
             transition: transform 0.2s ease;
         }
 
+        /* --- NOTIFICATION BADGE ON ICON --- */
+        .app-badge {
+            position: absolute;
+            top: -6px;
+            right: -18px;
+            background: rgba(20, 20, 25, 0.85); /* Midnight pill */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+            font-weight: 800;
+            color: #ffffff;
+            z-index: 15;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            pointer-events: none; /* Let clicks pass through to the icon */
+        }
+
+        .recording-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            animation: subtle-pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes subtle-pulse {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
+            50% { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(255, 59, 48, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+
         .app-indicator {
             width: 5px;
             height: 5px;
@@ -215,11 +224,6 @@
 <body>
 
     <div class="status-area">
-        <!-- New Subtle On Air Badge -->
-        <div class="on-air-badge">
-            <div class="recording-dot"></div>
-            <span>ON AIR</span>
-        </div>
         <span id="mac-clock">Sat 12:40 AM</span>
     </div>
 
@@ -231,6 +235,11 @@
         <div class="mac-dock">
             <a href="/fm" class="dock-app" id="fm-app">
                 <div class="app-tooltip">CUCEU.fm</div>
+                <!-- The New Dock Icon Notification Badge -->
+                <div class="app-badge">
+                    <div class="recording-dot"></div>
+                    <span>ON AIR</span>
+                </div>
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
             </a>
