@@ -14,64 +14,28 @@
             background-color: #ffffff; 
             font-family: 'Helvetica Neue', Arial, sans-serif;
             
-            /* THE FIX: Continued glide downward so the transition matches trajectory */
+            /* Continued glide downward so the transition matches trajectory */
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         @keyframes continuityGlide {
-            0% { opacity: 0; transform: translateY(-5vh); } /* Arrives from above */
-            100% { opacity: 1; transform: translateY(0); } /* Settles into place */
+            0% { opacity: 0; transform: translateY(-5vh); } 
+            100% { opacity: 1; transform: translateY(0); } 
         }
 
-        /* --- FLOATING STATUS AREA (Clock & Battery) --- */
+        /* --- FLOATING STATUS AREA (Clock Only) --- */
         .status-area {
             position: absolute;
             top: 75px; /* Sits cleanly right below the top ticker tape */
             right: 30px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            font-size: 14px;
-            font-weight: 800; /* Bolder to match the brutalist aesthetic */
+            font-size: 16px; /* Slightly bigger clock size */
+            font-weight: 800; 
             text-transform: uppercase;
             color: #000000;
             z-index: 100;
             letter-spacing: 1px;
-        }
-
-        .battery-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            /* Hidden by default until JS confirms API support (Safari fallback) */
-            display: none; 
-        }
-
-        .battery-outline {
-            width: 26px;
-            height: 12px;
-            border: 2px solid #000; /* Thicker brutalist border */
-            border-radius: 2px;
-            padding: 1.5px;
-            position: relative;
-            display: flex;
-        }
-
-        .battery-outline::after {
-            content: '';
-            position: absolute;
-            right: -6px;
-            top: 2px;
-            width: 3px;
-            height: 6px;
-            background: #000;
-        }
-
-        .battery-fill {
-            height: 100%;
-            background-color: #000;
-            width: 100%; 
-            transition: width 0.3s ease, background-color 0.3s ease;
         }
 
         /* --- SEAMLESS INFINITE TICKER TAPE CSS --- */
@@ -92,11 +56,9 @@
         .ticker-top { top: 0; }
         .ticker-bottom { bottom: 0; }
 
-        /* The wrapper that holds the duplicating text for a gapless loop */
         .marquee-wrapper {
             display: flex;
             white-space: nowrap;
-            /* Chill 60s glide (sped up from 90s just a bit) */
             animation: marquee 60s linear infinite;
             width: fit-content;
         }
@@ -138,7 +100,7 @@
             letter-spacing: -5px; 
             margin: 0;
             color: #000; 
-            -webkit-text-stroke: 4px #000; /* Added this back for the boldness */
+            -webkit-text-stroke: 4px #000; 
         }
 
         .fm-text {
@@ -148,29 +110,27 @@
             -webkit-text-stroke: 0px; 
         }
 
-        /* Center Status Box */
+        /* Free-Floating Minimal Center Status (Box Removed!) */
         .live-status {
             font-size: clamp(1rem, 3vw, 1.5rem);
             text-transform: uppercase;
             letter-spacing: 3px;
             font-weight: 800;
-            margin-top: -5px;
+            margin-top: 15px;
             margin-bottom: 40px;
             color: #000; 
-            background: #fff; 
+            background: transparent; 
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            padding: 10px 20px;
-            border: 3px solid #000;
             max-width: 90%;
             white-space: nowrap;
         }
 
         .pulse-dot {
-            height: 15px;
-            width: 15px;
+            height: 12px;
+            width: 12px;
             background-color: #ff0000; 
             border-radius: 50%;
             flex-shrink: 0;
@@ -178,8 +138,8 @@
         }
 
         @keyframes pulse-red {
-            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.5); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); }
             100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
@@ -219,20 +179,15 @@
         </div>
     </div>
 
-    <!-- The New Status Area -->
+    <!-- Minimalist Status Area -->
     <div class="status-area">
-        <div class="battery-wrapper" id="battery-wrapper">
-            <span id="battery-pct">100%</span>
-            <div class="battery-outline">
-                <div class="battery-fill" id="battery-level-fill"></div>
-            </div>
-        </div>
         <span id="mac-clock">Sat 12:40 AM</span>
     </div>
 
     <div class="main-container">
         <h1>CUCEU<span class="fm-text">.fm</span></h1>
         
+        <!-- Clean Floating Live Status -->
         <div class="live-status">
             <div class="pulse-dot"></div> <span id="center-status">LOADING...</span>
         </div>
@@ -264,35 +219,6 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
-
-        // --- Battery Sync Script ---
-        if ('getBattery' in navigator) {
-            navigator.getBattery().then(function(battery) {
-                const batteryWrapper = document.getElementById('battery-wrapper');
-                batteryWrapper.style.display = 'flex'; // Show if API is supported
-
-                function updateBatteryStatus() {
-                    const level = Math.round(battery.level * 100);
-                    document.getElementById('battery-pct').innerText = level + '%';
-                    
-                    const batteryFill = document.getElementById('battery-level-fill');
-                    batteryFill.style.width = level + '%';
-
-                    // Change color to green if charging, red if low, black normally
-                    if (battery.charging) {
-                        batteryFill.style.backgroundColor = '#10b981'; 
-                    } else if (level <= 20) {
-                        batteryFill.style.backgroundColor = '#ef4444'; 
-                    } else {
-                        batteryFill.style.backgroundColor = '#000000'; 
-                    }
-                }
-
-                updateBatteryStatus();
-                battery.addEventListener('levelchange', updateBatteryStatus);
-                battery.addEventListener('chargingchange', updateBatteryStatus);
-            });
-        }
 
         // --- Radio Player Logic ---
         const btn = document.getElementById("btn");
