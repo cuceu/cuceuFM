@@ -23,6 +23,57 @@
             100% { opacity: 1; transform: translateY(0); } /* Settles into place */
         }
 
+        /* --- FLOATING STATUS AREA (Clock & Battery) --- */
+        .status-area {
+            position: absolute;
+            top: 75px; /* Sits cleanly right below the top ticker tape */
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            font-weight: 800; /* Bolder to match the brutalist aesthetic */
+            text-transform: uppercase;
+            color: #000000;
+            z-index: 100;
+            letter-spacing: 1px;
+        }
+
+        .battery-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Hidden by default until JS confirms API support (Safari fallback) */
+            display: none; 
+        }
+
+        .battery-outline {
+            width: 26px;
+            height: 12px;
+            border: 2px solid #000; /* Thicker brutalist border */
+            border-radius: 2px;
+            padding: 1.5px;
+            position: relative;
+            display: flex;
+        }
+
+        .battery-outline::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 2px;
+            width: 3px;
+            height: 6px;
+            background: #000;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background-color: #000;
+            width: 100%; 
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
         /* --- SEAMLESS INFINITE TICKER TAPE CSS --- */
         .ticker-tape {
             position: absolute;
@@ -168,6 +219,17 @@
         </div>
     </div>
 
+    <!-- The New Status Area -->
+    <div class="status-area">
+        <div class="battery-wrapper" id="battery-wrapper">
+            <span id="battery-pct">100%</span>
+            <div class="battery-outline">
+                <div class="battery-fill" id="battery-level-fill"></div>
+            </div>
+        </div>
+        <span id="mac-clock">Sat 12:40 AM</span>
+    </div>
+
     <div class="main-container">
         <h1>CUCEU<span class="fm-text">.fm</span></h1>
         
@@ -187,6 +249,52 @@
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
     <script>
+        // --- Clock Script ---
+        function updateClock() {
+            const now = new Date();
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const day = days[now.getDay()];
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('mac-clock').innerText = `${day} ${hours}:${minutes} ${ampm}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // --- Battery Sync Script ---
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                const batteryWrapper = document.getElementById('battery-wrapper');
+                batteryWrapper.style.display = 'flex'; // Show if API is supported
+
+                function updateBatteryStatus() {
+                    const level = Math.round(battery.level * 100);
+                    document.getElementById('battery-pct').innerText = level + '%';
+                    
+                    const batteryFill = document.getElementById('battery-level-fill');
+                    batteryFill.style.width = level + '%';
+
+                    // Change color to green if charging, red if low, black normally
+                    if (battery.charging) {
+                        batteryFill.style.backgroundColor = '#10b981'; 
+                    } else if (level <= 20) {
+                        batteryFill.style.backgroundColor = '#ef4444'; 
+                    } else {
+                        batteryFill.style.backgroundColor = '#000000'; 
+                    }
+                }
+
+                updateBatteryStatus();
+                battery.addEventListener('levelchange', updateBatteryStatus);
+                battery.addEventListener('chargingchange', updateBatteryStatus);
+            });
+        }
+
+        // --- Radio Player Logic ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         const centerStatus = document.getElementById("center-status");
