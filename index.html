@@ -25,7 +25,6 @@
             right: 30px;
             display: flex;
             align-items: center;
-            gap: 15px;
             font-size: 14px;
             font-weight: 600;
             color: #000000;
@@ -58,7 +57,7 @@
 
         h1#cuceu-logo {
             font-size: clamp(5rem, 20vw, 20rem);
-            font-weight: 900;
+            font-weight: 900; /* Bolder */
             text-transform: uppercase;
             letter-spacing: -8px;
             margin: 0;
@@ -66,12 +65,13 @@
             white-space: nowrap;
             line-height: 0.8;
             cursor: default;
-            animation: marqueeLogo 25s linear infinite;
+            transform: scaleY(1.4); /* Stretched vertically */
+            animation: marqueeLogo 30s linear infinite; /* 20% Slower */
         }
 
         @keyframes marqueeLogo {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translateX(0) scaleY(1.4); }
+            100% { transform: translateX(-50%) scaleY(1.4); }
         }
 
         /* --- THE PREMIUM MIDNIGHT DOCK --- */
@@ -107,13 +107,11 @@
             position: relative;
         }
 
-        /* Glassy Grey App Icon */
         .app-icon {
             width: 65px;
             height: 65px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #ffffff;
             border-radius: 18px; 
@@ -134,7 +132,6 @@
             right: -18px;
             background: rgba(20, 20, 25, 0.85);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 4px 8px;
@@ -147,6 +144,12 @@
             z-index: 15;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             pointer-events: none;
+            opacity: 0; /* Hidden by default until loaded */
+            transition: opacity 0.3s ease;
+        }
+
+        .app-badge.visible {
+            opacity: 1;
         }
 
         .recording-dot {
@@ -157,8 +160,9 @@
             animation: subtle-pulse 2s infinite ease-in-out;
         }
 
+        /* Offline state styles */
         .app-badge.offline .recording-dot {
-            background-color: #555;
+            background-color: #777;
             animation: none;
             box-shadow: none;
         }
@@ -178,35 +182,8 @@
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
         }
 
-        .app-tooltip {
-            position: absolute;
-            top: -45px;
-            background: rgba(30, 30, 35, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            white-space: nowrap;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-
-        .dock-app:hover {
-            transform: translateY(-15px) scale(1.1);
-        }
-
-        .dock-app:hover .app-tooltip {
-            opacity: 1;
-        }
-
-        .dock-app:active .app-icon {
-            transform: scale(0.9);
-            filter: brightness(0.8);
-        }
+        .dock-app:hover { transform: translateY(-15px) scale(1.1); }
+        .dock-app:active .app-icon { transform: scale(0.9); filter: brightness(0.8); }
 
         /* --- THE LIQUID GLASS GENIE FIX --- */
         .genie-overlay {
@@ -216,11 +193,8 @@
             margin-left: -32.5px; 
             width: 65px;
             height: 65px;
-            
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(40px); 
-            -webkit-backdrop-filter: blur(40px); 
-            
             border-radius: 18px;
             z-index: 1000;
             pointer-events: none;
@@ -244,7 +218,7 @@
     <div class="main-content">
         <div id="cuceu-logo-wrapper">
             <h1 id="cuceu-logo">
-                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
+                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
             </h1>
         </div>
     </div>
@@ -252,10 +226,9 @@
     <div class="mac-dock-container">
         <div class="mac-dock">
             <a href="/fm" class="dock-app" id="fm-app">
-                <div class="app-tooltip">CUCEU.fm</div>
-                <div class="app-badge">
+                <div class="app-badge" id="fm-badge">
                     <div class="recording-dot"></div>
-                    <span>LOADING...</span>
+                    <span id="fm-badge-text"></span>
                 </div>
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
@@ -266,39 +239,30 @@
     <div id="genie" class="genie-overlay"></div>
 
     <script>
-        // Clock Script
+        // --- Clock Script ---
         function updateClock() {
             const now = new Date();
             const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            const day = days[now.getDay()];
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            document.getElementById('mac-clock').innerText = `${day} ${hours}:${minutes} ${ampm}`;
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            let hours = now.getHours() % 12 || 12; 
+            let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
+            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} ${hours}:${minutes} ${ampm}`;
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        // App Launch & Genie Animation
+        // --- App Launch Animation ---
         const appIcon = document.getElementById('fm-app');
         const appWrapper = document.getElementById('cuceu-logo-wrapper');
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
             e.preventDefault(); 
-            
             genieOverlay.classList.add('expand'); 
             appWrapper.classList.add('glide-down'); 
-            
-            setTimeout(() => {
-                window.location.href = "/fm";
-            }, 550); 
+            setTimeout(() => { window.location.href = "/fm"; }, 550); 
         });
 
-        // Instant reset if user presses the back button
         window.addEventListener('pageshow', (event) => {
             if (event.persisted) {
                 genieOverlay.classList.remove('expand');
@@ -306,7 +270,7 @@
             }
         });
 
-        // Stream Status Checker for Main Page
+        // --- Background Prefetch & Badge Status ---
         function checkStreamStatus() {
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
@@ -317,20 +281,30 @@
                     return res.json();
                 })
                 .then(data => {
-                    if (data.icestats.source) {
-                        document.querySelector('.app-badge span').innerText = "ON AIR";
-                        document.querySelector('.app-badge').classList.remove('offline');
+                    let source = data.icestats.source;
+                    if (source) {
+                        let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+                        // Save to browser memory for instant load on the /fm page
+                        sessionStorage.setItem('cuceu_fm_title', title);
+                        sessionStorage.setItem('cuceu_fm_status', 'online');
+                        
+                        document.getElementById('fm-badge-text').innerText = "ON AIR";
+                        document.getElementById('fm-badge').classList.remove('offline');
+                        document.getElementById('fm-badge').classList.add('visible');
                     } else {
-                        throw new Error("No source"); // Icecast running, but BUTT is disconnected
+                        throw new Error("No source"); 
                     }
                 })
                 .catch(() => {
-                    document.querySelector('.app-badge span').innerText = "OFFLINE";
-                    document.querySelector('.app-badge').classList.add('offline');
+                    sessionStorage.setItem('cuceu_fm_status', 'offline');
+                    document.getElementById('fm-badge-text').innerText = "OFFLINE";
+                    document.getElementById('fm-badge').classList.add('offline', 'visible');
                 });
         }
+        
+        // Polling slightly slower (8s) to prevent proxy bans
         checkStreamStatus();
-        setInterval(checkStreamStatus, 5000);
+        setInterval(checkStreamStatus, 8000);
     </script>
 
 </body>
