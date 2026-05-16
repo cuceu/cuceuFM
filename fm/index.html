@@ -268,158 +268,119 @@
 
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
-    <script>
-        // --- Clock Script ---
-        function updateClock() {
-            const now = new Date();
-            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-            let hours = now.getHours() % 12 || 12; 
-            let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
-            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} ${hours}:${minutes} ${ampm}`;
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
+<script>
+    // --- Clock ---
+    function updateClock() {
+        const now = new Date();
+        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+        let hours = now.getHours() % 12 || 12; 
+        let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
+        document.getElementById('mac-clock').innerText = `${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][now.getDay()]} ${hours}:${minutes} ${ampm}`;
+    }
+    updateClock(); setInterval(updateClock, 1000);
 
-        // --- DOM Elements ---
-        const btn = document.getElementById("btn");
-        const player = document.getElementById("radioPlayer");
-        const centerStatus = document.getElementById("center-status");
-        const pulseIndicator = document.getElementById("pulse-indicator");
-        const tapes = document.querySelectorAll('.song-display');
-        const historyList = document.getElementById("history-list");
-        
-        let playing = false;
-        let isOnline = false;
-        let currentTrackText = "";
-        let currentTitle = "";
-        let fetchInterval = null; 
+    const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
+          centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
+          tapes = document.querySelectorAll('.song-display'), historyList = document.getElementById("history-list");
+    
+    let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", fetchInterval = null; 
 
-        // --- History Management ---
-        let songHistory = JSON.parse(sessionStorage.getItem('cuceu_history')) || [];
-
-        function updateHistoryUI() {
-            if (songHistory.length === 0) return;
-            historyList.innerHTML = songHistory.map(track => `
-                <li class="history-item">Previously <span>${track}</span></li>
-            `).join('');
-        }
-        updateHistoryUI();
-
-        // --- Ticker Engine ---
-        function updateTicker(baseString, instant = false) {
-            const newFullString = Array(15).fill(baseString + " ").join('');
-            if (currentTrackText !== newFullString) {
-                if (instant) {
-                    tapes.forEach(el => el.innerText = newFullString);
-                    currentTrackText = newFullString;
-                    const perfectSpeed = newFullString.length * 0.333;
-                    document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
-                        wrapper.style.animationDuration = `${perfectSpeed}s`;
-                    });
-                    return;
+    // --- GLOBAL HISTORY FETCH ---
+    function fetchGlobalHistory() {
+        // Hits your Mac directly via the tunnel!
+        const histUrl = "https://stream.cuceu.co.uk/history.json?nocache=" + new Date().getTime();
+        fetch(histUrl, { cache: "no-store" })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    historyList.innerHTML = data
+                        .filter(t => t && t !== "undefined")
+                        .map(track => `<li class="history-item">Previously <span>${track}</span></li>`)
+                        .join('');
                 }
-                tapes.forEach(el => el.classList.add('fade-out'));
-                setTimeout(() => {
-                    tapes.forEach(el => el.innerText = newFullString);
-                    currentTrackText = newFullString;
-                    const perfectSpeed = newFullString.length * 0.333;
-                    document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
-                        wrapper.style.animationDuration = `${perfectSpeed}s`;
-                    });
-                    tapes.forEach(el => el.classList.remove('fade-out'));
-                }, 750); 
-            }
-        }
-        
-        // --- Handshake ---
-        const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
-        const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
+            })
+            .catch(() => { /* Silent fail if history file is empty */ });
+    }
 
-        if (cachedStatus === 'online') {
-            isOnline = true;
-            currentTitle = cachedTitle || "ON AIR";
-            centerStatus.innerText = "LIVE";
-            pulseIndicator.className = "pulse-dot live";
-            updateTicker(`NOW PLAYING: ${currentTitle}`, true);
+    // --- Ticker Engine ---
+    function updateTicker(baseString, instant = false) {
+        const newFullString = Array(15).fill(baseString + " ").join('');
+        if (currentTrackText !== newFullString) {
+            if (instant) {
+                tapes.forEach(el => el.innerText = newFullString);
+                currentTrackText = newFullString;
+                document.querySelectorAll('.marquee-wrapper').forEach(w => w.style.animationDuration = `${newFullString.length * 0.333}s`);
+                return;
+            }
+            tapes.forEach(el => el.classList.add('fade-out'));
+            setTimeout(() => {
+                tapes.forEach(el => el.innerText = newFullString);
+                currentTrackText = newFullString;
+                document.querySelectorAll('.marquee-wrapper').forEach(w => w.style.animationDuration = `${newFullString.length * 0.333}s`);
+                tapes.forEach(el => el.classList.remove('fade-out'));
+            }, 750); 
+        }
+    }
+    
+    // --- Handshake ---
+    const cachedStatus = localStorage.getItem('cuceu_fm_status');
+    const cachedTitle = localStorage.getItem('cuceu_fm_title');
+
+    if (cachedStatus === 'online') {
+        isOnline = true; centerStatus.innerText = "LIVE";
+        pulseIndicator.className = "pulse-dot live";
+        updateTicker(`NOW PLAYING: ${cachedTitle || "ON AIR"}`, true);
+    } else {
+        centerStatus.innerText = "OFFLINE"; updateTicker("STANDBY", true);
+    }
+    fetchGlobalHistory(); // Load global history immediately
+
+    player.addEventListener('playing', () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } });
+
+    btn.onclick = () => {
+        if (!playing) {
+            player.src = "https://stream.cuceu.co.uk/stream.mp3"; player.play();
+            btn.innerText = "⏸ Disconnect"; centerStatus.innerText = "CONNECTING..."; 
+            if (!isOnline || currentTrackText.includes("STANDBY")) updateTicker("Retrieving song information...");
+            fetchSongData(); fetchInterval = setInterval(fetchSongData, 12000); 
         } else {
-            isOnline = false;
-            centerStatus.innerText = "OFFLINE";
-            pulseIndicator.className = "pulse-dot";
-            updateTicker("STANDBY", true);
+            player.pause(); player.src = ""; btn.innerText = "▶ Listen";
+            centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
+            pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
+            clearInterval(fetchInterval); if (!isOnline) updateTicker("STANDBY");
         }
+        playing = !playing;
+    };
 
-        player.addEventListener('playing', () => {
-            if (playing) {
-                centerStatus.innerText = "ON AIR";
-                pulseIndicator.className = "pulse-dot on-air"; 
-            }
-        });
-
-        // --- Listen Logic ---
-        btn.onclick = () => {
-            if (!playing) {
-                player.src = "https://stream.cuceu.co.uk/stream.mp3";
-                player.play();
-                btn.innerText = "⏸ Disconnect";
-                centerStatus.innerText = "CONNECTING..."; 
-                if (!isOnline || currentTrackText.includes("STANDBY")) {
-                    updateTicker("Retrieving song information...");
-                }
-                fetchSongData();
-                fetchInterval = setInterval(fetchSongData, 12000); 
-            } else {
-                player.pause();
-                player.src = ""; 
-                btn.innerText = "▶ Listen";
-                centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
-                pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
-                clearInterval(fetchInterval);
-                if (!isOnline) updateTicker("STANDBY");
-            }
-            playing = !playing;
-        };
-
-        function processData(data) {
-            let source = data.icestats ? data.icestats.source : null;
-            if (!source) return; 
-            isOnline = true;
-            if (!playing) {
-                centerStatus.innerText = "LIVE";
-                pulseIndicator.className = "pulse-dot live";
-            }
-            let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-            
-            // Log History
-            if (newTitle !== currentTitle && newTitle !== "ON AIR") {
-                if (currentTitle && currentTitle !== "ON AIR") {
-                    songHistory.unshift(currentTitle);
-                    songHistory = songHistory.slice(0, 3);
-                    sessionStorage.setItem('cuceu_history', JSON.stringify(songHistory));
-                    updateHistoryUI();
-                }
-                currentTitle = newTitle;
-            }
-            updateTicker(`NOW PLAYING: ${newTitle}`);
+    function processData(data) {
+        let source = data.icestats ? data.icestats.source : null;
+        if (!source) return; 
+        isOnline = true;
+        if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
+        let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+        
+        if (newTitle !== currentTitle && newTitle !== "ON AIR") {
+            currentTitle = newTitle;
+            fetchGlobalHistory(); // Refresh the list whenever a song changes
         }
+        updateTicker(`NOW PLAYING: ${newTitle}`);
+    }
 
-        function fetchSongData() {
-            const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
-            fetch(targetUrl, { cache: "no-store" })
-                .then(res => res.json())
-                .then(processData)
-                .catch(() => {
-                    const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
-                    fetch(proxyUrl1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-                        const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
-                        fetch(proxyUrl2, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-                            isOnline = false;
-                            if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; }
-                        });
-                    });
+    function fetchSongData() {
+        const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
+        fetch(targetUrl, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+            const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
+            fetch(proxyUrl1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+                const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                fetch(proxyUrl2, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+                    isOnline = false; if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; }
                 });
-        }
-        setInterval(fetchSongData, 15000);
-    </script>
+            });
+        });
+    }
+    
+    setTimeout(fetchSongData, 500);
+    setInterval(fetchSongData, 15000);
+</script>
 </body>
 </html>
