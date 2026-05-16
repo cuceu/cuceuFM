@@ -7,261 +7,104 @@
     <style>
         /* PLAIN WHITE BRUTALIST BACKGROUND */
         html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            background-color: #ffffff; 
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;
         }
-
         #app-wrapper {
-            width: 100%;
-            height: 100%;
-            position: relative;
+            width: 100%; height: 100%; position: relative;
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
-
         @keyframes continuityGlide {
-            0% { opacity: 0; transform: translateY(-5vh); } 
-            100% { opacity: 1; transform: translateY(0); } 
+            0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); }
         }
-
         .status-area {
-            position: absolute;
-            top: 75px; 
-            right: 30px;
-            display: flex;
-            align-items: center;
-            font-size: 16px; 
-            font-weight: 800; 
-            text-transform: uppercase;
-            color: #000000;
-            z-index: 100;
-            letter-spacing: 1px;
+            position: absolute; top: 75px; right: 30px; display: flex; align-items: center;
+            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000000; z-index: 100; letter-spacing: 1px;
         }
-
         .ticker-tape {
-            position: absolute;
-            width: 100%;
-            background: #000;
-            color: #ffffff;
-            overflow: hidden;
-            padding: 12px 0;
-            border-top: 4px solid #000;
-            border-bottom: 4px solid #000;
-            z-index: 10;
-            box-sizing: border-box;
-            display: flex;
+            position: absolute; width: 100%; background: #000; color: #ffffff; overflow: hidden;
+            padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000;
+            z-index: 10; box-sizing: border-box; display: flex;
         }
-
-        .ticker-top { top: 0; }
-        .ticker-bottom { bottom: 0; }
-
-        .marquee-wrapper {
-            display: flex;
-            white-space: nowrap;
-            animation: marquee 60s linear infinite;
-            width: fit-content;
-        }
-
+        .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
+        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee 60s linear infinite; width: fit-content; }
         .song-display {
-            font-size: 1.8rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            padding-right: 20px; 
-            transition: opacity 0.75s ease-in-out; 
-            opacity: 1;
+            font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px;
+            padding-right: 20px; transition: opacity 0.75s ease-in-out; opacity: 1;
         }
-
         .song-display.fade-out { opacity: 0; }
-
-        @media (max-width: 600px) {
-            .song-display { font-size: 1.1rem; letter-spacing: 2px; }
-            .status-area { top: 65px; right: 15px; font-size: 12px; }
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .main-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 100%;
-            padding: 0 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; width: 100%; padding: 0 20px; box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center;
         }
-
         h1 {
-            font-size: clamp(4rem, 16vw, 18rem); 
-            white-space: nowrap; 
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -5px; 
-            margin: 0;
-            color: #000; 
-            -webkit-text-stroke: 4px #000; 
+            font-size: clamp(4rem, 16vw, 18rem); white-space: nowrap; font-weight: 900;
+            text-transform: uppercase; letter-spacing: -5px; margin: 0; color: #000; -webkit-text-stroke: 4px #000;
         }
-
-        .fm-text {
-            font-size: 0.5em; 
-            text-transform: lowercase;
-            letter-spacing: -2px;
-            -webkit-text-stroke: 0px; 
-        }
-
+        .fm-text { font-size: 0.5em; text-transform: lowercase; letter-spacing: -2px; -webkit-text-stroke: 0px; }
         .live-status {
-            font-size: clamp(1rem, 3vw, 1.5rem);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: 800;
-            margin-top: 15px;
-            margin-bottom: 30px;
-            color: #000; 
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            max-width: 90%;
-            white-space: nowrap;
+            font-size: clamp(1rem, 3vw, 1.5rem); text-transform: uppercase; letter-spacing: 3px;
+            font-weight: 800; margin-top: 15px; margin-bottom: 30px; color: #000;
+            display: inline-flex; align-items: center; justify-content: center; gap: 12px;
         }
-
-        .pulse-dot {
-            height: 12px;
-            width: 12px;
-            background-color: #777; 
-            border-radius: 50%;
-            flex-shrink: 0;
-            transition: background-color 0.3s ease;
-        }
+        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; flex-shrink: 0; }
         .pulse-dot.live { background-color: #34c759; }
-        .pulse-dot.on-air {
-            background-color: #ff3b30; 
-            animation: pulse-red 1.5s infinite;
-        }
-
+        .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
             100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
-
         button {
-            background-color: #000; 
-            color: #fff; 
-            border: 4px solid #000; 
-            padding: 20px 40px;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            font-weight: 800;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 8px 8px 0 #d3d3d3; 
-            transition: all 0.2s ease;
-            margin-bottom: 30px;
+            background-color: #000; color: #fff; border: 4px solid #000; padding: 20px 40px;
+            font-size: 1.2rem; text-transform: uppercase; font-weight: 800; letter-spacing: 3px;
+            cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
-        button:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 #d3d3d3; }
-        button:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0 #d3d3d3; }
-
         .history-dropdown {
-            width: 320px;
-            border: 4px solid #000;
-            background: #fff;
-            text-align: left;
-            box-shadow: 6px 6px 0 #d3d3d3;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            cursor: pointer;
-            z-index: 50;
+            width: 320px; border: 4px solid #000; background: #fff; text-align: left;
+            box-shadow: 6px 6px 0 #d3d3d3; cursor: pointer; z-index: 50;
         }
-
         summary {
-            padding: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 12px; font-weight: 900; text-transform: uppercase; font-size: 0.85rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: '▼'; font-size: 0.7rem; }
-        details[open] summary::after { content: '▲'; }
-
-        #history-list {
-            margin: 0;
-            padding: 0 12px 12px 12px;
-            list-style: none;
-            border-top: 4px solid #000;
-        }
-
-        .history-item {
-            padding: 10px 0;
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            border-bottom: 1px solid #eee;
-            color: #555;
-            animation: slideIn 0.3s ease-out;
-        }
-        .history-item:last-child { border-bottom: none; }
+        #history-list { margin: 0; padding: 0 12px 12px 12px; list-style: none; border-top: 4px solid #000; }
+        .history-item { padding: 10px 0; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #eee; }
         .history-item span { color: #000; display: block; margin-top: 3px; font-size: 0.85rem;}
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
-
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top">
             <div class="marquee-wrapper">
-                <span class="song-display"></span>
-                <span class="song-display"></span>
+                <span class="song-display">STANDBY</span><span class="song-display">STANDBY</span>
             </div>
         </div>
-
-        <div class="status-area">
-            <span id="mac-clock">00:00 AM</span>
-        </div>
-
+        <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
         <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
-            <div class="live-status">
-                <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CHECKING...</span>
-            </div>
+            <div class="live-status"><div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">OFFLINE</span></div>
             <button id="btn">▶ Listen</button>
             <details class="history-dropdown">
                 <summary>Recently Played</summary>
-                <ul id="history-list">
-                    <li class="history-item" style="border:none; text-align:center; color:#ccc; padding: 20px 0;">No history yet</li>
-                </ul>
+                <ul id="history-list"><li class="history-item" style="border:none; text-align:center; color:#ccc; padding: 20px 0;">No history yet</li></ul>
             </details>
         </div>
-
         <div class="ticker-tape ticker-bottom">
             <div class="marquee-wrapper">
-                <span class="song-display"></span>
-                <span class="song-display"></span>
+                <span class="song-display">STANDBY</span><span class="song-display">STANDBY</span>
             </div>
         </div>
     </div>
-
-    <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
+    <audio id="radioPlayer" preload="none"></audio>
 
 <script>
+    // --- SETTINGS ---
+    const STREAM_BASE = "https://stream.cuceu.co.uk";
+    
+    // --- CLOCK ---
     function updateClock() {
         const now = new Date();
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
@@ -275,113 +118,87 @@
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
           tapes = document.querySelectorAll('.song-display'), historyList = document.getElementById("history-list");
     
-    let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", fetchInterval = null; 
+    let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
-    function fetchGlobalHistory() {
-        const histUrl = "https://stream.cuceu.co.uk/history.json?nocache=" + new Date().getTime();
-        console.log("Attempting to fetch history from:", histUrl);
-
-        fetch(histUrl, { 
-            method: 'GET',
-            mode: 'cors',
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("HTTP error " + res.status);
-            return res.json();
-        })
-        .then(data => {
-            console.log("Raw history data received:", data);
-            if (data && Array.isArray(data)) {
-                const cleanData = data.filter(t => t && t.trim() !== "");
-                if (cleanData.length > 0) {
-                    historyList.innerHTML = cleanData.map(track => 
-                        `<li class="history-item">Previously <span>${track}</span></li>`
-                    ).join('');
-                }
-            }
-        })
-        .catch(err => {
-            console.error("HISTORY SYNC FAILED:", err);
-        });
-    }
-
-    function updateTicker(baseString, instant = false) {
-        const newFullString = Array(15).fill(baseString + " ").join('');
-        if (currentTrackText !== newFullString) {
-            if (instant) {
-                tapes.forEach(el => el.innerText = newFullString);
-                currentTrackText = newFullString;
-                document.querySelectorAll('.marquee-wrapper').forEach(w => w.style.animationDuration = `${newFullString.length * 0.333}s`);
-                return;
-            }
-            tapes.forEach(el => el.classList.add('fade-out'));
-            setTimeout(() => {
-                tapes.forEach(el => el.innerText = newFullString);
-                currentTrackText = newFullString;
-                document.querySelectorAll('.marquee-wrapper').forEach(w => w.style.animationDuration = `${newFullString.length * 0.333}s`);
-                tapes.forEach(el => el.classList.remove('fade-out'));
-            }, 750); 
+    // --- PROXY FETCH HELPER ---
+    async function smartFetch(url) {
+        try {
+            const response = await fetch(url, { cache: "no-store" });
+            if (!response.ok) throw new Error();
+            return await response.json();
+        } catch (e) {
+            // If direct fetch fails (CORS), use the proxy
+            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+            const res = await fetch(proxyUrl);
+            return await res.json();
         }
     }
-    
+
+    // --- HISTORY ---
+    async function fetchGlobalHistory() {
+        const data = await smartFetch(`${STREAM_BASE}/history.json?t=${Date.now()}`);
+        if (data && Array.isArray(data)) {
+            const cleanData = data.filter(t => t && t.trim() !== "");
+            if (cleanData.length > 0) {
+                historyList.innerHTML = cleanData.map(track => `<li class="history-item">Previously <span>${track}</span></li>`).join('');
+            }
+        }
+    }
+
+    // --- TICKER ---
+    function updateTicker(baseString) {
+        const newFullString = Array(15).fill(baseString + "   ").join('');
+        if (currentTrackText !== newFullString) {
+            tapes.forEach(el => el.classList.add('fade-out'));
+            setTimeout(() => {
+                tapes.forEach(el => { el.innerText = newFullString; el.classList.remove('fade-out'); });
+                currentTrackText = newFullString;
+                document.querySelectorAll('.marquee-wrapper').forEach(w => w.style.animationDuration = `${newFullString.length * 0.2}s`);
+            }, 500); 
+        }
+    }
+
+    // --- DATA SYNC ---
+    async function fetchSongData() {
+        try {
+            const data = await smartFetch(`${STREAM_BASE}/status-json.xsl?t=${Date.now()}`);
+            let source = data.icestats ? data.icestats.source : null;
+            if (!source) { throw new Error(); }
+            
+            isOnline = true;
+            let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+            
+            if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
+            if (newTitle !== currentTitle) { currentTitle = newTitle; fetchGlobalHistory(); }
+            updateTicker(`NOW PLAYING: ${newTitle}`);
+        } catch (e) {
+            isOnline = false;
+            if (!playing) { 
+                centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; 
+                updateTicker("STANDBY");
+            }
+        }
+    }
+
+    // --- BUTTON ---
     btn.onclick = () => {
         if (!playing) {
-            player.src = "https://stream.cuceu.co.uk/stream.mp3"; 
-            player.play();
-            btn.innerText = "⏸ Disconnect"; 
-            centerStatus.innerText = "CONNECTING..."; 
-            if (!isOnline || currentTrackText.includes("STANDBY")) updateTicker("Retrieving song information...");
-            fetchSongData(); 
-            fetchInterval = setInterval(fetchSongData, 12000); 
+            player.src = `${STREAM_BASE}/stream.mp3`; player.play();
+            btn.innerText = "⏸ Disconnect"; centerStatus.innerText = "CONNECTING...";
+            updateTicker("INITIALIZING STREAM...");
         } else {
-            player.pause(); player.src = ""; 
-            btn.innerText = "▶ Listen";
-            centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
+            player.pause(); player.src = ""; btn.innerText = "▶ Listen";
+            centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE";
             pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
-            clearInterval(fetchInterval); 
-            if (!isOnline) updateTicker("STANDBY");
         }
         playing = !playing;
     };
 
-    player.addEventListener('playing', () => { 
-        if (playing) { 
-            centerStatus.innerText = "ON AIR"; 
-            pulseIndicator.className = "pulse-dot on-air"; 
-        } 
-    });
+    player.onplaying = () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } };
 
-    function processData(data) {
-        let source = data.icestats ? data.icestats.source : null;
-        if (!source) return; 
-        isOnline = true;
-        if (!playing) { 
-            centerStatus.innerText = "LIVE"; 
-            pulseIndicator.className = "pulse-dot live"; 
-        }
-        let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-        if (newTitle !== currentTitle && newTitle !== "ON AIR") { 
-            currentTitle = newTitle; 
-            fetchGlobalHistory(); 
-        }
-        updateTicker(`NOW PLAYING: ${newTitle}`);
-    }
-
-    function fetchSongData() {
-        const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
-        fetch(targetUrl, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-            isOnline = false; 
-            if (!playing) { 
-                centerStatus.innerText = "OFFLINE"; 
-                pulseIndicator.className = "pulse-dot"; 
-            }
-        });
-    }
-
-    fetchGlobalHistory();
+    // Start Loops
     fetchSongData();
-    setInterval(fetchSongData, 15000);
+    setInterval(fetchSongData, 10000);
 </script>
 </body>
 </html>
