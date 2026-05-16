@@ -215,7 +215,7 @@
         let currentTrackText = "";
         let errorCount = 0; // For proxy forgiveness
 
-        // --- Instant Memory Load (The magic trick) ---
+        // --- Instant Memory Load ---
         const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
         const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
 
@@ -228,7 +228,6 @@
             updateTicker("+++ CONNECTING... ");
         }
 
-        // --- Helper: Smooth Ticker Updater ---
         function updateTicker(baseString) {
             const newText = Array(15).fill(baseString).join('');
             if (currentTrackText !== newText) {
@@ -256,10 +255,10 @@
             playing = !playing;
         };
 
-        // --- Background Fetch with Forgiveness ---
+        // --- Background Fetch with Forgiveness & Hiccup Protection ---
         function fetchSongData() {
-            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
+            const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
+            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
             
             fetch(proxyUrl, { cache: "no-store" })
                 .then(response => {
@@ -268,9 +267,15 @@
                 })
                 .then(data => {
                     let source = data.icestats.source;
-                    if (!source) throw new Error("Stream offline"); 
                     
-                    errorCount = 0; // Reset errors on success
+                    // THE HICCUP FIX: If Icecast drops the data during a song change, 
+                    // but we know we are online, just ignore it and keep the current title rolling.
+                    if (!source) {
+                        if (isOnline) return; 
+                        throw new Error("Stream offline"); 
+                    }
+                    
+                    errorCount = 0; // Reset errors
                     isOnline = true;
                     if (!playing) centerStatus.innerText = "READY"; 
                     pulseIndicator.classList.add('active');
@@ -280,8 +285,10 @@
                 })
                 .catch(err => {
                     errorCount++;
-                    // Only drop to offline if it fails 2 times in a row (stops the choppiness)
-                    if (errorCount >= 2) {
+                    
+                    // Increased forgiveness: Must fail 4 times in a row (~32 seconds of dead air) 
+                    // before officially declaring the station offline.
+                    if (errorCount >= 4) {
                         isOnline = false;
                         if (!playing) centerStatus.innerText = "OFFLINE";
                         pulseIndicator.classList.remove('active');
@@ -290,7 +297,6 @@
                 });
         }
 
-        // Start polling a bit slower to protect the proxy
         setInterval(fetchSongData, 8000);
     </script>
 </body>
