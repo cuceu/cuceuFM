@@ -10,12 +10,12 @@
             background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;
         }
         
-        /* --- THE BOUNCING CONTAINER --- */
+        /* --- THE BOUNCING BACKGROUND --- */
         #bouncing-container {
             position: absolute;
             width: 180px; height: 180px;
-            /* Layer 2: In front of CUCEU, but behind everything else */
-            z-index: 2; 
+            /* Layer -1: Behind the entire world */
+            z-index: -1; 
             top: 0; left: 0;
             will-change: transform;
         }
@@ -31,11 +31,9 @@
             border-radius: 0; 
             opacity: 0;
             transition: opacity 1.5s ease-in-out;
-            box-shadow: 15px 15px 35px rgba(0,0,0,0.2);
         }
         .art-layer.active {
-            /* Increased opacity to 0.9 (halfway more than 0.6) */
-            opacity: 0.9; 
+            opacity: 1.0; /* Full Opacity */
         }
 
         #app-wrapper {
@@ -50,7 +48,6 @@
             0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Front Layer Elements (Z-Index 10+) */
         .status-area {
             position: absolute; top: 75px; right: 30px; display: flex; align-items: center;
             font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000000; 
@@ -82,19 +79,17 @@
             display: flex; flex-direction: column; align-items: center;
         }
         
-        /* Layer 1: The big text in the very back */
+        /* BLACK CUCEU */
         h1 {
             font-size: clamp(4rem, 16vw, 18rem); font-weight: 900;
             text-transform: uppercase; letter-spacing: -5px; margin: 0;
-            -webkit-text-stroke: 4px #000; 
+            color: #000; /* Solid Black */
             position: relative;
             z-index: 1; 
-            color: #fff;
         }
 
-        /* Lifting the .fm and other UI to Layer 10+ so they stay on top */
         .fm-text { 
-            font-size: 0.5em; text-transform: lowercase; -webkit-text-stroke: 0px; 
+            font-size: 0.5em; text-transform: lowercase;
             position: relative; z-index: 10; color: #000;
         }
         
@@ -118,6 +113,7 @@
             position: relative; z-index: 10;
         }
         
+        /* GLASS MENUS */
         .history-wrapper {
             width: 100%; max-width: 360px;
             position: relative; z-index: 15;
@@ -128,8 +124,7 @@
             color: #000; border: 1px solid rgba(0, 0, 0, 0.1); 
             padding: 12px; border-radius: 8px;
             font-size: 0.85rem; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
             transition: all 0.2s ease; box-sizing: border-box;
         }
         
