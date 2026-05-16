@@ -176,7 +176,7 @@
         <h1>CUCEU<span class="fm-text">.fm</span></h1>
         
         <div class="live-status">
-            <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CONNECTING...</span>
+            <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">STANDBY</span>
         </div>
         <button id="btn">▶ Listen</button>
     </div>
@@ -213,7 +213,12 @@
         let playing = false;
         let isOnline = false;
         let currentTrackText = "";
-        let errorCount = 0; // For proxy forgiveness
+        let errorCount = 0;
+
+        // --- Ticker Initial Text ---
+        const initText = Array(15).fill("+++ Retrieving song information... ").join('');
+        tapes.forEach(el => el.innerText = initText);
+        currentTrackText = initText;
 
         // --- Instant Memory Load ---
         const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
@@ -222,10 +227,7 @@
         if (cachedStatus === 'online' && cachedTitle) {
             isOnline = true;
             centerStatus.innerText = "READY";
-            pulseIndicator.classList.add('active');
             updateTicker(`+++ NOW PLAYING: ${cachedTitle} `);
-        } else {
-            updateTicker("+++ CONNECTING... ");
         }
 
         function updateTicker(baseString) {
@@ -236,68 +238,79 @@
             }
         }
 
+        // --- AUDIO SYNC EVENTS (Triggers ON AIR exactly when sound plays) ---
+        player.addEventListener('playing', () => {
+            if (playing) {
+                centerStatus.innerText = "ON AIR";
+                pulseIndicator.classList.add('active'); // Red dot turns on ONLY when music hits
+            }
+        });
+
+        player.addEventListener('waiting', () => {
+            // If the stream buffers, let the user know
+            if (playing) {
+                centerStatus.innerText = "BUFFERING...";
+            }
+        });
+
         // --- Play/Pause Logic ---
         btn.onclick = () => {
             if (!playing) {
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
-                btn.innerText = "⏸ Pause";
-                if (isOnline) {
-                    centerStatus.innerText = "ON AIR"; 
-                    pulseIndicator.classList.add('active');
-                }
+                btn.innerText = "⏸ Disconnect";
+                centerStatus.innerText = "CONNECTING..."; // Shows immediately upon clicking
+                pulseIndicator.classList.remove('active'); // Ensures dot is off until 'playing' event fires
+                
+                // Force an immediate metadata fetch so it doesn't wait for the interval
+                fetchSongData();
             } else {
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
                 centerStatus.innerText = isOnline ? "READY" : "OFFLINE"; 
+                pulseIndicator.classList.remove('active'); // Turn off dot
             }
             playing = !playing;
         };
 
-        // --- Background Fetch with Forgiveness & Hiccup Protection ---
+        // --- DIRECT FETCH (No Proxy) ---
         function fetchSongData() {
+            // We removed the proxy to make it instant! It now hits your Cloudflare tunnel directly.
             const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
             
-            fetch(proxyUrl, { cache: "no-store" })
+            fetch(targetUrl, { cache: "no-store" })
                 .then(response => {
-                    if (!response.ok) throw new Error("Proxy limit hit");
+                    if (!response.ok) throw new Error("Stream offline");
                     return response.json();
                 })
                 .then(data => {
                     let source = data.icestats.source;
                     
-                    // THE HICCUP FIX: If Icecast drops the data during a song change, 
-                    // but we know we are online, just ignore it and keep the current title rolling.
                     if (!source) {
-                        if (isOnline) return; 
+                        if (isOnline) return; // Hiccup fix
                         throw new Error("Stream offline"); 
                     }
                     
-                    errorCount = 0; // Reset errors
+                    errorCount = 0; 
                     isOnline = true;
-                    if (!playing) centerStatus.innerText = "READY"; 
-                    pulseIndicator.classList.add('active');
+                    if (!playing && centerStatus.innerText !== "READY") centerStatus.innerText = "READY"; 
 
                     let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
                     updateTicker(`+++ NOW PLAYING: ${title} `);
                 })
                 .catch(err => {
                     errorCount++;
-                    
-                    // Increased forgiveness: Must fail 4 times in a row (~32 seconds of dead air) 
-                    // before officially declaring the station offline.
-                    if (errorCount >= 4) {
+                    if (errorCount >= 3) {
                         isOnline = false;
                         if (!playing) centerStatus.innerText = "OFFLINE";
-                        pulseIndicator.classList.remove('active');
+                        if (playing) pulseIndicator.classList.remove('active');
                         updateTicker("+++ STATION OFFLINE ");
                     }
                 });
         }
 
-        setInterval(fetchSongData, 8000);
+        setInterval(fetchSongData, 5000); // Polling faster now (5s) because there is no proxy to get mad at us
     </script>
 </body>
 </html>
