@@ -33,12 +33,27 @@
             letter-spacing: 0.5px;
         }
 
-        /* --- THE STARK CENTER LOGO --- */
+        /* --- THE SCROLLING CENTER LOGO --- */
         .main-content {
             flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        #cuceu-logo-wrapper {
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
+            transform-origin: center center;
+            position: relative;
+            z-index: 5;
+        }
+
+        #cuceu-logo-wrapper.glide-down {
+            transform: translateY(15vh) scale(0.9);
+            opacity: 0;
         }
 
         h1#cuceu-logo {
@@ -47,23 +62,16 @@
             text-transform: uppercase;
             letter-spacing: -8px;
             margin: 0;
-            
             color: #000000;
-            background: none;
-            -webkit-text-fill-color: currentcolor;
-            filter: none;
-            
-            cursor: default;
+            white-space: nowrap;
             line-height: 0.8;
-            transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
-            transform-origin: center center;
-            position: relative;
-            z-index: 5;
+            cursor: default;
+            animation: marqueeLogo 25s linear infinite;
         }
 
-        h1#cuceu-logo.glide-down {
-            transform: translateY(15vh) scale(0.9);
-            opacity: 0;
+        @keyframes marqueeLogo {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* --- THE PREMIUM MIDNIGHT DOCK --- */
@@ -124,7 +132,7 @@
             position: absolute;
             top: -6px;
             right: -18px;
-            background: rgba(20, 20, 25, 0.85); /* Midnight pill */
+            background: rgba(20, 20, 25, 0.85);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -138,7 +146,7 @@
             color: #ffffff;
             z-index: 15;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            pointer-events: none; /* Let clicks pass through to the icon */
+            pointer-events: none;
         }
 
         .recording-dot {
@@ -147,6 +155,12 @@
             background-color: #ff3b30;
             border-radius: 50%;
             animation: subtle-pulse 2s infinite ease-in-out;
+        }
+
+        .app-badge.offline .recording-dot {
+            background-color: #555;
+            animation: none;
+            box-shadow: none;
         }
 
         @keyframes subtle-pulse {
@@ -228,17 +242,20 @@
     </div>
 
     <div class="main-content">
-        <h1 id="cuceu-logo">CUCEU</h1>
+        <div id="cuceu-logo-wrapper">
+            <h1 id="cuceu-logo">
+                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
+            </h1>
+        </div>
     </div>
 
     <div class="mac-dock-container">
         <div class="mac-dock">
             <a href="/fm" class="dock-app" id="fm-app">
                 <div class="app-tooltip">CUCEU.fm</div>
-                <!-- The New Dock Icon Notification Badge -->
                 <div class="app-badge">
                     <div class="recording-dot"></div>
-                    <span>ON AIR</span>
+                    <span>LOADING...</span>
                 </div>
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
@@ -267,14 +284,14 @@
 
         // App Launch & Genie Animation
         const appIcon = document.getElementById('fm-app');
-        const centralLogo = document.getElementById('cuceu-logo');
+        const appWrapper = document.getElementById('cuceu-logo-wrapper');
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
             e.preventDefault(); 
             
             genieOverlay.classList.add('expand'); 
-            centralLogo.classList.add('glide-down'); 
+            appWrapper.classList.add('glide-down'); 
             
             setTimeout(() => {
                 window.location.href = "/fm";
@@ -285,9 +302,35 @@
         window.addEventListener('pageshow', (event) => {
             if (event.persisted) {
                 genieOverlay.classList.remove('expand');
-                centralLogo.classList.remove('glide-down');
+                appWrapper.classList.remove('glide-down');
             }
         });
+
+        // Stream Status Checker for Main Page
+        function checkStreamStatus() {
+            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
+            const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
+
+            fetch(proxyUrl, { cache: "no-store" })
+                .then(res => {
+                    if (!res.ok) throw new Error("Offline");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.icestats.source) {
+                        document.querySelector('.app-badge span').innerText = "ON AIR";
+                        document.querySelector('.app-badge').classList.remove('offline');
+                    } else {
+                        throw new Error("No source"); // Icecast running, but BUTT is disconnected
+                    }
+                })
+                .catch(() => {
+                    document.querySelector('.app-badge span').innerText = "OFFLINE";
+                    document.querySelector('.app-badge').classList.add('offline');
+                });
+        }
+        checkStreamStatus();
+        setInterval(checkStreamStatus, 5000);
     </script>
 
 </body>
