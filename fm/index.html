@@ -89,7 +89,7 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* --- MAIN BRUTALIST UI --- */
+        /* --- MAIN BRUTALIST UI (FIXED CENTERING) --- */
         .main-container {
             position: absolute;
             top: 50%;
@@ -128,7 +128,7 @@
             letter-spacing: 3px;
             font-weight: 800;
             margin-top: 15px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             color: #000; 
             display: inline-flex;
             align-items: center;
@@ -170,27 +170,28 @@
             cursor: pointer;
             box-shadow: 8px 8px 0 #d3d3d3; 
             transition: all 0.2s ease;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         button:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 #d3d3d3; }
         button:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0 #d3d3d3; }
 
-        /* --- RECENTLY PLAYED DROPDOWN --- */
+        /* --- RECENTLY PLAYED DROPDOWN (CENTERED) --- */
         .history-dropdown {
-            width: 300px;
+            width: 320px;
             border: 4px solid #000;
             background: #fff;
             text-align: left;
             box-shadow: 6px 6px 0 #d3d3d3;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             cursor: pointer;
+            z-index: 50;
         }
 
         summary {
-            padding: 10px;
+            padding: 12px;
             font-weight: 900;
             text-transform: uppercase;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             letter-spacing: 1px;
             list-style: none;
             display: flex;
@@ -198,19 +199,19 @@
             align-items: center;
         }
         summary::-webkit-details-marker { display: none; }
-        summary::after { content: '▼'; font-size: 0.6rem; }
+        summary::after { content: '▼'; font-size: 0.7rem; }
         details[open] summary::after { content: '▲'; }
 
         #history-list {
             margin: 0;
-            padding: 0 10px 10px 10px;
+            padding: 0 12px 12px 12px;
             list-style: none;
-            border-top: 2px solid #000;
+            border-top: 4px solid #000;
         }
 
         .history-item {
-            padding: 8px 0;
-            font-size: 0.75rem;
+            padding: 10px 0;
+            font-size: 0.8rem;
             font-weight: 800;
             text-transform: uppercase;
             border-bottom: 1px solid #eee;
@@ -218,7 +219,7 @@
             animation: slideIn 0.3s ease-out;
         }
         .history-item:last-child { border-bottom: none; }
-        .history-item span { color: #000; display: block; margin-top: 2px; }
+        .history-item span { color: #000; display: block; margin-top: 3px; font-size: 0.85rem;}
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(-5px); }
@@ -240,7 +241,7 @@
             <span id="mac-clock">00:00 AM</span>
         </div>
 
-        <div class="main-content">
+        <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
             
             <div class="live-status">
@@ -252,7 +253,7 @@
             <details class="history-dropdown">
                 <summary>Recently Played</summary>
                 <ul id="history-list">
-                    <li class="history-item" style="border:none; text-align:center; color:#ccc;">No history yet</li>
+                    <li class="history-item" style="border:none; text-align:center; color:#ccc; padding: 20px 0;">No history yet</li>
                 </ul>
             </details>
         </div>
@@ -280,7 +281,7 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // --- DOM Elements & Variables ---
+        // --- DOM Elements ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         const centerStatus = document.getElementById("center-status");
@@ -292,7 +293,6 @@
         let isOnline = false;
         let currentTrackText = "";
         let currentTitle = "";
-        let errorCount = 0;
         let fetchInterval = null; 
 
         // --- History Management ---
@@ -304,14 +304,14 @@
                 <li class="history-item">Previously <span>${track}</span></li>
             `).join('');
         }
-        updateHistoryUI(); // Load on start
+        updateHistoryUI();
 
-        // --- Speed-Locked & Cinematic Ticker Engine ---
+        // --- Ticker Engine ---
         function updateTicker(baseString, instant = false) {
             const newFullString = Array(15).fill(baseString + " ").join('');
             if (currentTrackText !== newFullString) {
                 if (instant) {
-                    tapes.forEach(el => el.innerText = newFullFullString);
+                    tapes.forEach(el => el.innerText = newFullString);
                     currentTrackText = newFullString;
                     const perfectSpeed = newFullString.length * 0.333;
                     document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
@@ -332,7 +332,7 @@
             }
         }
         
-        // --- Instant Handshake ---
+        // --- Handshake ---
         const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
         const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
 
@@ -349,7 +349,6 @@
             updateTicker("STANDBY", true);
         }
 
-        // --- AUDIO SYNC EVENTS ---
         player.addEventListener('playing', () => {
             if (playing) {
                 centerStatus.innerText = "ON AIR";
@@ -357,9 +356,70 @@
             }
         });
 
-        // --- Play/Pause Logic ---
+        // --- Listen Logic ---
         btn.onclick = () => {
             if (!playing) {
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
-                btn.innerText = "⏸ Disconnect
+                btn.innerText = "⏸ Disconnect";
+                centerStatus.innerText = "CONNECTING..."; 
+                if (!isOnline || currentTrackText.includes("STANDBY")) {
+                    updateTicker("Retrieving song information...");
+                }
+                fetchSongData();
+                fetchInterval = setInterval(fetchSongData, 12000); 
+            } else {
+                player.pause();
+                player.src = ""; 
+                btn.innerText = "▶ Listen";
+                centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
+                pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
+                clearInterval(fetchInterval);
+                if (!isOnline) updateTicker("STANDBY");
+            }
+            playing = !playing;
+        };
+
+        function processData(data) {
+            let source = data.icestats ? data.icestats.source : null;
+            if (!source) return; 
+            isOnline = true;
+            if (!playing) {
+                centerStatus.innerText = "LIVE";
+                pulseIndicator.className = "pulse-dot live";
+            }
+            let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+            
+            // Log History
+            if (newTitle !== currentTitle && newTitle !== "ON AIR") {
+                if (currentTitle && currentTitle !== "ON AIR") {
+                    songHistory.unshift(currentTitle);
+                    songHistory = songHistory.slice(0, 3);
+                    sessionStorage.setItem('cuceu_history', JSON.stringify(songHistory));
+                    updateHistoryUI();
+                }
+                currentTitle = newTitle;
+            }
+            updateTicker(`NOW PLAYING: ${newTitle}`);
+        }
+
+        function fetchSongData() {
+            const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
+            fetch(targetUrl, { cache: "no-store" })
+                .then(res => res.json())
+                .then(processData)
+                .catch(() => {
+                    const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
+                    fetch(proxyUrl1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+                        const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                        fetch(proxyUrl2, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+                            isOnline = false;
+                            if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; }
+                        });
+                    });
+                });
+        }
+        setInterval(fetchSongData, 15000);
+    </script>
+</body>
+</html>
