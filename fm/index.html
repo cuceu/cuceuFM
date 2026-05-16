@@ -26,10 +26,13 @@
             z-index: 10; display: flex;
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
+        
+        /* Added transition to the marquee wrapper for smooth fading */
         .marquee-wrapper { 
             display: flex; white-space: nowrap; 
             animation: marquee linear infinite; 
             width: fit-content; 
+            transition: opacity 0.5s ease-in-out;
         }
         .song-display {
             font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px;
@@ -53,7 +56,13 @@
             font-weight: 800; margin-top: 15px; margin-bottom: 30px;
             display: inline-flex; align-items: center; justify-content: center; gap: 12px;
         }
-        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
+        
+        /* Added transition to the text for smooth status changes */
+        #center-status {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; transition: background-color 0.3s ease; }
         .pulse-dot.live { background-color: #34c759; }
         .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
@@ -61,35 +70,47 @@
             70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
             100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
-        button {
+        
+        #btn {
             background-color: #000; color: #fff; border: 4px solid #000; padding: 20px 40px;
             font-size: 1.2rem; text-transform: uppercase; font-weight: 800; letter-spacing: 3px;
             cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
         
-        /* --- DROPDOWN ANIMATION --- */
-        .history-dropdown {
-            width: 360px; border: 4px solid #000; background: #fff; text-align: left;
-            box-shadow: 6px 6px 0 #d3d3d3; cursor: pointer; z-index: 50;
+        /* --- NEW ELEGANT FLOATING DROPDOWN --- */
+        .history-wrapper {
+            position: relative;
+            width: 360px;
+            z-index: 50;
         }
-        summary {
-            padding: 12px; font-weight: 900; text-transform: uppercase; font-size: 0.85rem;
-            display: flex; justify-content: space-between; align-items: center; outline: none;
+        #history-toggle {
+            width: 100%; background: #fff; color: #000; border: 4px solid #000; padding: 12px;
+            font-size: 0.85rem; font-weight: 900; text-transform: uppercase;
+            cursor: pointer; box-shadow: 6px 6px 0 #d3d3d3;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.2s ease;
         }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: '▼'; font-size: 0.7rem; }
-        details[open] summary::after { content: '▲'; }
-
+        #history-toggle:hover {
+            background: #f4f4f4;
+        }
         #history-list { 
-            margin: 0; padding: 0 12px 12px 12px; list-style: none; border-top: 4px solid #000; 
-            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out;
-            display: block;
+            position: absolute; top: calc(100% + 8px); left: 0; width: 100%;
+            background: #fff; border: 4px solid #000; padding: 0 12px; margin: 0; list-style: none;
+            box-shadow: 6px 6px 0 #d3d3d3; box-sizing: border-box;
+            
+            /* The magic smooth slide/fade setup */
+            max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
+            transform: translateY(-10px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        details[open] #history-list { max-height: 500px; }
-
+        #history-list.open {
+            max-height: 350px; opacity: 1; padding: 12px; pointer-events: auto;
+            transform: translateY(0); overflow-y: auto;
+        }
         .history-item { 
             padding: 12px 0; font-size: 0.85rem; font-weight: 900; 
             text-transform: uppercase; border-bottom: 1px solid #eee; color: #000;
+            text-align: left;
         }
         .history-item:last-child { border-bottom: none; }
     </style>
@@ -100,12 +121,21 @@
         <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
         <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
-            <div class="live-status"><div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CHECKING...</span></div>
+            
+            <div class="live-status">
+                <div class="pulse-dot" id="pulse-indicator"></div> 
+                <span id="center-status">CHECKING...</span>
+            </div>
+            
             <button id="btn">▶ Listen</button>
-            <details class="history-dropdown">
-                <summary>Recently Played</summary>
-                <ul id="history-list"><li class="history-item" style="border:none; text-align:center; color:#ccc;">Loading history...</li></ul>
-            </details>
+            
+            <div class="history-wrapper">
+                <div id="history-toggle">Recently Played <span>▼</span></div>
+                <ul id="history-list">
+                    <li class="history-item" style="border:none; text-align:center; color:#ccc;">Loading history...</li>
+                </ul>
+            </div>
+            
         </div>
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
     </div>
@@ -125,12 +155,17 @@
 
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
-          historyList = document.getElementById("history-list"),
+          historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
           topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee");
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
-    // NO PROXY! Lightning fast direct fetch.
+    // Dropdown Logic
+    historyToggle.onclick = () => {
+        historyList.classList.toggle("open");
+        historyToggle.querySelector("span").innerText = historyList.classList.contains("open") ? "▲" : "▼";
+    };
+
     async function directFetch(url) {
         const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
         if (!response.ok) throw new Error("Direct fetch failed");
@@ -151,14 +186,36 @@
         }
     }
 
+    // New smooth fading ticker logic
     function updateTicker(baseString) {
         if (currentTrackText === baseString) return;
         currentTrackText = baseString;
+        
         const content = Array(10).fill(`<span class="song-display">${baseString}</span>`).join('');
-        [topMarquee, bottomMarquee].forEach(m => {
-            m.innerHTML = content + content;
-            m.style.animationDuration = `${(baseString.length + 10) * 1.5}s`;
-        });
+        
+        // 1. Fade out the text
+        [topMarquee, bottomMarquee].forEach(m => m.style.opacity = 0);
+        
+        // 2. Wait for fade out to finish, then swap text and fade back in
+        setTimeout(() => {
+            [topMarquee, bottomMarquee].forEach(m => {
+                m.innerHTML = content + content;
+                m.style.animationDuration = `${(baseString.length + 10) * 1.5}s`;
+                m.style.opacity = 1;
+            });
+        }, 500); // 500ms matches the CSS transition time
+    }
+
+    // New smooth fading status text logic
+    function setStatus(text, dotClass) {
+        if (centerStatus.innerText === text) return;
+        
+        centerStatus.style.opacity = 0; // Fade out
+        setTimeout(() => {
+            centerStatus.innerText = text;
+            pulseIndicator.className = "pulse-dot " + dotClass;
+            centerStatus.style.opacity = 1; // Fade in
+        }, 300); // Quick 300ms fade
     }
 
     async function fetchSongData() {
@@ -171,7 +228,7 @@
             let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
             
             if (!playing) { 
-                centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; 
+                setStatus("LIVE", "live");
             }
             
             if (newTitle !== currentTitle) { 
@@ -182,7 +239,7 @@
         } catch (e) {
             isOnline = false;
             if (!playing) { 
-                centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; 
+                setStatus("OFFLINE", "");
                 updateTicker("STANDBY");
             }
         }
@@ -191,22 +248,21 @@
     btn.onclick = () => {
         if (!playing) {
             player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play();
-            btn.innerText = "⏸ Disconnect"; centerStatus.innerText = "CONNECTING...";
+            btn.innerText = "⏸ Disconnect"; 
+            setStatus("CONNECTING...", "");
         } else {
             player.pause(); player.src = ""; btn.innerText = "▶ Listen";
-            centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE";
-            pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
+            setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : "");
         }
         playing = !playing;
     };
 
-    player.onplaying = () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } };
+    player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
 
     // Kickoff
     fetchGlobalHistory();
     updateTicker("STANDBY");
     fetchSongData();
-    // Checks every 3 seconds!
     setInterval(fetchSongData, 3000);
 </script>
 </body>
