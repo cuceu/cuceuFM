@@ -110,7 +110,7 @@
             -webkit-text-stroke: 0px; 
         }
 
-        /* Free-Floating Minimal Center Status (Box Removed!) */
+        /* Free-Floating Minimal Center Status */
         .live-status {
             font-size: clamp(1rem, 3vw, 1.5rem);
             text-transform: uppercase;
@@ -174,12 +174,11 @@
 
     <div class="ticker-tape ticker-top">
         <div class="marquee-wrapper">
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+            <span class="song-display"></span>
+            <span class="song-display"></span>
         </div>
     </div>
 
-    <!-- Minimalist Status Area -->
     <div class="status-area">
         <span id="mac-clock">Sat 12:40 AM</span>
     </div>
@@ -187,17 +186,16 @@
     <div class="main-container">
         <h1>CUCEU<span class="fm-text">.fm</span></h1>
         
-        <!-- Clean Floating Live Status -->
         <div class="live-status">
-            <div class="pulse-dot"></div> <span id="center-status">LOADING...</span>
+            <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">LOADING...</span>
         </div>
         <button id="btn">▶ Listen</button>
     </div>
 
     <div class="ticker-tape ticker-bottom">
         <div class="marquee-wrapper">
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
+            <span class="song-display"></span>
+            <span class="song-display"></span>
         </div>
     </div>
 
@@ -224,9 +222,17 @@
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         const centerStatus = document.getElementById("center-status");
+        const pulseIndicator = document.getElementById("pulse-indicator");
+        const tapes = document.querySelectorAll('.song-display');
         
         let playing = false;
         let dataLoaded = false;
+        let currentTrackText = "";
+
+        // Pre-fill the tapes with a massive string immediately to prevent the black flash
+        const initText = Array(15).fill("+++ WAITING FOR SATELLITE UPLINK... ").join('');
+        tapes.forEach(el => el.innerText = initText);
+        currentTrackText = initText;
 
         btn.onclick = () => {
             if (!playing) {
@@ -234,11 +240,12 @@
                 player.play();
                 btn.innerText = "⏸ Pause";
                 centerStatus.innerText = "ON AIR"; 
+                pulseIndicator.style.backgroundColor = "#ff0000"; // Ensure pulse is red when playing
             } else {
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
-                centerStatus.innerText = dataLoaded ? "READY" : "LOADING..."; 
+                centerStatus.innerText = dataLoaded ? "READY" : "OFFLINE"; 
             }
             playing = !playing;
         };
@@ -248,29 +255,40 @@
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
             
             fetch(proxyUrl, { cache: "no-store" })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error("Offline");
+                    return response.json();
+                })
                 .then(data => {
-                    dataLoaded = true;
+                    let source = data.icestats.source;
+                    if (!source) throw new Error("No source"); // Triggers the catch block
                     
+                    dataLoaded = true;
                     if (!playing) {
                         centerStatus.innerText = "READY"; 
                     }
+                    pulseIndicator.style.backgroundColor = "#ff0000"; // Active pulse
 
-                    let title = "ON AIR"; 
-                    let source = data.icestats.source;
-                    if (source) {
-                        title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+                    let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
+                    let newText = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
+
+                    // Only update the DOM if the text actually changed to prevent jumping
+                    if (currentTrackText !== newText) {
+                        tapes.forEach(el => el.innerText = newText);
+                        currentTrackText = newText;
                     }
-                    
-                    const massiveTextBlock = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
-
-                    const tapes = document.querySelectorAll('.song-display');
-                    tapes.forEach(el => {
-                        el.innerText = massiveTextBlock;
-                    });
                 })
                 .catch(err => {
-                    console.log("Sneaking past the bouncer...");
+                    // Icecast is down or BUTT isn't pushing audio
+                    dataLoaded = false;
+                    if (!playing) centerStatus.innerText = "OFFLINE";
+                    pulseIndicator.style.backgroundColor = "#555"; // Grey out pulse when offline
+                    
+                    let offlineText = Array(15).fill(`+++ STATION OFFLINE `).join('');
+                    if (currentTrackText !== offlineText) {
+                        tapes.forEach(el => el.innerText = offlineText);
+                        currentTrackText = offlineText;
+                    }
                 });
         }
 
