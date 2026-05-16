@@ -335,25 +335,30 @@
         centerStatus.innerText = "OFFLINE"; updateTicker("STANDBY", true);
     }
     
-    // Fetch history immediately on page load
-    fetchGlobalHistory();
-
-    player.addEventListener('playing', () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } });
-
-    btn.onclick = () => {
-        if (!playing) {
-            player.src = "https://stream.cuceu.co.uk/stream.mp3"; player.play();
-            btn.innerText = "⏸ Disconnect"; centerStatus.innerText = "CONNECTING..."; 
-            if (!isOnline || currentTrackText.includes("STANDBY")) updateTicker("Retrieving song information...");
-            fetchSongData(); fetchInterval = setInterval(fetchSongData, 12000); 
-        } else {
-            player.pause(); player.src = ""; btn.innerText = "▶ Listen";
-            centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
-            pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
-            clearInterval(fetchInterval); if (!isOnline) updateTicker("STANDBY");
+    function fetchGlobalHistory() {
+    const histUrl = "https://stream.cuceu.co.uk/history.json?nocache=" + new Date().getTime();
+    
+    fetch(histUrl, { 
+        method: 'GET',
+        mode: 'cors', // This is the magic "allow" switch
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Global History Sync:", data); // Check your console for this!
+        if (data && Array.isArray(data)) {
+            const cleanData = data.filter(t => t && t.trim() !== "");
+            if (cleanData.length > 0) {
+                historyList.innerHTML = cleanData.map(track => 
+                    `<li class="history-item">Previously <span>${track}</span></li>`
+                ).join('');
+            } else {
+                historyList.innerHTML = '<li class="history-item" style="text-align:center; color:#ccc; border:none; padding:20px 0;">No history yet</li>';
+            }
         }
-        playing = !playing;
-    };
+    })
+    .catch(err => console.error("History Fetch Error:", err));
+}
 
     function processData(data) {
         let source = data.icestats ? data.icestats.source : null;
