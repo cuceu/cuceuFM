@@ -14,8 +14,7 @@
         #bouncing-container {
             position: absolute;
             width: 180px; height: 180px;
-            /* Sitting on the floor, but behind the app-wrapper */
-            z-index: 0; 
+            z-index: 0; /* Behind the app-wrapper */
             top: 0; left: 0;
             will-change: transform;
         }
@@ -33,12 +32,12 @@
             transition: opacity 1.5s ease-in-out;
         }
         .art-layer.active {
-            opacity: 0.9; /* 90% Opacity as requested */
+            opacity: 0.9; 
         }
 
         #app-wrapper {
             width: 100%; height: 100%; position: relative;
-            z-index: 10; /* Keeps the entire UI in front of the art */
+            z-index: 10; 
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             pointer-events: none;
         }
@@ -82,8 +81,7 @@
         h1 {
             font-size: clamp(4rem, 16vw, 18rem); font-weight: 900;
             text-transform: uppercase; letter-spacing: -5px; margin: 0;
-            color: #000000; /* SOLID BLACK */
-            -webkit-text-stroke: 0px; 
+            color: #000000;
         }
 
         .fm-text { font-size: 0.5em; text-transform: lowercase; }
@@ -106,39 +104,41 @@
             cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
         
-        /* UNBOXED GLASS MENU */
+        /* --- UNBOXED FLOATING TOGGLE --- */
         .history-wrapper {
             width: 100%; max-width: 360px;
             position: relative; 
         }
         #history-toggle {
-            width: 100%; background: rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            color: #000; border: 1px solid rgba(0, 0, 0, 0.1); 
-            padding: 12px; border-radius: 8px;
+            width: 100%; background: none; /* Removed the box */
+            border: none; box-shadow: none;
+            color: #000; padding: 12px;
             font-size: 0.85rem; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.2s ease; box-sizing: border-box;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: opacity 0.2s ease; box-sizing: border-box;
         }
+        #history-toggle:hover { opacity: 0.6; }
         
+        /* --- TRANSPARENT GLASS DROPDOWN --- */
         #history-list { 
-            width: 100%; background: rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            width: 100%; 
+            background: rgba(255, 255, 255, 0.2); /* More transparent */
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); /* Stronger blur */
             margin: 0; list-style: none; box-sizing: border-box; text-align: left;
             max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
-            border: 0px solid rgba(0,0,0,0.1); border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.05); border-radius: 12px;
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #history-list.open {
             max-height: 350px; opacity: 1; padding: 0 12px; pointer-events: auto;
-            margin-top: 10px; border: 1px solid rgba(0,0,0,0.1); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow-y: auto;
+            margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-y: auto;
         }
         
         .history-item { 
             padding: 12px 0; font-size: 0.85rem; font-weight: 900; 
             text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.05); color: #000;
         }
+        .history-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -160,7 +160,7 @@
             </div>
             <button id="btn">▶ Listen</button>
             <div class="history-wrapper">
-                <div id="history-toggle">Recently Played <span>▼</span></div>
+                <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
                 <ul id="history-list">
                     <li class="history-item" style="border:none; text-align:center; color:#555;">Loading history...</li>
                 </ul>
@@ -193,7 +193,7 @@
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
     let artX = 50, artY = 150; 
-    let artDX = 1.7, artDY = 1.7; 
+    let artDX = 1.8, artDY = 1.8; 
     let isBouncing = false;
 
     function animateBounce() {
@@ -244,7 +244,7 @@
 
     historyToggle.onclick = () => {
         historyList.classList.toggle("open");
-        historyToggle.querySelector("span").innerText = historyList.classList.contains("open") ? "▲" : "▼";
+        document.getElementById("arrow").innerText = historyList.classList.contains("open") ? "▲" : "▼";
     };
 
     async function directFetch(url) {
