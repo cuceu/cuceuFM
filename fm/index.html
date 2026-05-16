@@ -232,11 +232,8 @@
                 tapes.forEach(el => el.innerText = newText);
                 currentTrackText = newText;
 
-                // This math locks the physical speed of the scroll!
-                // It ensures longer sentences take more seconds to cross, keeping the speed smooth.
-                // (0.333 represents the exact speed ratio of your original STANDBY text)
+                // Locks the physical speed of the scroll regardless of text length
                 const perfectSpeed = newText.length * 0.333;
-                
                 document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
                     wrapper.style.animationDuration = `${perfectSpeed}s`;
                 });
@@ -271,8 +268,9 @@
                 
                 updateTicker("+++ Retrieving song information... ");
                 
+                // Fetch immediately, then loop every 12 seconds
                 fetchSongData();
-                fetchInterval = setInterval(fetchSongData, 5000);
+                fetchInterval = setInterval(fetchSongData, 12000); // 12s respects proxy limits!
 
             } else {
                 // STOP PLAYING (Return to Standby)
@@ -288,10 +286,10 @@
             playing = !playing;
         };
 
-        // --- DUAL-FETCH METADATA ENGINE ---
+        // --- TRIPLE-CASCADE METADATA ENGINE ---
         function processData(data) {
             let source = data.icestats ? data.icestats.source : null;
-            if (!source) return; 
+            if (!source) return; // Hiccup protection
             
             errorCount = 0; 
             let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
@@ -300,6 +298,7 @@
 
         function handleFetchError() {
             errorCount++;
+            console.warn("Metadata fetch failed. Strike: " + errorCount);
             if (errorCount >= 3) {
                 updateTicker("+++ METADATA UNAVAILABLE ");
             }
@@ -310,6 +309,7 @@
 
             const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
             
+            // Attempt 1: Direct Fetch (Fastest, respects your Cloudflare CORS rules)
             fetch(targetUrl, { cache: "no-store" })
                 .then(res => {
                     if (!res.ok) throw new Error("Direct fetch failed");
@@ -317,14 +317,25 @@
                 })
                 .then(processData)
                 .catch(err => {
-                    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
-                    fetch(proxyUrl, { cache: "no-store" })
+                    // Attempt 2: Codetabs Proxy (Extremely reliable)
+                    const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
+                    fetch(proxyUrl1, { cache: "no-store" })
                         .then(res => {
-                            if (!res.ok) throw new Error("Proxy failed");
+                            if (!res.ok) throw new Error("Codetabs proxy failed");
                             return res.json();
                         })
                         .then(processData)
-                        .catch(handleFetchError);
+                        .catch(err2 => {
+                            // Attempt 3: AllOrigins Proxy (The absolute last resort)
+                            const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                            fetch(proxyUrl2, { cache: "no-store" })
+                                .then(res => {
+                                    if (!res.ok) throw new Error("AllOrigins proxy failed");
+                                    return res.json();
+                                })
+                                .then(processData)
+                                .catch(handleFetchError);
+                        });
                 });
         }
     </script>
