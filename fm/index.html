@@ -104,7 +104,7 @@
             <button id="btn">▶ Listen</button>
             <details class="history-dropdown">
                 <summary>Recently Played</summary>
-                <ul id="history-list"><li class="history-item" style="border:none; text-align:center; color:#ccc;">No history yet</li></ul>
+                <ul id="history-list"><li class="history-item" style="border:none; text-align:center; color:#ccc;">Loading history...</li></ul>
             </details>
         </div>
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
@@ -131,19 +131,23 @@
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
     async function smartFetch(url) {
+        // Add cache buster to the base URL first
+        const urlWithCacheBuster = url + "?t=" + Date.now();
         try {
-            const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-            if (!response.ok) throw new Error();
+            const response = await fetch(urlWithCacheBuster, { cache: "no-store" });
+            if (!response.ok) throw new Error("Direct fetch failed");
             return await response.json();
         } catch (e) {
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-            const res = await fetch(proxyUrl);
+            // Ensure the cache-busted URL is what gets encoded and sent to the proxy
+            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(urlWithCacheBuster);
+            const res = await fetch(proxyUrl, { cache: "no-store" });
             return await res.json();
         }
     }
 
     async function fetchGlobalHistory() {
         try {
+            // Fetching from the file you created: /opt/homebrew/share/icecast/web/history.json
             const data = await smartFetch(`${STREAM_BASE}/history.json`);
             if (data && Array.isArray(data)) {
                 const cleanData = data.filter(t => t && t.trim() !== "");
@@ -151,7 +155,9 @@
                     historyList.innerHTML = cleanData.map(track => `<li class="history-item">${track}</li>`).join('');
                 }
             }
-        } catch(e) {}
+        } catch(e) {
+            console.warn("History file not ready yet or invalid JSON format.");
+        }
     }
 
     function updateTicker(baseString) {
@@ -160,7 +166,6 @@
         const content = Array(10).fill(`<span class="song-display">${baseString}</span>`).join('');
         [topMarquee, bottomMarquee].forEach(m => {
             m.innerHTML = content + content;
-            // CINEMATIC SPEED: 1.5s per character
             m.style.animationDuration = `${(baseString.length + 10) * 1.5}s`;
         });
     }
@@ -174,8 +179,15 @@
             isOnline = true;
             let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
             
-            if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
-            if (newTitle !== currentTitle) { currentTitle = newTitle; fetchGlobalHistory(); }
+            if (!playing) { 
+                centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; 
+            }
+            
+            // If the title changed, fetch the latest history.json
+            if (newTitle !== currentTitle) { 
+                currentTitle = newTitle; 
+                fetchGlobalHistory(); 
+            }
             updateTicker(`NOW PLAYING: ${newTitle}`);
         } catch (e) {
             isOnline = false;
@@ -188,7 +200,7 @@
 
     btn.onclick = () => {
         if (!playing) {
-            player.src = `${STREAM_BASE}/stream.mp3`; player.play();
+            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play();
             btn.innerText = "⏸ Disconnect"; centerStatus.innerText = "CONNECTING...";
         } else {
             player.pause(); player.src = ""; btn.innerText = "▶ Listen";
@@ -200,7 +212,8 @@
 
     player.onplaying = () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } };
 
-    // Kickoff
+    // Initial load: Fetch history immediately on page load, then start tracking live data
+    fetchGlobalHistory();
     updateTicker("STANDBY");
     fetchSongData();
     setInterval(fetchSongData, 10000);
