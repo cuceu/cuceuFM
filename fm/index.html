@@ -130,25 +130,16 @@
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
-    async function smartFetch(url) {
-        // Add cache buster to the base URL first
-        const urlWithCacheBuster = url + "?t=" + Date.now();
-        try {
-            const response = await fetch(urlWithCacheBuster, { cache: "no-store" });
-            if (!response.ok) throw new Error("Direct fetch failed");
-            return await response.json();
-        } catch (e) {
-            // Ensure the cache-busted URL is what gets encoded and sent to the proxy
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(urlWithCacheBuster);
-            const res = await fetch(proxyUrl, { cache: "no-store" });
-            return await res.json();
-        }
+    // The new, clean fetch without the proxy!
+    async function cleanFetch(url) {
+        const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) throw new Error("Fetch failed");
+        return await response.json();
     }
 
     async function fetchGlobalHistory() {
         try {
-            // Fetching from the file you created: /opt/homebrew/share/icecast/web/history.json
-            const data = await smartFetch(`${STREAM_BASE}/history.json`);
+            const data = await cleanFetch(`${STREAM_BASE}/history.json`);
             if (data && Array.isArray(data)) {
                 const cleanData = data.filter(t => t && t.trim() !== "");
                 if (cleanData.length > 0) {
@@ -172,7 +163,7 @@
 
     async function fetchSongData() {
         try {
-            const data = await smartFetch(`${STREAM_BASE}/status-json.xsl`);
+            const data = await cleanFetch(`${STREAM_BASE}/status-json.xsl`);
             let source = data.icestats ? data.icestats.source : null;
             if (!source) throw new Error("Offline");
             
@@ -183,7 +174,6 @@
                 centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; 
             }
             
-            // If the title changed, fetch the latest history.json
             if (newTitle !== currentTitle) { 
                 currentTitle = newTitle; 
                 fetchGlobalHistory(); 
@@ -212,7 +202,7 @@
 
     player.onplaying = () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } };
 
-    // Initial load: Fetch history immediately on page load, then start tracking live data
+    // Kickoff
     fetchGlobalHistory();
     updateTicker("STANDBY");
     fetchSongData();
