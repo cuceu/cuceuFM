@@ -67,20 +67,32 @@
             width: fit-content;
         }
 
-        /* --- ADDED CINEMATIC FADE TO THE TEXT --- */
+        /* --- THE NOW PLAYING TEXT (Desktop) --- */
         .song-display {
             font-size: 1.8rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
             padding-right: 20px; 
-            transition: opacity 0.75s ease-in-out; /* Smooth fade effect */
+            transition: opacity 0.75s ease-in-out; 
             opacity: 1;
         }
 
-        /* JavaScript applies this class to trigger the fade out */
         .song-display.fade-out {
             opacity: 0;
+        }
+
+        /* --- MOBILE ADJUSTMENT (Phone Only) --- */
+        @media (max-width: 600px) {
+            .song-display {
+                font-size: 1.1rem; /* Smaller text so more fits on the phone */
+                letter-spacing: 2px; /* Tighter spacing for mobile */
+            }
+            .status-area {
+                top: 65px;
+                right: 15px;
+                font-size: 12px;
+            }
         }
 
         @keyframes marquee {
@@ -236,7 +248,6 @@
             const newText = Array(15).fill(baseString).join('');
             
             if (currentTrackText !== newText) {
-                // If it's the very first page load, do it instantly without fading
                 if (instant) {
                     tapes.forEach(el => el.innerText = newText);
                     currentTrackText = newText;
@@ -247,27 +258,22 @@
                     return;
                 }
 
-                // 1. Trigger the fade out
                 tapes.forEach(el => el.classList.add('fade-out'));
                 
-                // 2. Wait exactly 0.75s for it to disappear, change the text, then fade back in
                 setTimeout(() => {
                     tapes.forEach(el => el.innerText = newText);
                     currentTrackText = newText;
 
-                    // Keep the speed completely locked and smooth
                     const perfectSpeed = newText.length * 0.333;
                     document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
                         wrapper.style.animationDuration = `${perfectSpeed}s`;
                     });
                     
-                    // Remove the class to trigger the gentle fade-in
                     tapes.forEach(el => el.classList.remove('fade-out'));
-                }, 750); // This creates the 1.5s total transition
+                }, 750); 
             }
         }
         
-        // Initialize to Standby instantly on page load
         updateTicker("+++ STANDBY ", true);
 
         // --- AUDIO SYNC EVENTS ---
@@ -292,7 +298,6 @@
                 btn.innerText = "⏸ Disconnect";
                 centerStatus.innerText = "CONNECTING..."; 
                 
-                // This will now smoothly fade!
                 updateTicker("+++ Retrieving song information... ");
                 
                 fetchSongData();
@@ -306,8 +311,6 @@
                 pulseIndicator.classList.remove('active'); 
                 
                 clearInterval(fetchInterval);
-                
-                // This will also smoothly fade back!
                 updateTicker("+++ STANDBY ");
             }
             playing = !playing;
