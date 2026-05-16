@@ -27,7 +27,6 @@
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         
-        /* Added transition to the marquee wrapper for smooth fading */
         .marquee-wrapper { 
             display: flex; white-space: nowrap; 
             animation: marquee linear infinite; 
@@ -43,6 +42,8 @@
         .main-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; width: 100%; padding: 0 20px;
+            /* The magic fix for the off-center bug! */
+            box-sizing: border-box; 
             display: flex; flex-direction: column; align-items: center;
         }
         h1 {
@@ -57,7 +58,6 @@
             display: inline-flex; align-items: center; justify-content: center; gap: 12px;
         }
         
-        /* Added transition to the text for smooth status changes */
         #center-status {
             transition: opacity 0.3s ease-in-out;
         }
@@ -77,10 +77,10 @@
             cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
         
-        /* --- NEW ELEGANT FLOATING DROPDOWN --- */
+        /* --- THE SMOOTH PUSH DROPDOWN --- */
         .history-wrapper {
-            position: relative;
-            width: 360px;
+            width: 100%;
+            max-width: 360px; /* Keeps it exactly the size you want */
             z-index: 50;
         }
         #history-toggle {
@@ -89,28 +89,33 @@
             cursor: pointer; box-shadow: 6px 6px 0 #d3d3d3;
             display: flex; justify-content: space-between; align-items: center;
             transition: all 0.2s ease;
+            box-sizing: border-box;
         }
         #history-toggle:hover {
             background: #f4f4f4;
         }
+        
         #history-list { 
-            position: absolute; top: calc(100% + 8px); left: 0; width: 100%;
-            background: #fff; border: 4px solid #000; padding: 0 12px; margin: 0; list-style: none;
-            box-shadow: 6px 6px 0 #d3d3d3; box-sizing: border-box;
+            /* This is no longer floating, it's back in the layout! */
+            width: 100%;
+            background: #fff; margin: 0; list-style: none;
+            box-sizing: border-box; text-align: left;
             
             /* The magic smooth slide/fade setup */
             max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
-            transform: translateY(-10px);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            border: 0px solid #000; /* Hides border when closed */
+            box-shadow: 0px 0px 0 #d3d3d3;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #history-list.open {
-            max-height: 350px; opacity: 1; padding: 12px; pointer-events: auto;
-            transform: translateY(0); overflow-y: auto;
+            max-height: 350px; opacity: 1; padding: 0 12px; pointer-events: auto;
+            margin-top: 15px; border: 4px solid #000; box-shadow: 6px 6px 0 #d3d3d3;
+            overflow-y: auto;
         }
+        
         .history-item { 
             padding: 12px 0; font-size: 0.85rem; font-weight: 900; 
             text-transform: uppercase; border-bottom: 1px solid #eee; color: #000;
-            text-align: left;
         }
         .history-item:last-child { border-bottom: none; }
     </style>
@@ -119,6 +124,7 @@
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
+        
         <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
             
@@ -137,6 +143,7 @@
             </div>
             
         </div>
+        
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
     </div>
     <audio id="radioPlayer" preload="none"></audio>
@@ -186,36 +193,32 @@
         }
     }
 
-    // New smooth fading ticker logic
     function updateTicker(baseString) {
         if (currentTrackText === baseString) return;
         currentTrackText = baseString;
         
         const content = Array(10).fill(`<span class="song-display">${baseString}</span>`).join('');
         
-        // 1. Fade out the text
         [topMarquee, bottomMarquee].forEach(m => m.style.opacity = 0);
         
-        // 2. Wait for fade out to finish, then swap text and fade back in
         setTimeout(() => {
             [topMarquee, bottomMarquee].forEach(m => {
                 m.innerHTML = content + content;
                 m.style.animationDuration = `${(baseString.length + 10) * 1.5}s`;
                 m.style.opacity = 1;
             });
-        }, 500); // 500ms matches the CSS transition time
+        }, 500);
     }
 
-    // New smooth fading status text logic
     function setStatus(text, dotClass) {
         if (centerStatus.innerText === text) return;
         
-        centerStatus.style.opacity = 0; // Fade out
+        centerStatus.style.opacity = 0; 
         setTimeout(() => {
             centerStatus.innerText = text;
             pulseIndicator.className = "pulse-dot " + dotClass;
-            centerStatus.style.opacity = 1; // Fade in
-        }, 300); // Quick 300ms fade
+            centerStatus.style.opacity = 1; 
+        }, 300);
     }
 
     async function fetchSongData() {
@@ -259,7 +262,6 @@
 
     player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
 
-    // Kickoff
     fetchGlobalHistory();
     updateTicker("STANDBY");
     fetchSongData();
