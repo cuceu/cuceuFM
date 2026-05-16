@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
     <style>
-        /* PLAIN WHITE BRUTALIST BACKGROUND */
+        /* PLAIN WHITE BRUTALIST BACKGROUND WITH SMOOTH FADE-IN */
         html, body {
             margin: 0;
             padding: 0;
@@ -13,6 +13,13 @@
             overflow: hidden;
             background-color: #ffffff; 
             font-family: 'Helvetica Neue', Arial, sans-serif;
+            /* THE FIX: Fades the page in softly so there's no harsh browser flash! */
+            animation: smoothLoad 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        @keyframes smoothLoad {
+            0% { opacity: 0; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         /* --- SEAMLESS INFINITE TICKER TAPE CSS --- */
@@ -37,7 +44,7 @@
         .marquee-wrapper {
             display: flex;
             white-space: nowrap;
-            /* SLOWED DOWN: Changed from 30s to 50s for a chill glide */
+            /* Chill 90s glide */
             animation: marquee 90s linear infinite;
             width: fit-content;
         }
@@ -131,109 +138,4 @@
             border: 4px solid #000; 
             padding: 20px 40px;
             font-size: 1.2rem;
-            text-transform: uppercase;
-            font-weight: 800;
-            letter-spacing: 3px;
-            cursor: pointer;
-            border-radius: 0; 
-            box-shadow: 8px 8px 0 #d3d3d3; 
-            transition: all 0.2s ease;
-        }
-
-        button:hover {
-            transform: translate(-4px, -4px); 
-            box-shadow: 12px 12px 0 #d3d3d3; 
-        }
-
-        button:active {
-            transform: translate(4px, 4px); 
-            box-shadow: 0px 0px 0 #d3d3d3; 
-        }
-    </style>
-</head>
-<body>
-
-    <div class="ticker-tape ticker-top">
-        <div class="marquee-wrapper">
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-        </div>
-    </div>
-
-    <div class="main-container">
-        <h1>CUCEU<span class="fm-text">.fm</span></h1>
-        
-        <div class="live-status">
-            <div class="pulse-dot"></div> <span id="center-status">LOADING...</span>
-        </div>
-        <button id="btn">▶ Listen</button>
-    </div>
-
-    <div class="ticker-tape ticker-bottom">
-        <div class="marquee-wrapper">
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-            <span class="song-display">WAITING FOR SATELLITE UPLINK... </span>
-        </div>
-    </div>
-
-    <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
-
-    <script>
-        const btn = document.getElementById("btn");
-        const player = document.getElementById("radioPlayer");
-        const centerStatus = document.getElementById("center-status");
-        
-        let playing = false;
-        let dataLoaded = false;
-
-        btn.onclick = () => {
-            if (!playing) {
-                player.src = "https://stream.cuceu.co.uk/stream.mp3";
-                player.play();
-                btn.innerText = "⏸ Pause";
-                centerStatus.innerText = "ON AIR"; 
-            } else {
-                player.pause();
-                player.src = ""; 
-                btn.innerText = "▶ Listen";
-                centerStatus.innerText = dataLoaded ? "READY" : "LOADING..."; 
-            }
-            playing = !playing;
-        };
-
-        function fetchSongData() {
-            const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
-            
-            fetch(proxyUrl, { cache: "no-store" })
-                .then(response => response.json())
-                .then(data => {
-                    dataLoaded = true;
-                    
-                    if (!playing) {
-                        centerStatus.innerText = "READY"; 
-                    }
-
-                    let title = "ON AIR"; 
-                    let source = data.icestats.source;
-                    if (source) {
-                        title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-                    }
-                    
-                    const massiveTextBlock = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
-
-                    const tapes = document.querySelectorAll('.song-display');
-                    tapes.forEach(el => {
-                        el.innerText = massiveTextBlock;
-                    });
-                })
-                .catch(err => {
-                    console.log("Sneaking past the bouncer...");
-                });
-        }
-
-        fetchSongData();
-        setInterval(fetchSongData, 5000);
-    </script>
-</body>
-</html>
+            text-transform
