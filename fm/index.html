@@ -67,7 +67,6 @@
             width: fit-content;
         }
 
-        /* --- THE NOW PLAYING TEXT (Desktop) --- */
         .song-display {
             font-size: 1.8rem;
             font-weight: 900;
@@ -82,11 +81,11 @@
             opacity: 0;
         }
 
-        /* --- MOBILE ADJUSTMENT (Phone Only) --- */
+        /* Mobile specific ticker size */
         @media (max-width: 600px) {
             .song-display {
-                font-size: 1.1rem; /* Smaller text so more fits on the phone */
-                letter-spacing: 2px; /* Tighter spacing for mobile */
+                font-size: 1.1rem;
+                letter-spacing: 2px;
             }
             .status-area {
                 top: 65px;
@@ -152,20 +151,27 @@
         .pulse-dot {
             height: 12px;
             width: 12px;
-            background-color: #777; 
+            background-color: #777; /* Offline Grey */
             border-radius: 50%;
             flex-shrink: 0;
+            transition: background-color 0.3s ease;
         }
 
-        .pulse-dot.active {
-            background-color: #ff0000; 
+        /* LIVE state (Signal found, not listening) */
+        .pulse-dot.live {
+            background-color: #34c759; /* Green */
+        }
+
+        /* ON AIR state (Actually playing) */
+        .pulse-dot.on-air {
+            background-color: #ff3b30; /* Red */
             animation: pulse-red 1.5s infinite;
         }
 
         @keyframes pulse-red {
-            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.5); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); }
-            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
         button {
@@ -203,7 +209,7 @@
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
             
             <div class="live-status">
-                <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">STANDBY</span>
+                <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CHECKING...</span>
             </div>
             <button id="btn">▶ Listen</button>
         </div>
@@ -239,13 +245,15 @@
         const tapes = document.querySelectorAll('.song-display');
         
         let playing = false;
+        let isOnline = false;
         let currentTrackText = "";
         let errorCount = 0;
         let fetchInterval = null; 
 
         // --- Speed-Locked & Cinematic Ticker Engine ---
         function updateTicker(baseString, instant = false) {
-            const newText = Array(15).fill(baseString).join('');
+            // Removed "+++" crosses from the strings
+            const newText = Array(15).fill(baseString + " ").join('');
             
             if (currentTrackText !== newText) {
                 if (instant) {
@@ -263,24 +271,35 @@
                 setTimeout(() => {
                     tapes.forEach(el => el.innerText = newText);
                     currentTrackText = newText;
-
                     const perfectSpeed = newText.length * 0.333;
                     document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
                         wrapper.style.animationDuration = `${perfectSpeed}s`;
                     });
-                    
                     tapes.forEach(el => el.classList.remove('fade-out'));
                 }, 750); 
             }
         }
         
-        updateTicker("+++ STANDBY ", true);
+        // --- Instant Handshake Logic ---
+        const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
+        const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
+
+        if (cachedStatus === 'online') {
+            isOnline = true;
+            centerStatus.innerText = "LIVE";
+            pulseIndicator.className = "pulse-dot live"; // Set to Green
+            updateTicker(`NOW PLAYING: ${cachedTitle || "ON AIR"}`, true);
+        } else {
+            centerStatus.innerText = "OFFLINE";
+            pulseIndicator.className = "pulse-dot"; // Grey
+            updateTicker("STANDBY", true);
+        }
 
         // --- AUDIO SYNC EVENTS ---
         player.addEventListener('playing', () => {
             if (playing) {
                 centerStatus.innerText = "ON AIR";
-                pulseIndicator.classList.add('active'); 
+                pulseIndicator.className = "pulse-dot on-air"; // Pulsing Red
             }
         });
 
@@ -297,8 +316,7 @@
                 player.play();
                 btn.innerText = "⏸ Disconnect";
                 centerStatus.innerText = "CONNECTING..."; 
-                
-                updateTicker("+++ Retrieving song information... ");
+                updateTicker("Retrieving song information...");
                 
                 fetchSongData();
                 fetchInterval = setInterval(fetchSongData, 12000); 
@@ -307,11 +325,11 @@
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
-                centerStatus.innerText = "STANDBY"; 
-                pulseIndicator.classList.remove('active'); 
+                centerStatus.innerText = isOnline ? "LIVE" : "OFFLINE"; 
+                pulseIndicator.className = isOnline ? "pulse-dot live" : "pulse-dot";
                 
                 clearInterval(fetchInterval);
-                updateTicker("+++ STANDBY ");
+                updateTicker("STANDBY");
             }
             playing = !playing;
         };
@@ -321,49 +339,54 @@
             let source = data.icestats ? data.icestats.source : null;
             if (!source) return; 
             
-            errorCount = 0; 
+            errorCount = 0;
+            isOnline = true;
+            if (!playing) {
+                centerStatus.innerText = "LIVE";
+                pulseIndicator.className = "pulse-dot live";
+            }
             let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-            updateTicker(`+++ NOW PLAYING: ${title} `);
+            updateTicker(`NOW PLAYING: ${title}`);
         }
 
         function handleFetchError() {
             errorCount++;
             if (errorCount >= 3) {
-                updateTicker("+++ METADATA UNAVAILABLE ");
+                isOnline = false;
+                if (!playing) {
+                    centerStatus.innerText = "OFFLINE";
+                    pulseIndicator.className = "pulse-dot";
+                }
+                updateTicker("STANDBY");
             }
         }
 
         function fetchSongData() {
-            if (!playing) return; 
-
             const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
             
             fetch(targetUrl, { cache: "no-store" })
                 .then(res => {
-                    if (!res.ok) throw new Error("Direct fetch failed");
+                    if (!res.ok) throw new Error();
                     return res.json();
                 })
                 .then(processData)
-                .catch(err => {
+                .catch(() => {
                     const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
                     fetch(proxyUrl1, { cache: "no-store" })
-                        .then(res => {
-                            if (!res.ok) throw new Error("Codetabs proxy failed");
-                            return res.json();
-                        })
+                        .then(res => res.json())
                         .then(processData)
-                        .catch(err2 => {
+                        .catch(() => {
                             const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
                             fetch(proxyUrl2, { cache: "no-store" })
-                                .then(res => {
-                                    if (!res.ok) throw new Error("AllOrigins proxy failed");
-                                    return res.json();
-                                })
+                                .then(res => res.json())
                                 .then(processData)
                                 .catch(handleFetchError);
                         });
                 });
         }
+
+        // Keep the background check running every 15s to keep the signal status fresh
+        setInterval(fetchSongData, 15000);
     </script>
 </body>
 </html>
