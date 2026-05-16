@@ -269,7 +269,7 @@
     <audio id="radioPlayer" src="https://stream.cuceu.co.uk/stream.mp3" preload="none"></audio>
 
 <script>
-    // --- Clock ---
+    // --- Clock Script ---
     function updateClock() {
         const now = new Date();
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
@@ -285,21 +285,23 @@
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", fetchInterval = null; 
 
-    // --- GLOBAL HISTORY FETCH ---
+    // --- GLOBAL HISTORY FETCH (The Magic Step) ---
     function fetchGlobalHistory() {
-        // Hits your Mac directly via the tunnel!
+        // This hits your tunnel directly to grab the history file we made in Step 1
         const histUrl = "https://stream.cuceu.co.uk/history.json?nocache=" + new Date().getTime();
         fetch(histUrl, { cache: "no-store" })
             .then(res => res.json())
             .then(data => {
                 if (data && data.length > 0) {
-                    historyList.innerHTML = data
-                        .filter(t => t && t !== "undefined")
-                        .map(track => `<li class="history-item">Previously <span>${track}</span></li>`)
-                        .join('');
+                    // Filter out the empty slots from the start of the file
+                    const cleanData = data.filter(t => t && t.trim() !== "");
+                    if (cleanData.length > 0) {
+                        historyList.innerHTML = cleanData.map(track => 
+                            `<li class="history-item">Previously <span>${track}</span></li>`
+                        ).join('');
+                    }
                 }
-            })
-            .catch(() => { /* Silent fail if history file is empty */ });
+            }).catch(() => { console.log("History sync waiting for data..."); });
     }
 
     // --- Ticker Engine ---
@@ -325,7 +327,6 @@
     // --- Handshake ---
     const cachedStatus = localStorage.getItem('cuceu_fm_status');
     const cachedTitle = localStorage.getItem('cuceu_fm_title');
-
     if (cachedStatus === 'online') {
         isOnline = true; centerStatus.innerText = "LIVE";
         pulseIndicator.className = "pulse-dot live";
@@ -333,7 +334,9 @@
     } else {
         centerStatus.innerText = "OFFLINE"; updateTicker("STANDBY", true);
     }
-    fetchGlobalHistory(); // Load global history immediately
+    
+    // Fetch history immediately on page load
+    fetchGlobalHistory();
 
     player.addEventListener('playing', () => { if (playing) { centerStatus.innerText = "ON AIR"; pulseIndicator.className = "pulse-dot on-air"; } });
 
@@ -359,9 +362,10 @@
         if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
         let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
         
-        if (newTitle !== currentTitle && newTitle !== "ON AIR") {
-            currentTitle = newTitle;
-            fetchGlobalHistory(); // Refresh the list whenever a song changes
+        // If the song has changed, fetch the updated history file from your Mac
+        if (newTitle !== currentTitle && newTitle !== "ON AIR") { 
+            currentTitle = newTitle; 
+            fetchGlobalHistory(); 
         }
         updateTicker(`NOW PLAYING: ${newTitle}`);
     }
@@ -369,17 +373,17 @@
     function fetchSongData() {
         const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
         fetch(targetUrl, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-            const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
-            fetch(proxyUrl1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
-                const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
-                fetch(proxyUrl2, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+            const p1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
+            fetch(p1, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
+                const p2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                fetch(p2, { cache: "no-store" }).then(res => res.json()).then(processData).catch(() => {
                     isOnline = false; if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; }
                 });
             });
         });
     }
     
-    setTimeout(fetchSongData, 500);
+    // Sync metadata every 15s
     setInterval(fetchSongData, 15000);
 </script>
 </body>
