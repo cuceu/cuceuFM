@@ -63,17 +63,24 @@
         .marquee-wrapper {
             display: flex;
             white-space: nowrap;
-            /* The 60s is just a fallback now. Javascript controls the true speed! */
             animation: marquee 60s linear infinite;
             width: fit-content;
         }
 
+        /* --- ADDED CINEMATIC FADE TO THE TEXT --- */
         .song-display {
             font-size: 1.8rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
             padding-right: 20px; 
+            transition: opacity 0.75s ease-in-out; /* Smooth fade effect */
+            opacity: 1;
+        }
+
+        /* JavaScript applies this class to trigger the fade out */
+        .song-display.fade-out {
+            opacity: 0;
         }
 
         @keyframes marquee {
@@ -224,24 +231,44 @@
         let errorCount = 0;
         let fetchInterval = null; 
 
-        // --- Speed-Locked Ticker Engine ---
-        function updateTicker(baseString) {
+        // --- Speed-Locked & Cinematic Ticker Engine ---
+        function updateTicker(baseString, instant = false) {
             const newText = Array(15).fill(baseString).join('');
             
             if (currentTrackText !== newText) {
-                tapes.forEach(el => el.innerText = newText);
-                currentTrackText = newText;
+                // If it's the very first page load, do it instantly without fading
+                if (instant) {
+                    tapes.forEach(el => el.innerText = newText);
+                    currentTrackText = newText;
+                    const perfectSpeed = newText.length * 0.333;
+                    document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
+                        wrapper.style.animationDuration = `${perfectSpeed}s`;
+                    });
+                    return;
+                }
 
-                // Locks the physical speed of the scroll regardless of text length
-                const perfectSpeed = newText.length * 0.333;
-                document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
-                    wrapper.style.animationDuration = `${perfectSpeed}s`;
-                });
+                // 1. Trigger the fade out
+                tapes.forEach(el => el.classList.add('fade-out'));
+                
+                // 2. Wait exactly 0.75s for it to disappear, change the text, then fade back in
+                setTimeout(() => {
+                    tapes.forEach(el => el.innerText = newText);
+                    currentTrackText = newText;
+
+                    // Keep the speed completely locked and smooth
+                    const perfectSpeed = newText.length * 0.333;
+                    document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
+                        wrapper.style.animationDuration = `${perfectSpeed}s`;
+                    });
+                    
+                    // Remove the class to trigger the gentle fade-in
+                    tapes.forEach(el => el.classList.remove('fade-out'));
+                }, 750); // This creates the 1.5s total transition
             }
         }
         
-        // Initialize to Standby
-        updateTicker("+++ STANDBY ");
+        // Initialize to Standby instantly on page load
+        updateTicker("+++ STANDBY ", true);
 
         // --- AUDIO SYNC EVENTS ---
         player.addEventListener('playing', () => {
@@ -260,20 +287,18 @@
         // --- Play/Pause Logic ---
         btn.onclick = () => {
             if (!playing) {
-                // START PLAYING
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Disconnect";
                 centerStatus.innerText = "CONNECTING..."; 
                 
+                // This will now smoothly fade!
                 updateTicker("+++ Retrieving song information... ");
                 
-                // Fetch immediately, then loop every 12 seconds
                 fetchSongData();
-                fetchInterval = setInterval(fetchSongData, 12000); // 12s respects proxy limits!
+                fetchInterval = setInterval(fetchSongData, 12000); 
 
             } else {
-                // STOP PLAYING (Return to Standby)
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
@@ -281,6 +306,8 @@
                 pulseIndicator.classList.remove('active'); 
                 
                 clearInterval(fetchInterval);
+                
+                // This will also smoothly fade back!
                 updateTicker("+++ STANDBY ");
             }
             playing = !playing;
@@ -289,7 +316,7 @@
         // --- TRIPLE-CASCADE METADATA ENGINE ---
         function processData(data) {
             let source = data.icestats ? data.icestats.source : null;
-            if (!source) return; // Hiccup protection
+            if (!source) return; 
             
             errorCount = 0; 
             let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
@@ -298,7 +325,6 @@
 
         function handleFetchError() {
             errorCount++;
-            console.warn("Metadata fetch failed. Strike: " + errorCount);
             if (errorCount >= 3) {
                 updateTicker("+++ METADATA UNAVAILABLE ");
             }
@@ -309,7 +335,6 @@
 
             const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
             
-            // Attempt 1: Direct Fetch (Fastest, respects your Cloudflare CORS rules)
             fetch(targetUrl, { cache: "no-store" })
                 .then(res => {
                     if (!res.ok) throw new Error("Direct fetch failed");
@@ -317,7 +342,6 @@
                 })
                 .then(processData)
                 .catch(err => {
-                    // Attempt 2: Codetabs Proxy (Extremely reliable)
                     const proxyUrl1 = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(targetUrl);
                     fetch(proxyUrl1, { cache: "no-store" })
                         .then(res => {
@@ -326,7 +350,6 @@
                         })
                         .then(processData)
                         .catch(err2 => {
-                            // Attempt 3: AllOrigins Proxy (The absolute last resort)
                             const proxyUrl2 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
                             fetch(proxyUrl2, { cache: "no-store" })
                                 .then(res => {
