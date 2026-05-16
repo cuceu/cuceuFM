@@ -63,6 +63,7 @@
         .marquee-wrapper {
             display: flex;
             white-space: nowrap;
+            /* The 60s is just a fallback now. Javascript controls the true speed! */
             animation: marquee 60s linear infinite;
             width: fit-content;
         }
@@ -221,16 +222,28 @@
         let playing = false;
         let currentTrackText = "";
         let errorCount = 0;
-        let fetchInterval = null; // Controls the background fetching
+        let fetchInterval = null; 
 
-        // --- Initialization: Pure Standby ---
+        // --- Speed-Locked Ticker Engine ---
         function updateTicker(baseString) {
             const newText = Array(15).fill(baseString).join('');
+            
             if (currentTrackText !== newText) {
                 tapes.forEach(el => el.innerText = newText);
                 currentTrackText = newText;
+
+                // This math locks the physical speed of the scroll!
+                // It ensures longer sentences take more seconds to cross, keeping the speed smooth.
+                // (0.333 represents the exact speed ratio of your original STANDBY text)
+                const perfectSpeed = newText.length * 0.333;
+                
+                document.querySelectorAll('.marquee-wrapper').forEach(wrapper => {
+                    wrapper.style.animationDuration = `${perfectSpeed}s`;
+                });
             }
         }
+        
+        // Initialize to Standby
         updateTicker("+++ STANDBY ");
 
         // --- AUDIO SYNC EVENTS ---
@@ -256,10 +269,8 @@
                 btn.innerText = "⏸ Disconnect";
                 centerStatus.innerText = "CONNECTING..."; 
                 
-                // Update ticker to searching state
                 updateTicker("+++ Retrieving song information... ");
                 
-                // Kick off the metadata loop
                 fetchSongData();
                 fetchInterval = setInterval(fetchSongData, 5000);
 
@@ -271,7 +282,6 @@
                 centerStatus.innerText = "STANDBY"; 
                 pulseIndicator.classList.remove('active'); 
                 
-                // Shut down the background fetching
                 clearInterval(fetchInterval);
                 updateTicker("+++ STANDBY ");
             }
@@ -281,7 +291,7 @@
         // --- DUAL-FETCH METADATA ENGINE ---
         function processData(data) {
             let source = data.icestats ? data.icestats.source : null;
-            if (!source) return; // Ignore Icecast hiccups during song changes
+            if (!source) return; 
             
             errorCount = 0; 
             let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
@@ -296,11 +306,10 @@
         }
 
         function fetchSongData() {
-            if (!playing) return; // Safety check
+            if (!playing) return; 
 
             const targetUrl = "https://stream.cuceu.co.uk/status-json.xsl?nocache=" + new Date().getTime();
             
-            // Attempt 1: Direct Fetch (Fastest, avoids Cloudflare Bot blocks)
             fetch(targetUrl, { cache: "no-store" })
                 .then(res => {
                     if (!res.ok) throw new Error("Direct fetch failed");
@@ -308,7 +317,6 @@
                 })
                 .then(processData)
                 .catch(err => {
-                    // Attempt 2: Fallback to allorigins if Direct is blocked by CORS
                     const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
                     fetch(proxyUrl, { cache: "no-store" })
                         .then(res => {
