@@ -5,27 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CUCEU</title>
     <style>
-        /* PREMIUM DARK MODE MAC BACKGROUND */
+        /* STARK WHITE BACKDROP */
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            /* Deep, cinematic midnight gradient */
-            background: radial-gradient(circle at 50% -20%, #2a2a3d, #000000);
+            background-color: #ffffff; /* Reverted to Stark White */
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            color: #ffffff;
+            color: #000000;
         }
 
-        /* --- FROSTED GLASS TOP MENU BAR --- */
+        /* --- MIDNIGHT GLASS TOP MENU BAR (We kept this as requested!) --- */
         .mac-topbar {
             position: absolute;
             top: 0;
             width: 100%;
             height: 35px;
-            /* Authentic macOS frosted glass */
             background: rgba(20, 20, 25, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -39,6 +37,7 @@
             font-size: 14px;
             letter-spacing: 0.5px;
             z-index: 100;
+            color: #ffffff; /* White text for the dark bar */
         }
 
         .topbar-left, .topbar-right {
@@ -58,7 +57,7 @@
             opacity: 0.8;
         }
 
-        /* --- THE SLEEK CENTER LOGO --- */
+        /* --- THE STARK CENTER LOGO --- */
         .main-content {
             flex-grow: 1;
             display: flex;
@@ -66,22 +65,34 @@
             justify-content: center;
         }
 
-        h1 {
+        h1#cuceu-logo {
             font-size: clamp(5rem, 20vw, 20rem);
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: -8px;
             margin: 0;
-            /* Soft silver gradient for the text */
-            background: linear-gradient(to bottom, #ffffff, #777777);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            /* Cinematic drop shadow */
-            filter: drop-shadow(0px 20px 30px rgba(0,0,0,0.8));
+            
+            /* Reverted to Flat Brutalist Black */
+            color: #000000;
+            background: none;
+            -webkit-text-fill-color: currentcolor;
+            filter: none;
+            
             cursor: default;
+            line-height: 0.8;
+            transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1); /* Smooth movement transition */
+            transform-origin: center center;
+            position: relative;
+            z-index: 5;
         }
 
-        /* --- THE PREMIUM FROSTED DOCK --- */
+        /* The class triggered by the script to move the logo */
+        h1#cuceu-logo.glide-down {
+            transform: translateY(15vh) scale(0.9); /* Glides down and slightly shrinks */
+            opacity: 0;
+        }
+
+        /* --- THE PREMIUM MIDNIGHT DOCK (Kept!) --- */
         .mac-dock-container {
             position: absolute;
             bottom: 20px;
@@ -100,7 +111,7 @@
             padding: 15px 25px;
             display: flex;
             gap: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* Softened shadow against white background */
             align-items: flex-end;
         }
 
@@ -118,7 +129,6 @@
         .app-icon {
             width: 65px;
             height: 65px;
-            /* Glowing Brat-green 3D gradient */
             background: linear-gradient(135deg, #8aff00, #00cc66);
             color: #000;
             border-radius: 18px; 
@@ -135,7 +145,7 @@
         .app-indicator {
             width: 5px;
             height: 5px;
-            background-color: #8aff00; /* Neon indicator dot */
+            background-color: #8aff00; 
             border-radius: 50%;
             margin-top: 8px;
             box-shadow: 0 0 8px #8aff00;
@@ -171,7 +181,7 @@
             filter: brightness(0.8);
         }
 
-        /* --- THE BRIGHT WHITE GENIE FIX --- */
+        /* --- THE LIQUID GLASS GENIE FIX --- */
         .genie-overlay {
             position: fixed;
             bottom: 45px; 
@@ -180,10 +190,10 @@
             width: 65px;
             height: 65px;
             
-            /* Expands into pure frosted white to match the radio page */
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(30px); 
-            -webkit-backdrop-filter: blur(30px); 
+            /* Expands into Liquid White Glass to cover everything smoothly */
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(40px); 
+            -webkit-backdrop-filter: blur(40px); 
             
             border-radius: 18px;
             z-index: 1000;
@@ -195,7 +205,7 @@
 
         .genie-overlay.expand {
             opacity: 1;
-            transform: scale(60); /* Swallows the screen in white light */
+            transform: scale(60); 
         }
     </style>
 </head>
@@ -218,7 +228,7 @@
     </div>
 
     <div class="main-content">
-        <h1>CUCEU</h1>
+        <h1 id="cuceu-logo">CUCEU</h1>
     </div>
 
     <div class="mac-dock-container">
@@ -250,20 +260,26 @@
         setInterval(updateClock, 1000);
 
         const appIcon = document.getElementById('fm-app');
+        const centralLogo = document.getElementById('cuceu-logo'); // Gabbing the logo
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
             e.preventDefault(); 
-            genieOverlay.classList.add('expand');
-            // Delays the jump just long enough for the white screen to cover everything
+            
+            genieOverlay.classList.add('expand'); // Liquid white glass explodes
+            centralLogo.classList.add('glide-down'); // Logo glides down simultaneously
+            
+            // Wait exactly 550ms for the white screen to cover, then teleport
             setTimeout(() => {
                 window.location.href = "/fm";
             }, 550); 
         });
 
+        // The back-button fix - instantly resets the logo and genie state
         window.addEventListener('pageshow', (event) => {
             if (event.persisted) {
                 genieOverlay.classList.remove('expand');
+                centralLogo.classList.remove('glide-down');
             }
         });
     </script>
