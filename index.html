@@ -48,7 +48,7 @@
             transform-origin: center center;
             position: relative;
             z-index: 5;
-            padding: 100px 0; /* Prevents cutoff from vertical scaling */
+            padding: 180px 0; /* Massive padding for the extreme scale */
         }
 
         #cuceu-logo-wrapper.glide-down {
@@ -57,28 +57,28 @@
         }
 
         h1#cuceu-logo {
-            font-size: clamp(8rem, 25vw, 25rem); /* Significantly bigger */
-            font-weight: 900; 
+            font-size: clamp(8rem, 25vw, 25rem);
+            font-weight: 950; /* Absolute Bold */
             text-transform: uppercase;
-            letter-spacing: -18px; /* Tighter spacing for that touching look */
+            letter-spacing: -22px; /* Letters touching for that tight Brutalist look */
             margin: 0;
             color: #000000;
             white-space: nowrap;
-            line-height: 0.8;
+            line-height: 0.7;
             cursor: default;
-            transform: scaleY(1.6); /* Even more stretched vertically */
-            animation: marqueeLogo 35s linear infinite; 
+            transform: scaleY(2.2); /* Extreme vertical pull */
+            animation: marqueeLogo 38s linear infinite; /* Slightly slower for the scale */
         }
 
         @keyframes marqueeLogo {
-            0% { transform: translateX(0) scaleY(1.6); }
-            100% { transform: translateX(-50%) scaleY(1.6); }
+            0% { transform: translateX(0) scaleY(2.2); }
+            100% { transform: translateX(-50%) scaleY(2.2); }
         }
 
         /* --- THE PREMIUM MIDNIGHT DOCK --- */
         .mac-dock-container {
             position: absolute;
-            bottom: 25px;
+            bottom: 30px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -91,11 +91,11 @@
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 35px;
-            padding: 12px 20px;
+            padding: 10px 20px;
             display: flex;
             gap: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            align-items: flex-end;
+            align-items: center; /* All icons now share the same center height */
         }
 
         .dock-app {
@@ -106,12 +106,13 @@
             color: #fff;
             transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
+            height: 90px; /* Locked height to keep things stable */
+            justify-content: center;
         }
 
-        /* Icon sizing bumped up */
         .app-icon {
-            width: 75px; 
-            height: 75px;
+            width: 70px; 
+            height: 70px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -122,97 +123,93 @@
             justify-content: center;
             font-size: 1.8rem;
             font-weight: 900;
-            letter-spacing: -1px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.4); 
             transition: transform 0.2s ease;
         }
 
-        /* Tooltip text styling */
+        .icon-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .icon-trash { background: rgba(255, 255, 255, 0.1); font-size: 2.2rem; }
+
         .app-tooltip {
             position: absolute;
-            top: -45px;
-            background: rgba(30, 30, 35, 0.8);
+            top: -35px;
+            background: rgba(30, 30, 35, 0.85);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
             white-space: nowrap;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            z-index: 50;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         .dock-app:hover .app-tooltip { opacity: 1; }
 
-        /* Icon specific colors for aesthetics */
-        .icon-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .icon-trash { background: rgba(255, 255, 255, 0.15); font-size: 2.2rem; }
-
         /* --- NOTIFICATION BADGE --- */
         .app-badge {
             position: absolute;
-            top: -6px;
-            right: -10px;
-            background: rgba(20, 20, 25, 0.85);
+            top: 2px;
+            right: -8px;
+            background: rgba(20, 20, 25, 0.9);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 4px 8px;
+            border-radius: 10px;
+            padding: 3px 7px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 9px;
+            gap: 4px;
+            font-size: 8px;
             font-weight: 800;
             color: #ffffff;
             z-index: 15;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            pointer-events: none;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
         }
 
         .app-badge.visible { opacity: 1; }
 
         .recording-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             background-color: #ff3b30;
             border-radius: 50%;
             animation: subtle-pulse 2s infinite ease-in-out;
         }
 
-        .app-badge.offline .recording-dot { background-color: #777; animation: none; }
+        .app-badge.offline .recording-dot { background-color: #555; animation: none; }
 
         @keyframes subtle-pulse {
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
-            50% { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(255, 59, 48, 0); }
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+            0% { transform: scale(0.8); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.6; }
         }
 
         .app-indicator {
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
             background-color: #ffffff; 
             border-radius: 50%;
-            margin-top: 8px;
+            position: absolute;
+            bottom: -2px;
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
         }
 
-        .dock-app:hover { transform: translateY(-15px) scale(1.1); }
-        .dock-app:active .app-icon { transform: scale(0.9); filter: brightness(0.8); }
+        .dock-app:hover { transform: translateY(-10px); }
+        .dock-app:active .app-icon { transform: scale(0.92); }
 
         /* --- GENIE OVERLAY --- */
         .genie-overlay {
             position: fixed;
             bottom: 45px; 
             left: 50%;
-            margin-left: -37.5px; /* Half of 75px */
-            width: 75px;
-            height: 75px;
+            margin-left: -35px;
+            width: 70px;
+            height: 70px;
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(40px); 
             border-radius: 18px;
@@ -223,10 +220,7 @@
             transition: all 0.6s cubic-bezier(0.8, 0, 0.2, 1); 
         }
 
-        .genie-overlay.expand {
-            opacity: 1;
-            transform: scale(60); 
-        }
+        .genie-overlay.expand { opacity: 1; transform: scale(70); }
     </style>
 </head>
 <body>
@@ -248,7 +242,7 @@
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div>
                 <div class="app-icon icon-ig">
-                    <svg width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                 </div>
             </a>
 
@@ -256,14 +250,14 @@
                 <div class="app-tooltip">cuceuFM</div>
                 <div class="app-badge" id="fm-badge">
                     <div class="recording-dot"></div>
-                    <span id="fm-badge-text"></span>
+                    <span id="fm-badge-text">CHECKING...</span>
                 </div>
                 <div class="app-icon">.fm</div>
                 <div class="app-indicator"></div>
             </a>
 
             <a href="https://www.croydon.gov.uk/rubbish-and-recycling/bins/check-your-bin-collection-days" target="_blank" class="dock-app">
-                <div class="app-tooltip">Bin Day</div>
+                <div class="app-tooltip">Bin</div>
                 <div class="app-icon icon-trash">🗑️</div>
             </a>
         </div>
@@ -294,15 +288,12 @@
             setTimeout(() => { window.location.href = "/fm"; }, 550); 
         });
 
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                genieOverlay.classList.remove('expand');
-                appWrapper.classList.remove('glide-down');
-            }
-        });
+        // Smart Status Script
+        let failCount = 0;
 
         function checkStreamStatus() {
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
+            // Using a high-speed CORS proxy to reduce lag
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
 
             fetch(proxyUrl, { cache: "no-store" })
@@ -310,22 +301,29 @@
                 .then(data => {
                     let source = data.icestats.source;
                     if (source) {
+                        failCount = 0; // Reset on success
                         let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
                         sessionStorage.setItem('cuceu_fm_title', title);
                         sessionStorage.setItem('cuceu_fm_status', 'online');
+                        
                         document.getElementById('fm-badge-text').innerText = "ON AIR";
                         document.getElementById('fm-badge').classList.remove('offline');
                         document.getElementById('fm-badge').classList.add('visible');
                     } else { throw new Error(); }
                 })
                 .catch(() => {
-                    sessionStorage.setItem('cuceu_fm_status', 'offline');
-                    document.getElementById('fm-badge-text').innerText = "OFFLINE";
-                    document.getElementById('fm-badge').classList.add('offline', 'visible');
+                    failCount++;
+                    // Only show "OFFLINE" after 3 failed attempts in a row
+                    if (failCount >= 3) {
+                        sessionStorage.setItem('cuceu_fm_status', 'offline');
+                        document.getElementById('fm-badge-text').innerText = "OFFLINE";
+                        document.getElementById('fm-badge').classList.add('offline', 'visible');
+                    }
                 });
         }
+        
         checkStreamStatus();
-        setInterval(checkStreamStatus, 15000);
+        setInterval(checkStreamStatus, 10000); // Check every 10 seconds for stability
     </script>
 </body>
 </html>
