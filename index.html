@@ -18,7 +18,7 @@
             color: #000000;
         }
 
-        /* --- FLOATING STATUS AREA (Replaces Top Bar) --- */
+        /* --- FLOATING STATUS AREA (Clock & On Air Badge) --- */
         .status-area {
             position: absolute;
             top: 25px;
@@ -33,41 +33,31 @@
             letter-spacing: 0.5px;
         }
 
-        .battery-wrapper {
+        /* --- NEW: SUBTLE ON AIR BADGE --- */
+        .on-air-badge {
             display: flex;
             align-items: center;
             gap: 6px;
-            /* Hidden by default until JS confirms API support */
-            display: none; 
+            font-size: 10px; /* Tiny letters to match badge size */
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #000000;
+            padding-right: 5px;
         }
 
-        .battery-outline {
-            width: 24px;
-            height: 12px;
-            border: 1.5px solid #000;
-            border-radius: 4px;
-            padding: 1.5px;
-            position: relative;
-            display: flex;
+        .recording-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #ff3b30; /* Classic iOS notification red */
+            border-radius: 50%;
+            /* Subtle breathing pulse animation */
+            animation: subtle-pulse 2s infinite ease-in-out;
         }
 
-        .battery-outline::after {
-            content: '';
-            position: absolute;
-            right: -5px;
-            top: 2px;
-            width: 2px;
-            height: 6px;
-            background: #000;
-            border-radius: 0 2px 2px 0;
-        }
-
-        .battery-fill {
-            height: 100%;
-            background-color: #000;
-            border-radius: 2px;
-            width: 100%; 
-            transition: width 0.3s ease, background-color 0.3s ease;
+        @keyframes subtle-pulse {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(255, 59, 48, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
         /* --- THE STARK CENTER LOGO --- */
@@ -224,13 +214,11 @@
 </head>
 <body>
 
-    <!-- Replaced Top Bar with Floating Status -->
     <div class="status-area">
-        <div class="battery-wrapper" id="battery-wrapper">
-            <span id="battery-pct">100%</span>
-            <div class="battery-outline">
-                <div class="battery-fill" id="battery-level-fill"></div>
-            </div>
+        <!-- New Subtle On Air Badge -->
+        <div class="on-air-badge">
+            <div class="recording-dot"></div>
+            <span>ON AIR</span>
         </div>
         <span id="mac-clock">Sat 12:40 AM</span>
     </div>
@@ -267,35 +255,6 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
-
-        // Battery Sync Script
-        if ('getBattery' in navigator) {
-            navigator.getBattery().then(function(battery) {
-                const batteryWrapper = document.getElementById('battery-wrapper');
-                batteryWrapper.style.display = 'flex'; // Show if API is supported
-
-                function updateBatteryStatus() {
-                    const level = Math.round(battery.level * 100);
-                    document.getElementById('battery-pct').innerText = level + '%';
-                    
-                    const batteryFill = document.getElementById('battery-level-fill');
-                    batteryFill.style.width = level + '%';
-
-                    // Change color to green if charging, red if low, black normally
-                    if (battery.charging) {
-                        batteryFill.style.backgroundColor = '#10b981'; 
-                    } else if (level <= 20) {
-                        batteryFill.style.backgroundColor = '#ef4444'; 
-                    } else {
-                        batteryFill.style.backgroundColor = '#000000'; 
-                    }
-                }
-
-                updateBatteryStatus();
-                battery.addEventListener('levelchange', updateBatteryStatus);
-                battery.addEventListener('chargingchange', updateBatteryStatus);
-            });
-        }
 
         // App Launch & Genie Animation
         const appIcon = document.getElementById('fm-app');
