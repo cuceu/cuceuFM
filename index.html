@@ -149,7 +149,7 @@
         }
 
         .dock-app:hover {
-            transform: translateY(-15px) scale(1.9);
+            transform: translateY(-15px) scale(1.1);
         }
 
         .dock-app:hover .app-tooltip {
@@ -161,26 +161,32 @@
             background: #333;
         }
 
-        /* --- THE GENIE OVERLAY ANIMATION --- */
+        /* --- THE LIQUID GLASS GENIE OVERLAY --- */
         .genie-overlay {
             position: fixed;
             bottom: 45px; 
             left: 50%;
-            margin-left: -32.5px; /* Perfect center alignment with the icon */
+            margin-left: -32.5px; 
             width: 65px;
             height: 65px;
-            background-color: #000;
+            
+            /* Liquid Glass Effect */
+            background: rgba(0, 0, 0, 0.4); /* Semi-transparent dark tint */
+            backdrop-filter: blur(25px); /* Creates the heavy glass blur */
+            -webkit-backdrop-filter: blur(25px); /* Safari support for the blur */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle glass edge shine */
+            
             border-radius: 16px;
             z-index: 1000;
             pointer-events: none;
             opacity: 0;
             transform-origin: bottom center;
-            transition: all 0.6s cubic-bezier(0.8, 0, 0.2, 1); /* Sexy Mac-like easing */
+            transition: all 0.6s cubic-bezier(0.8, 0, 0.2, 1); 
         }
 
         .genie-overlay.expand {
             opacity: 1;
-            transform: scale(50); /* Massively scales the black box to swallow the screen */
+            transform: scale(50); 
         }
     </style>
 </head>
@@ -244,15 +250,23 @@
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
-            e.preventDefault(); // Stop the immediate page load
+            e.preventDefault(); 
             
-            // Trigger the explosion
+            // Trigger the liquid glass explosion
             genieOverlay.classList.add('expand');
             
-            // Wait exactly 550ms for the black screen to fill, then teleport to the radio room
+            // Wait exactly 550ms, then teleport
             setTimeout(() => {
                 window.location.href = "/fm";
             }, 550); 
+        });
+
+        // --- THE BACK-BUTTON FIX ---
+        // If the browser tries to load this page from the cache (like when pressing back), instantly reset the animation
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                genieOverlay.classList.remove('expand');
+            }
         });
     </script>
 
