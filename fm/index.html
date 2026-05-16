@@ -10,54 +10,56 @@
             background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;
         }
         
-        /* --- THE CROSSFADING BOUNCE CONTAINER --- */
+        /* --- THE BOUNCING CONTAINER --- */
         #bouncing-container {
             position: absolute;
-            width: 180px; height: 180px; /* Mobile size */
-            z-index: 5; /* This magic number puts it ABOVE CUCEU but BELOW .fm! */
+            width: 180px; height: 180px;
+            /* Layer 2: In front of CUCEU, but behind everything else */
+            z-index: 2; 
             top: 0; left: 0;
             will-change: transform;
         }
         
-        /* Desktop size boost! */
         @media (min-width: 768px) {
             #bouncing-container { width: 320px; height: 320px; }
         }
 
-        /* The dual-layer images for smooth blending */
         .art-layer {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
-            border-radius: 0; /* Unboxed/sharp corners! */
+            border-radius: 0; 
             opacity: 0;
-            transition: opacity 1.5s ease-in-out; /* The smooth crossfade blend */
-            box-shadow: 12px 12px 25px rgba(0,0,0,0.15);
+            transition: opacity 1.5s ease-in-out;
+            box-shadow: 15px 15px 35px rgba(0,0,0,0.2);
         }
         .art-layer.active {
-            opacity: 0.6; /* Slight transparency so text is readable */
+            /* Increased opacity to 0.9 (halfway more than 0.6) */
+            opacity: 0.9; 
         }
 
         #app-wrapper {
             width: 100%; height: 100%; position: relative;
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-            pointer-events: none; /* Lets you click through the invisible wrapper */
+            pointer-events: none;
         }
         
-        /* Re-enable clicking for actual menus and buttons */
         .main-container, .status-area { pointer-events: auto; }
 
         @keyframes continuityGlide {
             0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); }
         }
+
+        /* Front Layer Elements (Z-Index 10+) */
         .status-area {
             position: absolute; top: 75px; right: 30px; display: flex; align-items: center;
-            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000000; z-index: 20;
+            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000000; 
+            z-index: 20; 
         }
         .ticker-tape {
             position: absolute; width: 100%; background: #000; color: #ffffff; overflow: hidden;
             padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000;
-            z-index: 20; display: flex; /* Stays above everything */
+            z-index: 30; display: flex;
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         
@@ -78,20 +80,22 @@
             text-align: center; width: 100%; padding: 0 20px;
             box-sizing: border-box; 
             display: flex; flex-direction: column; align-items: center;
-            z-index: auto;
         }
         
-        /* H1 has no z-index, so it sits at the very back (Level 0) */
+        /* Layer 1: The big text in the very back */
         h1 {
             font-size: clamp(4rem, 16vw, 18rem); font-weight: 900;
             text-transform: uppercase; letter-spacing: -5px; margin: 0;
             -webkit-text-stroke: 4px #000; 
             position: relative;
+            z-index: 1; 
+            color: #fff;
         }
-        /* .fm sits at Level 10, jumping in front of the picture! */
+
+        /* Lifting the .fm and other UI to Layer 10+ so they stay on top */
         .fm-text { 
             font-size: 0.5em; text-transform: lowercase; -webkit-text-stroke: 0px; 
-            position: relative; z-index: 10;
+            position: relative; z-index: 10; color: #000;
         }
         
         .live-status {
@@ -106,11 +110,6 @@
         .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; transition: background-color 0.3s ease; }
         .pulse-dot.live { background-color: #34c759; }
         .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red {
-            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
-            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
-        }
         
         #btn {
             background-color: #000; color: #fff; border: 4px solid #000; padding: 20px 40px;
@@ -119,50 +118,39 @@
             position: relative; z-index: 10;
         }
         
-        /* --- FROSTED GLASS MENU (UNBOXED) --- */
         .history-wrapper {
-            width: 100%;
-            max-width: 360px;
-            position: relative; z-index: 10;
+            width: 100%; max-width: 360px;
+            position: relative; z-index: 15;
         }
         #history-toggle {
-            width: 100%; 
-            background: rgba(255, 255, 255, 0.4); /* Transparent base */
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); /* The glass blur */
-            color: #000; 
-            border: 1px solid rgba(0, 0, 0, 0.1); /* Soft edge instead of thick box */
+            width: 100%; background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: #000; border: 1px solid rgba(0, 0, 0, 0.1); 
             padding: 12px; border-radius: 8px;
             font-size: 0.85rem; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             display: flex; justify-content: space-between; align-items: center;
             transition: all 0.2s ease; box-sizing: border-box;
         }
-        #history-toggle:hover { background: rgba(255, 255, 255, 0.6); }
         
         #history-list { 
-            width: 100%;
-            background: rgba(255, 255, 255, 0.4); /* Transparent base */
+            width: 100%; background: rgba(255, 255, 255, 0.4); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            margin: 0; list-style: none;
-            box-sizing: border-box; text-align: left;
+            margin: 0; list-style: none; box-sizing: border-box; text-align: left;
             max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
             border: 0px solid rgba(0,0,0,0.1); border-radius: 8px;
-            box-shadow: 0px 0px 0 rgba(0,0,0,0);
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #history-list.open {
             max-height: 350px; opacity: 1; padding: 0 12px; pointer-events: auto;
             margin-top: 10px; border: 1px solid rgba(0,0,0,0.1); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow-y: auto;
         }
         
         .history-item { 
             padding: 12px 0; font-size: 0.85rem; font-weight: 900; 
             text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.05); color: #000;
         }
-        .history-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -178,14 +166,11 @@
         
         <div class="main-container">
             <h1>CUCEU<span class="fm-text">.fm</span></h1>
-            
             <div class="live-status">
                 <div class="pulse-dot" id="pulse-indicator"></div> 
                 <span id="center-status">CHECKING...</span>
             </div>
-            
             <button id="btn">▶ Listen</button>
-            
             <div class="history-wrapper">
                 <div id="history-toggle">Recently Played <span>▼</span></div>
                 <ul id="history-list">
@@ -219,78 +204,52 @@
     
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
 
-    // --- DVD BOUNCE LOGIC (SMART BARRIERS) ---
     let artX = 50, artY = 150; 
-    let artDX = 1.5, artDY = 1.5; 
+    let artDX = 1.6, artDY = 1.6; 
     let isBouncing = false;
 
     function animateBounce() {
         if (!isBouncing) return;
-        
-        // Grab exact sizes dynamically
         const rect = bouncingContainer.getBoundingClientRect();
-        const imgWidth = rect.width;
-        const imgHeight = rect.height;
-        
-        // Measure the physical height of your top and bottom ticker tapes
         const topBarrier = document.querySelector('.ticker-top').offsetHeight;
         const bottomBarrier = document.querySelector('.ticker-bottom').offsetHeight;
 
-        // Create the impenetrable walls!
-        const boundsX = window.innerWidth - imgWidth;
-        const boundsYMax = window.innerHeight - imgHeight - bottomBarrier;
+        const boundsX = window.innerWidth - rect.width;
+        const boundsYMax = window.innerHeight - rect.height - bottomBarrier;
         const boundsYMin = topBarrier;
 
-        artX += artDX;
-        artY += artDY;
+        artX += artDX; artY += artDY;
 
-        if (artX <= 0 || artX >= boundsX) {
-            artDX *= -1;
-            artX = Math.max(0, Math.min(artX, boundsX));
-        }
-        if (artY <= boundsYMin || artY >= boundsYMax) {
-            artDY *= -1;
-            artY = Math.max(boundsYMin, Math.min(artY, boundsYMax));
-        }
+        if (artX <= 0 || artX >= boundsX) { artDX *= -1; artX = Math.max(0, Math.min(artX, boundsX)); }
+        if (artY <= boundsYMin || artY >= boundsYMax) { artDY *= -1; artY = Math.max(boundsYMin, Math.min(artY, boundsYMax)); }
 
         bouncingContainer.style.transform = `translate(${artX}px, ${artY}px)`;
         requestAnimationFrame(animateBounce); 
     }
 
-    // --- CROSSFADE LOGIC ---
     let currentArtUrl = "";
     let currentLayer = 1;
 
     async function fetchArtwork() {
         try {
-            const url = await textFetch(`${STREAM_BASE}/artwork.txt`);
-            const cleanUrl = url.trim();
+            const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now(), { cache: "no-store" });
+            const cleanUrl = (await res.text()).trim();
             
             if (cleanUrl && cleanUrl.startsWith('http')) {
                 if (currentArtUrl !== cleanUrl) {
                     currentArtUrl = cleanUrl;
-                    
-                    // Flip-flop between layer 1 and layer 2
                     const nextLayerNum = currentLayer === 1 ? 2 : 1;
                     const nextLayer = document.getElementById(`art-layer-${nextLayerNum}`);
                     const oldLayer = document.getElementById(`art-layer-${currentLayer}`);
                     
                     nextLayer.src = cleanUrl;
                     nextLayer.onload = () => {
-                        nextLayer.classList.add('active'); // Fade new one in
-                        oldLayer.classList.remove('active'); // Fade old one out
+                        nextLayer.classList.add('active');
+                        oldLayer.classList.remove('active');
                         currentLayer = nextLayerNum;
-                        
-                        if (!isBouncing) {
-                            isBouncing = true;
-                            animateBounce(); 
-                        }
+                        if (!isBouncing) { isBouncing = true; animateBounce(); }
                     };
                 }
-            } else {
-                document.getElementById('art-layer-1').classList.remove('active');
-                document.getElementById('art-layer-2').classList.remove('active');
-                currentArtUrl = "";
             }
         } catch(e) {}
     }
@@ -302,24 +261,14 @@
 
     async function directFetch(url) {
         const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-        if (!response.ok) throw new Error("Direct fetch failed");
         return await response.json();
-    }
-    
-    async function textFetch(url) {
-        const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-        if (!response.ok) throw new Error("Text fetch failed");
-        return await response.text();
     }
 
     async function fetchGlobalHistory() {
         try {
             const data = await directFetch(`${STREAM_BASE}/history.json`);
             if (data && Array.isArray(data)) {
-                const cleanData = data.filter(t => t && t.trim() !== "");
-                if (cleanData.length > 0) {
-                    historyList.innerHTML = cleanData.map(track => `<li class="history-item">${track}</li>`).join('');
-                }
+                historyList.innerHTML = data.filter(t => t && t.trim() !== "").map(track => `<li class="history-item">${track}</li>`).join('');
             }
         } catch(e) {}
     }
@@ -327,11 +276,8 @@
     function updateTicker(baseString) {
         if (currentTrackText === baseString) return;
         currentTrackText = baseString;
-        
         const content = Array(10).fill(`<span class="song-display">${baseString}</span>`).join('');
-        
         [topMarquee, bottomMarquee].forEach(m => m.style.opacity = 0);
-        
         setTimeout(() => {
             [topMarquee, bottomMarquee].forEach(m => {
                 m.innerHTML = content + content;
@@ -343,7 +289,6 @@
 
     function setStatus(text, dotClass) {
         if (centerStatus.innerText === text) return;
-        
         centerStatus.style.opacity = 0; 
         setTimeout(() => {
             centerStatus.innerText = text;
@@ -357,25 +302,15 @@
             const data = await directFetch(`${STREAM_BASE}/status-json.xsl`);
             let source = data.icestats ? data.icestats.source : null;
             if (!source) throw new Error("Offline");
-            
             isOnline = true;
             let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-            
-            if (!playing) { 
-                setStatus("LIVE", "live");
-            }
-            
-            if (newTitle !== currentTitle) { 
-                currentTitle = newTitle; 
-                fetchGlobalHistory(); 
-                fetchArtwork(); 
-            }
+            if (!playing) setStatus("LIVE", "live");
+            if (newTitle !== currentTitle) { currentTitle = newTitle; fetchGlobalHistory(); fetchArtwork(); }
             updateTicker(`NOW PLAYING: ${newTitle}`);
         } catch (e) {
             isOnline = false;
             if (!playing) { 
-                setStatus("OFFLINE", "");
-                updateTicker("STANDBY");
+                setStatus("OFFLINE", ""); updateTicker("STANDBY");
                 document.getElementById('art-layer-1').classList.remove('active');
                 document.getElementById('art-layer-2').classList.remove('active');
             }
@@ -385,8 +320,7 @@
     btn.onclick = () => {
         if (!playing) {
             player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play();
-            btn.innerText = "⏸ Disconnect"; 
-            setStatus("CONNECTING...", "");
+            btn.innerText = "⏸ Disconnect"; setStatus("CONNECTING...", "");
         } else {
             player.pause(); player.src = ""; btn.innerText = "▶ Listen";
             setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : "");
@@ -396,10 +330,7 @@
 
     player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
 
-    fetchGlobalHistory();
-    fetchArtwork();
-    updateTicker("STANDBY");
-    fetchSongData();
+    fetchGlobalHistory(); fetchArtwork(); updateTicker("STANDBY"); fetchSongData();
     setInterval(fetchSongData, 3000);
 </script>
 </body>
