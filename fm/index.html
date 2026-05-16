@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceuFM</title>
     <style>
-        /* PLAIN WHITE BRUTALIST BACKGROUND WITH SMOOTH FADE-IN */
+        /* PLAIN WHITE BRUTALIST BACKGROUND */
         html, body {
             margin: 0;
             padding: 0;
@@ -13,8 +13,6 @@
             overflow: hidden;
             background-color: #ffffff; 
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            
-            /* Continued glide downward so the transition matches trajectory */
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
@@ -23,14 +21,14 @@
             100% { opacity: 1; transform: translateY(0); } 
         }
 
-        /* --- FLOATING STATUS AREA (Clock Only) --- */
+        /* --- FLOATING STATUS AREA --- */
         .status-area {
             position: absolute;
-            top: 75px; /* Sits cleanly right below the top ticker tape */
+            top: 75px; 
             right: 30px;
             display: flex;
             align-items: center;
-            font-size: 16px; /* Slightly bigger clock size */
+            font-size: 16px; 
             font-weight: 800; 
             text-transform: uppercase;
             color: #000000;
@@ -38,7 +36,7 @@
             letter-spacing: 1px;
         }
 
-        /* --- SEAMLESS INFINITE TICKER TAPE CSS --- */
+        /* --- SEAMLESS INFINITE TICKER TAPE --- */
         .ticker-tape {
             position: absolute;
             width: 100%;
@@ -91,7 +89,6 @@
             align-items: center;
         }
 
-        /* BOLDER LOGO */
         h1 {
             font-size: clamp(4rem, 16vw, 18rem); 
             white-space: nowrap; 
@@ -110,7 +107,6 @@
             -webkit-text-stroke: 0px; 
         }
 
-        /* Free-Floating Minimal Center Status */
         .live-status {
             font-size: clamp(1rem, 3vw, 1.5rem);
             text-transform: uppercase;
@@ -119,7 +115,6 @@
             margin-top: 15px;
             margin-bottom: 40px;
             color: #000; 
-            background: transparent; 
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -131,9 +126,13 @@
         .pulse-dot {
             height: 12px;
             width: 12px;
-            background-color: #ff0000; 
+            background-color: #777; /* Default offline grey */
             border-radius: 50%;
             flex-shrink: 0;
+        }
+
+        .pulse-dot.active {
+            background-color: #ff0000; 
             animation: pulse-red 1.5s infinite;
         }
 
@@ -143,7 +142,6 @@
             100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
-        /* BIG BLOCKY BUTTON */
         button {
             background-color: #000; 
             color: #fff; 
@@ -154,20 +152,11 @@
             font-weight: 800;
             letter-spacing: 3px;
             cursor: pointer;
-            border-radius: 0; 
             box-shadow: 8px 8px 0 #d3d3d3; 
             transition: all 0.2s ease;
         }
-
-        button:hover {
-            transform: translate(-4px, -4px); 
-            box-shadow: 12px 12px 0 #d3d3d3; 
-        }
-
-        button:active {
-            transform: translate(4px, 4px); 
-            box-shadow: 0px 0px 0 #d3d3d3; 
-        }
+        button:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 #d3d3d3; }
+        button:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0 #d3d3d3; }
     </style>
 </head>
 <body>
@@ -187,7 +176,7 @@
         <h1>CUCEU<span class="fm-text">.fm</span></h1>
         
         <div class="live-status">
-            <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">LOADING...</span>
+            <div class="pulse-dot" id="pulse-indicator"></div> <span id="center-status">CONNECTING...</span>
         </div>
         <button id="btn">▶ Listen</button>
     </div>
@@ -206,19 +195,15 @@
         function updateClock() {
             const now = new Date();
             const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            const day = days[now.getDay()];
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            document.getElementById('mac-clock').innerText = `${day} ${hours}:${minutes} ${ampm}`;
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            let hours = now.getHours() % 12 || 12; 
+            let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
+            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} ${hours}:${minutes} ${ampm}`;
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        // --- Radio Player Logic ---
+        // --- DOM Elements ---
         const btn = document.getElementById("btn");
         const player = document.getElementById("radioPlayer");
         const centerStatus = document.getElementById("center-status");
@@ -226,74 +211,87 @@
         const tapes = document.querySelectorAll('.song-display');
         
         let playing = false;
-        let dataLoaded = false;
+        let isOnline = false;
         let currentTrackText = "";
+        let errorCount = 0; // For proxy forgiveness
 
-        // Pre-fill the tapes with a massive string immediately to prevent the black flash
-        const initText = Array(15).fill("+++ WAITING FOR SATELLITE UPLINK... ").join('');
-        tapes.forEach(el => el.innerText = initText);
-        currentTrackText = initText;
+        // --- Instant Memory Load (The magic trick) ---
+        const cachedStatus = sessionStorage.getItem('cuceu_fm_status');
+        const cachedTitle = sessionStorage.getItem('cuceu_fm_title');
 
+        if (cachedStatus === 'online' && cachedTitle) {
+            isOnline = true;
+            centerStatus.innerText = "READY";
+            pulseIndicator.classList.add('active');
+            updateTicker(`+++ NOW PLAYING: ${cachedTitle} `);
+        } else {
+            updateTicker("+++ CONNECTING... ");
+        }
+
+        // --- Helper: Smooth Ticker Updater ---
+        function updateTicker(baseString) {
+            const newText = Array(15).fill(baseString).join('');
+            if (currentTrackText !== newText) {
+                tapes.forEach(el => el.innerText = newText);
+                currentTrackText = newText;
+            }
+        }
+
+        // --- Play/Pause Logic ---
         btn.onclick = () => {
             if (!playing) {
                 player.src = "https://stream.cuceu.co.uk/stream.mp3";
                 player.play();
                 btn.innerText = "⏸ Pause";
-                centerStatus.innerText = "ON AIR"; 
-                pulseIndicator.style.backgroundColor = "#ff0000"; // Ensure pulse is red when playing
+                if (isOnline) {
+                    centerStatus.innerText = "ON AIR"; 
+                    pulseIndicator.classList.add('active');
+                }
             } else {
                 player.pause();
                 player.src = ""; 
                 btn.innerText = "▶ Listen";
-                centerStatus.innerText = dataLoaded ? "READY" : "OFFLINE"; 
+                centerStatus.innerText = isOnline ? "READY" : "OFFLINE"; 
             }
             playing = !playing;
         };
 
+        // --- Background Fetch with Forgiveness ---
         function fetchSongData() {
             const targetUrl = encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + new Date().getTime());
             const proxyUrl = "https://api.allorigins.win/raw?url=" + targetUrl + "&nocache=" + new Date().getTime();
             
             fetch(proxyUrl, { cache: "no-store" })
                 .then(response => {
-                    if (!response.ok) throw new Error("Offline");
+                    if (!response.ok) throw new Error("Proxy limit hit");
                     return response.json();
                 })
                 .then(data => {
                     let source = data.icestats.source;
-                    if (!source) throw new Error("No source"); // Triggers the catch block
+                    if (!source) throw new Error("Stream offline"); 
                     
-                    dataLoaded = true;
-                    if (!playing) {
-                        centerStatus.innerText = "READY"; 
-                    }
-                    pulseIndicator.style.backgroundColor = "#ff0000"; // Active pulse
+                    errorCount = 0; // Reset errors on success
+                    isOnline = true;
+                    if (!playing) centerStatus.innerText = "READY"; 
+                    pulseIndicator.classList.add('active');
 
                     let title = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-                    let newText = Array(15).fill(`+++ NOW PLAYING: ${title} `).join('');
-
-                    // Only update the DOM if the text actually changed to prevent jumping
-                    if (currentTrackText !== newText) {
-                        tapes.forEach(el => el.innerText = newText);
-                        currentTrackText = newText;
-                    }
+                    updateTicker(`+++ NOW PLAYING: ${title} `);
                 })
                 .catch(err => {
-                    // Icecast is down or BUTT isn't pushing audio
-                    dataLoaded = false;
-                    if (!playing) centerStatus.innerText = "OFFLINE";
-                    pulseIndicator.style.backgroundColor = "#555"; // Grey out pulse when offline
-                    
-                    let offlineText = Array(15).fill(`+++ STATION OFFLINE `).join('');
-                    if (currentTrackText !== offlineText) {
-                        tapes.forEach(el => el.innerText = offlineText);
-                        currentTrackText = offlineText;
+                    errorCount++;
+                    // Only drop to offline if it fails 2 times in a row (stops the choppiness)
+                    if (errorCount >= 2) {
+                        isOnline = false;
+                        if (!playing) centerStatus.innerText = "OFFLINE";
+                        pulseIndicator.classList.remove('active');
+                        updateTicker("+++ STATION OFFLINE ");
                     }
                 });
         }
 
-        fetchSongData();
-        setInterval(fetchSongData, 5000);
+        // Start polling a bit slower to protect the proxy
+        setInterval(fetchSongData, 8000);
     </script>
 </body>
 </html>
