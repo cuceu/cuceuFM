@@ -60,7 +60,6 @@
             justify-content: center;
             overflow: hidden; 
             pointer-events: none;
-            /* Glitch runs continuously, entrance animation moved to individual rows */
             animation: subtle-glitch 8s infinite 2s;
         }
         
@@ -93,28 +92,49 @@
             flex-shrink: 0; 
             user-select: none;
             -webkit-user-drag: none; 
-            opacity: 0; /* Hidden initially so they can fade in */
+            opacity: 0; /* Hidden initially */
         }
 
-        /* --- THE BREATHING DROP-IN ANIMATIONS --- */
-        @keyframes dropInOdd {
-            0% { opacity: 0; transform: translateY(-40px) scale(0.85); filter: blur(5px); }
-            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-        @keyframes dropInEven {
-            0% { opacity: 0; transform: translateY(-40px) scale(0.85) rotate(180deg); filter: blur(5px); }
-            100% { opacity: 1; transform: translateY(0) scale(1) rotate(180deg); filter: blur(0); }
+        /* --- THE MECHANICAL DROP-IN ANIMATIONS (Removed Blur & Switched Easing) --- */
+        @keyframes dropInMechanical {
+            0% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Apply the animations with 'both' to keep them hidden during the delay, and rotated properly */
+        /* Visibility: visible pops them in mechanically when delay ends, linear gives no smooth accel/decel */
         .marquee-track:nth-child(odd) img.cuceu-img {
-            animation: dropInOdd 1.2s cubic-bezier(0.25, 1, 0.5, 1) both;
+            animation: dropInMechanical 0.4s linear both;
         }
+        
+        /* Account for rotation on even rows */
         .marquee-track:nth-child(even) img.cuceu-img {
-            animation: dropInEven 1.2s cubic-bezier(0.25, 1, 0.5, 1) both;
+            transform: rotate(180deg);
+            animation: dropInMechanical 0.4s linear both;
+            transform-origin: center;
+        }
+        
+        /* Crucial fix to ensure rotation is respected DURING the mechanical pop-in on even rows */
+        @keyframes dropInMechanical {
+             0% { opacity: 0; transform: translateY(-30px) inherit; }
+             100% { opacity: 1; transform: translateY(0) inherit; }
+        }
+        
+        /* Overriding to handle specific even row rotation mechanics */
+        @keyframes dropInMechanicalEven {
+             0% { opacity: 0; transform: translateY(-30px) rotate(180deg); }
+             100% { opacity: 1; transform: translateY(0) rotate(180deg); }
         }
 
-        /* Stagger the entrance line by line */
+        .marquee-track:nth-child(even) img.cuceu-img {
+            animation-name: dropInMechanicalEven;
+        }
+
+        /* Stagger the segmented entrance line by line (Removed easing for mechanical 'snap') */
+        .marquee-track img.cuceu-img {
+            /* Using steps(1) means they are hidden until delay ends, then snapshot to 100% state instantly */
+            animation-timing-function: steps(1, end); 
+        }
+
         .marquee-track:nth-child(1) img.cuceu-img { animation-delay: 0.1s; }
         .marquee-track:nth-child(2) img.cuceu-img { animation-delay: 0.2s; }
         .marquee-track:nth-child(3) img.cuceu-img { animation-delay: 0.3s; }
@@ -137,12 +157,13 @@
             padding: 8px 16px; display: flex; gap: 12px; align-items: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             opacity: 0;
-            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s forwards; /* Delayed slightly so logos appear first */
+            /* Dock snaps in mechanically after logos */
+            animation: dockSnapIn 0.01s steps(1) 1.2s forwards; 
         }
         
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-        @keyframes dockSlideUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes dockSnapIn { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes dockSlideDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
 
         .dock-app {
@@ -243,157 +264,10 @@
             <div class="marquee-track track-left">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-            
+
             <div class="marquee-track track-right">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-        </div>
-    </div>
-
-    <div class="mac-dock-container">
-        <div class="mac-dock">
-            
-            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
-                <div class="app-tooltip">Instagram</div>
-                <div class="app-icon icon-ig">
-                    <svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                </div>
-            </a>
-
-            <a href="/td" class="dock-app internal-link">
-                <div class="app-tooltip">TouchDesigner</div>
-                <div class="app-icon icon-td">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0" y="0" width="100" height="100" fill="#919c7d" stroke="#111" stroke-width="4" />
-                        <path d="M 50 0 L 50 100 M 0 50 L 100 50" stroke="#111" stroke-width="5"/>
-                        <path d="M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50" stroke="#111" stroke-width="5"/>
-                        <rect x="12" y="12" width="20" height="20" fill="#111" />
-                        <rect x="68" y="12" width="20" height="20" fill="#111" />
-                        <rect x="12" y="68" width="20" height="20" fill="#111" />
-                        <rect x="68" y="68" width="20" height="20" fill="#111" />
-                        <circle cx="50" cy="50" r="23" fill="#ffffff" stroke="#111" stroke-width="5" />
-                        <rect x="43" y="43" width="14" height="14" fill="#111" />
-                    </svg>
-                </div>
-            </a>
-
-            <a href="/fm" class="dock-app is-open internal-link" id="fm-app">
-                <div class="app-tooltip">cuceuFM</div>
-                <div class="app-badge" id="fm-badge">
-                    <div class="recording-dot"></div>
-                    <span id="fm-badge-text">STATUS...</span>
-                </div>
-                <div class="app-icon">.fm</div>
-            </a>
-
-            <a href="/bin" class="dock-app internal-link">
-                <div class="app-tooltip">Trash</div>
-                <div class="app-icon icon-trash">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="rgba(255,255,255,0.7)" />
-                                <stop offset="20%" stop-color="rgba(255,255,255,0.2)" />
-                                <stop offset="80%" stop-color="rgba(255,255,255,0.2)" />
-                                <stop offset="100%" stop-color="rgba(255,255,255,0.6)" />
-                            </linearGradient>
-                            <linearGradient id="paper1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#ffffff"/>
-                                <stop offset="100%" stop-color="#dddddd"/>
-                            </linearGradient>
-                            <linearGradient id="paper2" x1="100%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#f0f0f0"/>
-                                <stop offset="100%" stop-color="#aaaaaa"/>
-                            </linearGradient>
-                        </defs>
-
-                        <path d="M 30 35 Q 25 15 45 10 T 65 20 Q 70 35 60 40 Z" fill="url(#paper2)" stroke="#999" stroke-width="0.5"/>
-                        <path d="M 40 18 Q 50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                        <path d="M 45 40 Q 45 20 60 18 T 80 25 Q 85 40 70 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
-                        <path d="M 55 25 Q 65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                        <path d="M 20 40 Q 15 25 35 22 T 55 30 Q 50 45 35 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
-                        <path d="M 28 30 Q 40 25 45 35" fill="none" stroke="#999" stroke-width="1" stroke-linecap="round"/>
-
-                        <ellipse cx="50" cy="30" rx="34" ry="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-
-                        <path d="M 16 30 L 26 86 C 26 94, 74 94, 74 86 L 84 30 Z" fill="url(#glass)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
-
-                        <path d="M 22 36 L 30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
-
-                        <path d="M 16 30 A 34 9 0 0 0 84 30" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
-                        <path d="M 18 31 A 32 7 0 0 0 82 31" fill="none" stroke="rgba(150,150,150,0.5)" stroke-width="1"/>
-                    </svg>
-                </div>
-            </a>
-            
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const overlay = document.getElementById('page-transition-overlay');
-            requestAnimationFrame(() => overlay.classList.add('loaded'));
-
-            document.querySelectorAll('.internal-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('is-exiting'); 
-                    
-                    setTimeout(() => {
-                        overlay.classList.remove('loaded');
-                        overlay.classList.add('leaving');
-                    }, 500); 
-                    setTimeout(() => window.location.href = link.href, 900); 
-                });
-            });
-        });
-
-        window.addEventListener('pageshow', (e) => { 
-            if (e.persisted) {
-                document.body.classList.remove('is-exiting');
-                document.getElementById('page-transition-overlay').classList.add('loaded');
-                document.getElementById('page-transition-overlay').classList.remove('leaving');
-            }
-        });
-
-        function updateClock() {
-            const now = new Date();
-            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-            let hours = now.getHours() % 12 || 12; 
-            let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
-            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} ${hours}:${minutes} ${ampm}`;
-        }
-        updateClock(); setInterval(updateClock, 1000);
-
-        function checkStreamStatus() {
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
-            fetch(proxyUrl, { cache: "no-store" })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.icestats.source) {
-                        document.getElementById('fm-badge-text').innerText = "ON AIR";
-                        document.getElementById('fm-badge').classList.add('visible');
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('fm-badge-text').innerText = "OFFLINE";
-                    document.getElementById('fm-badge').classList.add('visible');
-                });
-        }
-        checkStreamStatus(); setInterval(checkStreamStatus, 15000);
-    </script>
-</body>
-</html>
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt
