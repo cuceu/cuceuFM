@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>CUCEU.fm</title>
+    <title>c.fm</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
 
     <style>
@@ -17,7 +17,6 @@
         #bouncing-container {
             position: absolute;
             width: 180px; height: 180px;
-            /* Layer 1: Behind the text, but above the white floor */
             z-index: 1; 
             top: 0; left: 0;
             will-change: transform;
@@ -36,10 +35,9 @@
             transition: opacity 1.5s ease-in-out;
         }
         .art-layer.active {
-            opacity: 0.9; /* 90% Opacity */
+            opacity: 0.9; 
         }
 
-        /* Front Layer for all text/buttons */
         #app-wrapper {
             width: 100%; height: 100%; position: relative;
             z-index: 10; 
@@ -83,15 +81,27 @@
             display: flex; flex-direction: column; align-items: center;
         }
         
-        /* THE BLACK CUCEU */
+        /* --- THE MASSIVE BOLD CUCEU --- */
         h1 {
-            font-size: clamp(4rem, 16vw, 18rem); font-weight: 950;
-            text-transform: uppercase; letter-spacing: -5px; margin: 0;
+            font-size: clamp(8rem, 28vw, 35rem); /* Massive Size */
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: -12px; /* Tight Heavy Spacing */
+            margin: 0;
             color: #000000;
-            line-height: 1;
+            line-height: 0.8;
+            user-select: none;
         }
 
-        .fm-text { font-size: 0.5em; text-transform: lowercase; }
+        /* --- THE SMALLER LIGHTER .FM --- */
+        .fm-text { 
+            font-size: 0.3em; /* Much smaller relative to the giant CUCEU */
+            text-transform: lowercase;
+            font-weight: 400; /* Not as bold */
+            letter-spacing: normal; /* Resets the tight spacing for readability */
+            display: inline-block;
+            vertical-align: baseline;
+        }
         
         .live-status {
             font-size: clamp(1rem, 3vw, 1.5rem); text-transform: uppercase; letter-spacing: 3px;
@@ -111,7 +121,6 @@
             cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
         }
         
-        /* --- UNBOXED FLOATING TOGGLE --- */
         .history-wrapper {
             width: 100%; max-width: 360px;
             position: relative; 
@@ -126,7 +135,6 @@
         }
         #history-toggle:hover { opacity: 0.6; }
         
-        /* --- TRANSPARENT GLASS DROPDOWN --- */
         #history-list { 
             width: 100%; 
             background: rgba(255, 255, 255, 0.2); 
@@ -146,6 +154,10 @@
             text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.05); color: #000;
         }
         .history-item:last-child { border-bottom: none; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 6rem; letter-spacing: -4px; }
+        }
     </style>
 </head>
 <body>
