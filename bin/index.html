@@ -14,23 +14,24 @@
         /* The fake macOS app window bar */
         .mac-titlebar {
             height: 40px; background: #e5e5e5; display: flex; align-items: center; padding: 0 15px;
-            border-bottom: 1px solid #ccc; position: relative; z-index: 10;
+            border-bottom: 1px solid #ccc; position: relative; z-index: 9999;
         }
 
-        /* The close button to go back to the main site */
+        /* The close button - forced to the very front so it can't be blocked */
         .close-btn {
             width: 13px; height: 13px; background-color: #ff5f56; border-radius: 50%;
             display: inline-block; cursor: pointer; border: 1px solid #e0443e;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s; position: relative; z-index: 99999;
         }
         .close-btn:hover { opacity: 0.7; }
         
-        .window-title { flex-grow: 1; text-align: center; font-weight: 600; font-size: 13px; color: #333; margin-left: -13px; }
+        .window-title { flex-grow: 1; text-align: center; font-weight: 600; font-size: 13px; color: #333; margin-left: -13px; pointer-events: none; }
 
         /* Camera wrapper */
         .app-content { 
             height: calc(100% - 40px); width: 100%; position: relative; 
             display: flex; justify-content: center; align-items: center;
+            z-index: 1; /* Keeping this below the title bar */
         }
 
         /* The video feed */
@@ -50,7 +51,7 @@
 <body>
 
     <div class="mac-titlebar">
-        <div onclick="window.location.href='../'" class="close-btn" title="Close App"></div>
+        <div onclick="window.location.assign('/');" class="close-btn" title="Close App"></div>
         <div class="window-title">Trash</div>
     </div>
 
