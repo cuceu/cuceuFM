@@ -77,7 +77,7 @@
             flex-grow: 1; margin: 0 30px 30px 30px;
             border-radius: 12px; background-color: #1a1a1a; color: #d0d0d0;
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333; position: relative;
         }
 
         .top-bar {
@@ -112,7 +112,27 @@
             pointer-events: none; z-index: 1; overflow: visible;
         }
 
-        /* The Nodes */
+        /* --- ON-SCREEN NAV CONTROLS --- */
+        .nav-controls {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; gap: 5px;
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(5px);
+            padding: 10px; border-radius: 8px; border: 1px solid #333;
+            z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .nav-row { display: flex; justify-content: center; gap: 5px; }
+        .nav-btn {
+            width: 32px; height: 32px; background: #333; color: #aaa;
+            border: 1px solid #444; border-radius: 4px;
+            cursor: pointer; font-size: 14px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.1s;
+        }
+        .nav-btn:hover { background: #555; color: #fff; }
+        .nav-btn:active { background: #111; transform: scale(0.95); }
+        .nav-divider { width: 100%; height: 1px; background: #444; margin: 4px 0; }
+
+        /* --- THE NODES --- */
         .td-node {
             position: absolute; background-color: #1e1e1e; border: 1px solid #000;
             border-radius: 2px; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
@@ -121,15 +141,26 @@
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
-        /* SCATTERED Node Placement using Viewport Math! */
-        #project-node { width: 180px; left: calc(50vw - 260px); top: calc(50vh - 220px); }
-        #download-node { width: 140px; left: calc(50vw + 60px); top: calc(50vh - 120px); }
+        /* MOVED NODES HIGHER UP! Shifted Y values heavily to fix empty space */
+        #project-node { width: 180px; left: calc(50vw - 260px); top: calc(50vh - 300px); }
+        #download-node { width: 140px; left: calc(50vw + 60px); top: calc(50vh - 220px); }
         
-        #project-node-2 { width: 180px; left: calc(50vw - 120px); top: calc(50vh + 60px); }
-        #download-node-2 { width: 140px; left: calc(50vw + 180px); top: calc(50vh + 140px); }
+        #project-node-2 { width: 180px; left: calc(50vw - 120px); top: calc(50vh - 40px); }
+        #download-node-2 { width: 140px; left: calc(50vw + 180px); top: calc(50vh + 20px); }
 
         .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
         .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
+
+        /* --- HOVER FULL NAME TOOLTIP --- */
+        .node-fullname-tooltip {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85); color: #fff; border: 1px solid #444;
+            padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
+            white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease; z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .td-node:hover .node-fullname-tooltip { opacity: 1; transform: translateX(-50%) translateY(-5px); }
 
         /* Node Image Viewer */
         .node-viewer { 
@@ -174,12 +205,8 @@
 
         .video-modal.active { opacity: 1; pointer-events: auto; }
 
-        /* UPDATED VIDEO CONTAINER FOR BIGGER PLAYER */
         .video-container { 
-            position: relative; 
-            height: 92vh; /* Make it massive vertically! */
-            aspect-ratio: 9/16; 
-            width: auto; max-width: 95vw;
+            position: relative; height: 92vh; aspect-ratio: 9/16; width: auto; max-width: 95vw;
         }
         
         .close-hint { position: absolute; top: -30px; width: 100%; text-align: center; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -191,12 +218,12 @@
             .td-window { margin: 0 10px 10px 10px; }
             .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
             
-            /* Scattered node sizing for mobile screens */
-            #project-node { left: calc(50vw - 160px); top: calc(50vh - 200px); width: 140px; }
-            #download-node { left: calc(50vw - 10px); top: calc(50vh - 130px); width: 110px; }
+            /* Shifted up heavily for mobile too */
+            #project-node { left: calc(50vw - 160px); top: calc(50vh - 260px); width: 140px; }
+            #download-node { left: calc(50vw - 10px); top: calc(50vh - 190px); width: 110px; }
             
-            #project-node-2 { left: calc(50vw - 140px); top: calc(50vh + 30px); width: 140px; }
-            #download-node-2 { left: calc(50vw + 10px); top: calc(50vh + 90px); width: 110px; }
+            #project-node-2 { left: calc(50vw - 140px); top: calc(50vh - 40px); width: 140px; }
+            #download-node-2 { left: calc(50vw + 10px); top: calc(50vh + 30px); width: 110px; }
         }
     </style>
 </head>
@@ -224,6 +251,20 @@
 
         <div class="network-editor" id="network-editor">
             
+            <div class="nav-controls" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
+                <div class="nav-row"><button class="nav-btn" onclick="panView(0, 50)">▲</button></div>
+                <div class="nav-row">
+                    <button class="nav-btn" onclick="panView(50, 0)">◀</button>
+                    <button class="nav-btn" onclick="panView(0, -50)">▼</button>
+                    <button class="nav-btn" onclick="panView(-50, 0)">▶</button>
+                </div>
+                <div class="nav-divider"></div>
+                <div class="nav-row">
+                    <button class="nav-btn" onclick="zoomView(0.1)">+</button>
+                    <button class="nav-btn" onclick="zoomView(-0.1)">-</button>
+                </div>
+            </div>
+
             <div id="network-canvas">
                 
                 <svg id="wire-layer">
@@ -232,6 +273,7 @@
                 </svg>
 
                 <div class="td-node video-node" id="project-node" data-video-src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0&autoplay=1">
+                    <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser</div>
                     <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Sully-Model Collapse...</span><span>✖</span></div>
                     
                     <div class="node-viewer" style="height: 90px; background-image: url('sullyjpeg.jpg');">
@@ -246,6 +288,7 @@
 
                 <a href="Sully -Model Collapse Visualiser.toe" download>
                     <div class="td-node" id="download-node" title="Click to download .toe file">
+                        <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser.toe</div>
                         <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Sully -Model Collapse...</span><span>↓</span></div>
                         
                         <div class="node-viewer" style="height: 70px; background-image: url('sullyjpeg.jpg');">
@@ -264,6 +307,7 @@
 
 
                 <div class="td-node video-node" id="project-node-2" data-video-src="https://player.vimeo.com/video/1193012409?title=0&byline=0&portrait=0&autoplay=1">
+                    <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video</div>
                     <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>✖</span></div>
                     
                     <div class="node-viewer" style="height: 90px; background-image: url('poatejpeg.jpg');">
@@ -278,6 +322,7 @@
 
                 <a href="Printesa De Aur - Poate Lyric Music Video.toe" download>
                     <div class="td-node" id="download-node-2" title="Click to download .toe file">
+                        <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video.toe</div>
                         <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>↓</span></div>
                         
                         <div class="node-viewer" style="height: 70px; background-image: url('poatejpeg.jpg');">
@@ -370,6 +415,17 @@
             editor.style.backgroundSize = `${40 * scale}px ${40 * scale}px`;
         }
 
+        // Exposed navigation functions for the buttons
+        window.panView = function(dx, dy) {
+            panX += dx; panY += dy; updateTransform();
+        };
+
+        window.zoomView = function(delta) {
+            let newScale = scale + delta;
+            newScale = Math.max(0.3, Math.min(newScale, 3)); 
+            scale = newScale; updateTransform();
+        };
+
         editor.addEventListener('mousedown', (e) => {
             if(e.target.closest('.td-node')) return; 
             isDragging = true;
@@ -421,10 +477,12 @@
             updateTransform();
         }, {passive: false});
 
+        // --- ORGANIC WIRE LOGIC ---
         function drawWires() {
+            // We pass custom "droop" and "stiffness" values to make each wire unique!
             const connections = [
-                { outId: 'project-node', inId: 'download-node', pathId: 'wire-path-1' },
-                { outId: 'project-node-2', inId: 'download-node-2', pathId: 'wire-path-2' }
+                { outId: 'project-node', inId: 'download-node', pathId: 'wire-path-1', droop: 40, stiff: 70 },
+                { outId: 'project-node-2', inId: 'download-node-2', pathId: 'wire-path-2', droop: 10, stiff: 40 }
             ];
 
             connections.forEach(conn => {
@@ -438,10 +496,11 @@
                 const endX = inNode.offsetLeft;
                 const endY = inNode.offsetTop + (inNode.offsetHeight / 2);
 
-                const cp1X = startX + 60;
-                const cp1Y = startY;
-                const cp2X = endX - 60;
-                const cp2Y = endY;
+                // Adding organic curves!
+                const cp1X = startX + conn.stiff;
+                const cp1Y = startY + conn.droop;
+                const cp2X = endX - conn.stiff;
+                const cp2Y = endY + conn.droop;
 
                 wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
             });
