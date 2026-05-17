@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cuceu.td</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><circle cx=%2250%22 cy=%2250%22 r=%2225%22 fill=%22white%22/></svg>">
+    <title>TouchDesigner | CUCEU</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
     <style>
         * {
             box-sizing: border-box;
@@ -16,12 +16,84 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #1a1a1a;
-            color: #d0d0d0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff; /* White background */
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* --- HEADER SECTION --- */
+        .brand-header {
+            background-color: #ffffff;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .back-btn-top {
+            position: absolute; 
+            left: 30px; 
+            top: 30px;
+            color: #000; 
+            text-decoration: none; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 12px;
+            letter-spacing: 1px;
+            border: 2px solid #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn-top:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .logo-group { 
+            display: flex; 
+            align-items: flex-end; 
+            justify-content: center; 
+            margin-top: 10px;
+        }
+        
+        h1 { 
+            font-size: clamp(4rem, 12vw, 12rem); 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            letter-spacing: -6px; 
+            margin: 0; 
+            color: #000; 
+            line-height: 0.8; 
+        }
+
+        .td-text { 
+            font-size: clamp(1.5rem, 5vw, 4rem); 
+            font-weight: 400; 
+            text-transform: lowercase; 
+            margin-left: 5px; 
+            color: #000; 
+            letter-spacing: -2px; 
+        }
+
+
+        /* --- TOUCHDESIGNER WINDOW --- */
+        .td-window {
+            flex-grow: 1;
+            margin: 0 30px 30px 30px; /* Spacing around the embedded window */
+            border-radius: 12px;
+            background-color: #1a1a1a;
+            color: #d0d0d0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); /* Heavy shadow to lift it off the white page */
+            border: 1px solid #333;
         }
 
         /* Top Menu Bar */
@@ -30,19 +102,13 @@
             height: 28px;
             display: flex;
             align-items: center;
-            padding: 0 10px;
+            padding: 0 15px;
             font-size: 12px;
             border-bottom: 1px solid #111;
         }
 
-        .menu-items span {
-            margin-right: 15px;
-            cursor: pointer;
-        }
-
-        .menu-items span:hover {
-            color: #fff;
-        }
+        .menu-items span { margin-right: 15px; cursor: pointer; }
+        .menu-items span:hover { color: #fff; }
 
         /* Path Bar */
         .path-bar {
@@ -61,7 +127,6 @@
             flex-grow: 1;
             position: relative;
             background-color: #222222;
-            /* Creates the classic TD grid */
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
@@ -73,12 +138,8 @@
         /* SVG Wire Layer */
         #wire-layer {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
         }
 
         /* The Nodes */
@@ -94,94 +155,36 @@
             z-index: 5;
         }
 
-        .td-node:hover {
-            border-color: #999;
-        }
+        .td-node:hover { border-color: #999; }
+        .td-node:active { transform: scale(0.98); }
 
-        .td-node:active {
-            transform: scale(0.98);
-        }
+        /* Centered and staggered node positions */
+        #project-node { left: 38%; top: 35%; }
+        #download-node { left: 52%; top: 55%; }
 
-        /* Video Node Specifics */
-        #project-node {
-            left: 35%;
-            top: 30%;
-        }
-
-        .node-header-top {
-            background-color: #7b4b8a; /* TOP Purple */
-            color: white;
-            padding: 3px 6px;
-            font-size: 11px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Download Node Specifics */
-        #download-node {
-            left: 55%;
-            top: 55%;
-        }
-
-        .node-header-comp {
-            background-color: #555555; /* COMP Grey */
-            color: white;
-            padding: 3px 6px;
-            font-size: 11px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-        }
+        .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; }
+        .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; }
 
         .node-viewer {
-            height: 90px;
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            font-size: 24px;
-            color: #555;
+            height: 90px; background-color: #000; display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; font-size: 24px; color: #555;
         }
 
         .node-footer {
-            padding: 4px;
-            font-size: 10px;
-            color: #888;
-            background: #2a2a2a;
-            text-align: center;
-            line-height: 1.3;
+            padding: 4px; font-size: 10px; color: #888; background: #2a2a2a; text-align: center; line-height: 1.3;
         }
 
-        .format-text {
-            color: #555;
-            font-size: 9px;
-        }
+        .format-text { color: #555; font-size: 9px; }
 
-        /* TD Node Plugs (Inputs/Outputs) */
-        .plug {
-            position: absolute;
-            width: 8px;
-            height: 4px;
-            background-color: #888;
-        }
+        /* TD Node Plugs */
+        .plug { position: absolute; width: 8px; height: 4px; background-color: #888; }
         .plug-out { top: 50%; right: -8px; transform: translateY(-50%); border-radius: 0 2px 2px 0; }
         .plug-in { top: 50%; left: -8px; transform: translateY(-50%); border-radius: 2px 0 0 2px; }
 
         /* Bottom Timeline */
         .timeline {
-            height: 35px;
-            background-color: #2b2b2b;
-            border-top: 1px solid #111;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 11px;
-            font-family: monospace;
-            color: #888;
-            z-index: 10;
+            height: 35px; background-color: #2b2b2b; border-top: 1px solid #111;
+            display: flex; align-items: center; padding: 0 15px; font-size: 11px; font-family: monospace; color: #888; z-index: 10;
         }
         
         .timeline span { margin-right: 20px; }
@@ -189,125 +192,111 @@
 
         /* Video Overlay Modal */
         .video-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
 
-        .video-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .video-modal.active { opacity: 1; pointer-events: auto; }
 
-        .video-container {
-            width: 80%;
-            max-width: 1000px;
-            position: relative;
-        }
+        .video-container { width: 80%; max-width: 1000px; position: relative; }
         
-        .close-hint {
-            position: absolute;
-            top: -30px;
-            right: 0;
-            color: #aaa;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .close-hint { position: absolute; top: -30px; right: 0; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
         a { text-decoration: none; color: inherit; }
-        a.back-btn { color: #aaa; margin-right: 20px; }
-        a.back-btn:hover { color: white; }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
-            #project-node { left: 15%; top: 20%; }
+            h1 { font-size: 4.5rem; letter-spacing: -4px; }
+            .td-window { margin: 0 10px 10px 10px; }
+            #project-node { left: 15%; top: 25%; }
             #download-node { left: 45%; top: 55%; }
+            .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; }
         }
 
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <a href="/" class="back-btn">← Home</a>
-        <div class="menu-items">
-            <span>File</span>
-            <span>Edit</span>
-            <span>Dialogs</span>
-            <span>View</span>
-            <span>Window</span>
-            <span>Help</span>
+    <div class="brand-header">
+        <a href="/" class="back-btn-top">← Home</a>
+        <div class="logo-group">
+            <h1>CUCEU</h1>
+            <span class="td-text">.td</span>
         </div>
     </div>
 
-    <div class="path-bar">
-        cuceu/project/touchdesigner
-    </div>
-
-    <div class="network-editor" id="network-bg">
+    <div class="td-window">
         
-        <svg id="wire-layer">
-            <path id="wire-path" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
-        </svg>
-
-        <div class="td-node" id="project-node" title="Click to view project video">
-            <div class="node-header-top">
-                <span>0517.td</span>
-                <span>✖</span>
+        <div class="top-bar">
+            <div class="menu-items">
+                <span>File</span>
+                <span>Edit</span>
+                <span>Dialogs</span>
+                <span>View</span>
+                <span>Window</span>
+                <span>Help</span>
             </div>
-            <div class="node-viewer">
-                ▶
-            </div>
-            <div class="node-footer">
-                1080 x 1920<br>
-                <span class="format-text">MOV / H.264</span>
-            </div>
-            <div class="plug plug-out" id="plug1"></div>
         </div>
 
-        <a href="0517.toe" download>
-            <div class="td-node" id="download-node" title="Click to download .toe file">
-                <div class="node-header-comp">
-                    <span>0517.toe</span>
-                    <span>↓</span>
+        <div class="path-bar">
+            cuceu/project/touchdesigner
+        </div>
+
+        <div class="network-editor" id="network-bg">
+            
+            <svg id="wire-layer">
+                <path id="wire-path" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
+            </svg>
+
+            <div class="td-node" id="project-node" title="Click to view project video">
+                <div class="node-header-top">
+                    <span>0517.td</span>
+                    <span>✖</span>
                 </div>
-                <div class="node-viewer" style="color: #666; font-size: 32px;">
-                    ⬇
+                <div class="node-viewer">
+                    ▶
                 </div>
                 <div class="node-footer">
-                    Download Project<br>
-                    <span class="format-text">.TOE FILE</span>
+                    1080 x 1920<br>
+                    <span class="format-text">MOV / H.264</span>
                 </div>
-                <div class="plug plug-in" id="plug2"></div>
+                <div class="plug plug-out" id="plug1"></div>
             </div>
-        </a>
 
-    </div>
+            <a href="0517.toe" download>
+                <div class="td-node" id="download-node" title="Click to download .toe file">
+                    <div class="node-header-comp">
+                        <span>0517.toe</span>
+                        <span>↓</span>
+                    </div>
+                    <div class="node-viewer" style="color: #666; font-size: 32px;">
+                        ⬇
+                    </div>
+                    <div class="node-footer">
+                        Download Project<br>
+                        <span class="format-text">.TOE FILE</span>
+                    </div>
+                    <div class="plug plug-in" id="plug2"></div>
+                </div>
+            </a>
 
-    <div class="timeline">
-        <span>Start: 1</span>
-        <span>End: 600</span>
-        <span class="play-btn">▶</span>
-        <span>FPS: 60</span>
-        <span style="color: #4a90e2;">00:00:00:00</span>
-    </div>
+        </div>
 
-    <div class="video-modal" id="video-overlay">
+        <div class="timeline">
+            <span>Start: 1</span>
+            <span>End: 600</span>
+            <span class="play-btn">▶</span>
+            <span>FPS: 60</span>
+            <span style="color: #4a90e2;">00:00:00:00</span>
+        </div>
+
+    </div> <div class="video-modal" id="video-overlay">
         <div class="video-container">
             <div class="close-hint">Click anywhere outside the video to close</div>
-            
             <div style="padding:56.25% 0 0 0;position:relative;">
                 <iframe id="vimeo-iframe" src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;box-shadow: 0 10px 30px rgba(0,0,0,0.8);border-radius: 4px;" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
             </div>
-            
         </div>
     </div>
 
@@ -347,7 +336,7 @@
             const endX = p2.left - container.left;
             const endY = p2.top + (p2.height / 2) - container.top;
 
-            // Create a curved path (Bezier) so it droops like a TD wire
+            // Curved path (Bezier) so it droops like a TD wire
             const cp1X = startX + 60;
             const cp1Y = startY;
             const cp2X = endX - 60;
