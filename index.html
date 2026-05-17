@@ -27,7 +27,8 @@
 
         .status-area {
             position: absolute; top: 25px; right: 30px; display: flex; align-items: center;
-            font-size: 14px; font-weight: 600; color: #000000; z-index: 100;
+            font-size: 17.5px; /* Increased by 25% */
+            font-weight: 600; color: #000000; z-index: 100;
             letter-spacing: 0.5px;
         }
 
@@ -35,8 +36,10 @@
             flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;
         }
 
-        /* --- THE PLAIN BOLD LOGO --- */
+        /* --- THE LOOPING MARQUEE LOGO --- */
         #logo-wrapper {
+            width: 100vw; 
+            overflow: hidden; /* Hides the extra text off-screen */
             transform-origin: center center; z-index: 5;
             animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
@@ -46,13 +49,27 @@
         @keyframes glideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes glideOut { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.95); } }
 
-        h1#cuceu-logo {
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            will-change: transform;
+            animation: scrollRight 25s linear infinite; /* Adjust the 25s to make it faster/slower */
+        }
+
+        /* Moves right seamlessly */
+        @keyframes scrollRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0%); }
+        }
+
+        h1.cuceu-logo {
             font-size: clamp(8rem, 28vw, 35rem); 
             font-weight: 950;
             text-transform: uppercase;
             letter-spacing: -12px;
             margin: 0; color: #000000; line-height: 0.8;
             user-select: none; cursor: default;
+            padding-right: 6vw; /* Creates the gap between the repeating words */
         }
 
         /* --- THE DOCK --- */
@@ -109,7 +126,7 @@
 
         /* Custom Trash Icon Styling */
         .icon-trash { background: rgba(255, 255, 255, 0.1); }
-        .icon-trash svg { width: 42px; height: 42px; margin-top: 2px; }
+        .icon-trash svg { width: 46px; height: 46px; margin-top: 2px; } /* Slightly bigger to fit the rim perfectly */
         
         .app-tooltip {
             position: absolute; top: -35px; background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(10px);
@@ -131,7 +148,7 @@
         @keyframes subtle-pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
 
         @media (max-width: 600px) {
-            h1#cuceu-logo { font-size: 6rem; letter-spacing: -4px; }
+            h1.cuceu-logo { font-size: 6rem; letter-spacing: -4px; }
             .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 55px; height: 55px; font-size: 1.5rem; }
             .icon-td svg { width: 36px; height: 36px; }
@@ -149,7 +166,12 @@
 
     <div class="main-content">
         <div id="logo-wrapper">
-            <h1 id="cuceu-logo">CUCEU</h1>
+            <div class="marquee-track">
+                <h1 class="cuceu-logo">CUCEU</h1>
+                <h1 class="cuceu-logo">CUCEU</h1>
+                <h1 class="cuceu-logo">CUCEU</h1>
+                <h1 class="cuceu-logo">CUCEU</h1>
+            </div>
         </div>
     </div>
 
@@ -193,14 +215,38 @@
                 <div class="app-tooltip">Trash</div>
                 <div class="app-icon icon-trash">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 25 30 L 75 30 L 65 90 L 35 90 Z" fill="rgba(255,255,255,0.15)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
-                        <line x1="40" y1="35" x2="42" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-                        <line x1="50" y1="35" x2="50" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-                        <line x1="60" y1="35" x2="58" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-                        <path d="M 26 30 C 23 20, 35 12, 42 22 C 48 8, 58 10, 62 20 C 68 15, 78 20, 74 30 Z" fill="#e2e2e2" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M 35 22 C 35 15, 45 18, 50 24" stroke="#a0a0a0" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                        <path d="M 55 20 C 55 14, 65 18, 65 24" stroke="#a0a0a0" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                        <ellipse cx="50" cy="30" rx="26" ry="4" fill="none" stroke="#fff" stroke-width="3"/>
+                        <defs>
+                            <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="rgba(255,255,255,0.7)" />
+                                <stop offset="20%" stop-color="rgba(255,255,255,0.2)" />
+                                <stop offset="80%" stop-color="rgba(255,255,255,0.2)" />
+                                <stop offset="100%" stop-color="rgba(255,255,255,0.6)" />
+                            </linearGradient>
+                            <linearGradient id="paper1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#dddddd"/>
+                            </linearGradient>
+                            <linearGradient id="paper2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#f0f0f0"/>
+                                <stop offset="100%" stop-color="#aaaaaa"/>
+                            </linearGradient>
+                        </defs>
+
+                        <path d="M 30 35 Q 25 15 45 10 T 65 20 Q 70 35 60 40 Z" fill="url(#paper2)" stroke="#999" stroke-width="0.5"/>
+                        <path d="M 40 18 Q 50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M 45 40 Q 45 20 60 18 T 80 25 Q 85 40 70 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M 55 25 Q 65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M 20 40 Q 15 25 35 22 T 55 30 Q 50 45 35 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M 28 30 Q 40 25 45 35" fill="none" stroke="#999" stroke-width="1" stroke-linecap="round"/>
+
+                        <ellipse cx="50" cy="30" rx="34" ry="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+
+                        <path d="M 16 30 L 26 86 C 26 94, 74 94, 74 86 L 84 30 Z" fill="url(#glass)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+
+                        <path d="M 22 36 L 30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
+
+                        <path d="M 16 30 A 34 9 0 0 0 84 30" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+                        <path d="M 18 31 A 32 7 0 0 0 82 31" fill="none" stroke="rgba(150,150,150,0.5)" stroke-width="1"/>
                     </svg>
                 </div>
             </a>
