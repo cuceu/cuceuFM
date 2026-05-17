@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>CUCEU</title>
+    <title>c</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
 
     <style>
@@ -27,27 +27,38 @@
         }
 
         #cuceu-logo-wrapper {
-            width: 100%; overflow: hidden; display: flex;
+            width: 100%; display: flex; justify-content: center;
             transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
             transform-origin: center center; position: relative; z-index: 5;
-            padding: 250px 0; 
         }
 
         #cuceu-logo-wrapper.glide-down {
             transform: translateY(15vh) scale(0.9); opacity: 0;
         }
 
+        /* --- UPDATED LOGO STYLE TO MATCH FM PAGE --- */
         h1#cuceu-logo {
-            font-size: clamp(8rem, 25vw, 25rem); font-weight: 950;
-            text-transform: uppercase; letter-spacing: -22px; margin: 0;
-            color: #000000; white-space: nowrap; line-height: 1; 
-            transform: scaleY(2.4);
-            animation: marqueeLogo 38s linear infinite; display: inline-block;
+            font-size: clamp(4rem, 16vw, 18rem); /* Exact same size as FM page */
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: -5px; /* Exact same spacing as FM page */
+            margin: 0;
+            color: #000000;
+            line-height: 1; 
+            cursor: default;
+            user-select: none;
         }
 
-        @keyframes marqueeLogo {
-            0% { transform: translateX(0) scaleY(2.4); }
-            100% { transform: translateX(-50%) scaleY(2.4); }
+        /* --- THE FUN LETTER INTERACTION --- */
+        h1#cuceu-logo span {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom center;
+        }
+
+        h1#cuceu-logo span:hover {
+            transform: scale(1.15) translateY(-10px); /* Enlarge and lift */
+            color: #000; /* Keeps it bold black */
         }
 
         .mac-dock-container {
@@ -78,7 +89,6 @@
 
         .icon-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .icon-trash { background: rgba(255, 255, 255, 0.1); font-size: 2.2rem; }
-
         .icon-ig svg { width: 42px; height: 42px; }
 
         .app-tooltip {
@@ -109,8 +119,7 @@
         .genie-overlay.expand { opacity: 1; transform: scale(70); }
 
         @media (max-width: 600px) {
-            #cuceu-logo-wrapper { padding: 120px 0; }
-            h1#cuceu-logo { font-size: 6rem; letter-spacing: -6px; transform: scaleY(1.8); animation: marqueeLogo 15s linear infinite; }
+            h1#cuceu-logo { font-size: 4rem; letter-spacing: -2px; }
             .app-tooltip { display: none !important; }
         }
     </style>
@@ -124,7 +133,7 @@
     <div class="main-content">
         <div id="cuceu-logo-wrapper">
             <h1 id="cuceu-logo">
-                CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp; CUCEU &nbsp;
+                <span>C</span><span>U</span><span>C</span><span>E</span><span>U</span>
             </h1>
         </div>
     </div>
@@ -173,11 +182,16 @@
         const genieOverlay = document.getElementById('genie');
 
         appIcon.addEventListener('click', (e) => {
-            e.preventDefault(); genieOverlay.classList.add('expand'); appWrapper.classList.add('glide-down'); 
+            e.preventDefault(); 
+            genieOverlay.classList.add('expand'); 
+            appWrapper.classList.add('glide-down'); 
             setTimeout(() => { window.location.href = "/fm"; }, 550); 
         });
 
-        window.addEventListener('pageshow', () => { genieOverlay.classList.remove('expand'); appWrapper.classList.remove('glide-down'); });
+        window.addEventListener('pageshow', () => { 
+            genieOverlay.classList.remove('expand'); 
+            appWrapper.classList.remove('glide-down'); 
+        });
 
         function checkStreamStatus() {
             const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
