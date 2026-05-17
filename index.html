@@ -43,10 +43,10 @@
         /* --- THE TYPOGRAPHIC BACKGROUND --- */
         #logo-wrapper {
             position: absolute; 
-            top: 50px; /* Clears the space for the top clock */
+            top: 50px; 
             left: 0;
             width: 100vw; 
-            height: calc(100dvh - 160px); /* Calculates the safe area between clock and dock */
+            height: calc(100dvh - 160px); 
             display: flex; flex-direction: column;
             justify-content: center;
             overflow: hidden; 
@@ -73,10 +73,10 @@
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
         h1.cuceu-logo {
-            font-size: clamp(3.5rem, 8vw, 10rem); /* Scaled down further */
+            font-size: clamp(3.5rem, 8vw, 10rem); 
             font-weight: 950;
             text-transform: uppercase;
-            letter-spacing: -7px; /* Adjusted to prevent text overlapping too much */
+            letter-spacing: -7px; 
             margin: 0; color: #000000; line-height: 0.85;
             user-select: none; cursor: default;
             padding-right: 4vw; 
@@ -175,6 +175,11 @@
 
     <div class="main-content">
         <div id="logo-wrapper">
+            <div class="marquee-track track-left">
+                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+            </div>
+
             <div class="marquee-track track-right">
                 <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
                 <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
@@ -192,6 +197,11 @@
                 <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
             </div>
             <div class="marquee-track track-right">
+                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+            </div>
+
+            <div class="marquee-track track-left">
                 <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
                 <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
             </div>
