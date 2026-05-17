@@ -23,7 +23,9 @@
 
         /* --- THE GENIE CONTAINER --- */
         #app-container {
-            width: 100vw; height: 100vh;
+            width: 100vw; 
+            height: 100vh; /* Fallback for very old browsers */
+            height: 100dvh; /* THE FIX: Adapts to mobile toolbars! */
             display: flex; flex-direction: column;
             background-color: #ffffff;
             transform-origin: 60% 100%; /* Sucks down into the 3rd dock slot */
