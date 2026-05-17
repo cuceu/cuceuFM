@@ -102,7 +102,6 @@
             overflow: hidden; touch-action: none;
         }
 
-        /* The Canvas that actually moves when you pan/zoom */
         #network-canvas {
             position: absolute; top: 0; left: 0; width: 0; height: 0;
             transform-origin: 0 0; 
@@ -119,24 +118,41 @@
             border-radius: 2px; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
             cursor: pointer; z-index: 5;
         }
-
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
         /* Centered Node Placement using Viewport Math! */
-        #project-node { width: 160px; left: calc(50vw - 150px); top: calc(50vh - 100px); }
-        #download-node { width: 120px; left: calc(50vw + 50px); top: calc(50vh + 80px); }
-
-        .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; }
-        .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; }
-
-        #project-node .node-viewer { height: 90px; }
-        #download-node .node-viewer { height: 60px; font-size: 20px;}
-
-        .node-viewer { background-color: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; font-size: 24px; color: #555; }
-        .node-footer { padding: 4px; font-size: 10px; color: #888; background: #2a2a2a; text-align: center; line-height: 1.3; }
+        #project-node { width: 180px; left: calc(50vw - 180px); top: calc(50vh - 180px); }
+        #download-node { width: 140px; left: calc(50vw + 40px); top: calc(50vh - 150px); }
         
-        #download-node .node-footer { font-size: 8px; }
+        #project-node-2 { width: 180px; left: calc(50vw - 180px); top: calc(50vh + 20px); }
+        #download-node-2 { width: 140px; left: calc(50vw + 40px); top: calc(50vh + 50px); }
+
+        .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
+        .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
+
+        /* Node Image Viewer */
+        .node-viewer { 
+            background-color: #000; background-size: cover; background-position: center;
+            position: relative; overflow: hidden; 
+        }
+        
+        /* Thumb Overlay Elements */
+        .play-overlay, .dl-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+            color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            transition: background 0.2s ease;
+        }
+        .dl-overlay { flex-direction: column; gap: 0px; }
+        
+        .td-node:hover .play-overlay, .td-node:hover .dl-overlay { background: rgba(0,0,0,0.1); }
+
+        .play-overlay span { font-size: 24px; }
+        .dl-overlay span:first-child { font-size: 20px; }
+        .dl-overlay span:last-child { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+
+        .node-footer { padding: 4px; font-size: 10px; color: #888; background: #2a2a2a; text-align: center; line-height: 1.3; }
         .format-text { color: #555; font-size: 9px; }
 
         .plug { position: absolute; width: 8px; height: 4px; background-color: #888; }
@@ -159,10 +175,7 @@
         .video-modal.active { opacity: 1; pointer-events: auto; }
 
         .video-container { 
-            position: relative; 
-            max-height: 85vh;
-            aspect-ratio: 9/16; 
-            width: auto; max-width: 90vw;
+            position: relative; max-height: 85vh; aspect-ratio: 9/16; width: auto; max-width: 90vw;
         }
         
         .close-hint { position: absolute; top: -30px; width: 100%; text-align: center; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -173,6 +186,10 @@
             h1 { font-size: 4.5rem; letter-spacing: -4px; }
             .td-window { margin: 0 10px 10px 10px; }
             .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
+            
+            /* Adjust node sizes slightly for mobile screens */
+            #project-node, #project-node-2 { left: calc(50vw - 160px); width: 160px; }
+            #download-node, #download-node-2 { left: calc(50vw + 20px); width: 120px; }
         }
     </style>
 </head>
@@ -203,26 +220,70 @@
             <div id="network-canvas">
                 
                 <svg id="wire-layer">
-                    <path id="wire-path" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
+                    <path id="wire-path-1" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
+                    <path id="wire-path-2" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
                 </svg>
 
-                <div class="td-node" id="project-node" title="Click to view project video">
-                    <div class="node-header-top"><span>0517.td</span><span>✖</span></div>
-                    <div class="node-viewer">▶</div>
+                <div class="td-node video-node" id="project-node" data-video-src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0&autoplay=1">
+                    <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Sully-Model Collapse...</span><span>✖</span></div>
+                    
+                    <div class="node-viewer" style="height: 90px; background-image: url('sullypngg.png');">
+                        <div class="play-overlay"><span>▶</span></div>
+                    </div>
+                    
                     <div class="node-footer">
                         1080 x 1920<br><span class="format-text">MOV / H.264</span>
                     </div>
-                    <div class="plug plug-out" id="plug1"></div>
+                    <div class="plug plug-out" id="plug-out-1"></div>
                 </div>
 
-                <a href="0517.toe" download>
+                <a href="Sully -Model Collapse Visualiser.toe" download>
                     <div class="td-node" id="download-node" title="Click to download .toe file">
-                        <div class="node-header-comp"><span>0517.toe</span><span>↓</span></div>
-                        <div class="node-viewer" style="color: #666;">⬇</div>
-                        <div class="node-footer">
+                        <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Sully -Model Collapse...</span><span>↓</span></div>
+                        
+                        <div class="node-viewer" style="height: 70px; background-image: url('sullypngg.png');">
+                            <div class="dl-overlay">
+                                <span>⬇</span>
+                                <span>.TOE</span>
+                            </div>
+                        </div>
+
+                        <div class="node-footer" style="font-size: 8px;">
                             Download<br><span class="format-text">.TOE FILE</span>
                         </div>
-                        <div class="plug plug-in" id="plug2"></div>
+                        <div class="plug plug-in" id="plug-in-1"></div>
+                    </div>
+                </a>
+
+
+                <div class="td-node video-node" id="project-node-2" data-video-src="https://player.vimeo.com/video/1193012409?title=0&byline=0&portrait=0&autoplay=1">
+                    <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>✖</span></div>
+                    
+                    <div class="node-viewer" style="height: 90px; background-image: url('poatepngg.png');">
+                        <div class="play-overlay"><span>▶</span></div>
+                    </div>
+                    
+                    <div class="node-footer">
+                        1080 x 1920<br><span class="format-text">MOV / H.264</span>
+                    </div>
+                    <div class="plug plug-out" id="plug-out-2"></div>
+                </div>
+
+                <a href="Printesa De Aur - Poate Lyric Music Video.toe" download>
+                    <div class="td-node" id="download-node-2" title="Click to download .toe file">
+                        <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>↓</span></div>
+                        
+                        <div class="node-viewer" style="height: 70px; background-image: url('poatepngg.png');">
+                            <div class="dl-overlay">
+                                <span>⬇</span>
+                                <span>.TOE</span>
+                            </div>
+                        </div>
+
+                        <div class="node-footer" style="font-size: 8px;">
+                            Download<br><span class="format-text">.TOE FILE</span>
+                        </div>
+                        <div class="plug plug-in" id="plug-in-2"></div>
                     </div>
                 </a>
 
@@ -238,7 +299,7 @@
     <div class="video-modal" id="video-overlay">
         <div class="video-container">
             <div class="close-hint">Click anywhere outside to close</div>
-            <iframe id="vimeo-iframe" src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0" style="width:100%; height:100%; border:none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 4px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            <iframe id="vimeo-iframe" src="" style="width:100%; height:100%; border:none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 4px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
         </div>
     </div>
 
@@ -251,7 +312,7 @@
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.body.classList.add('is-exiting'); // Triggers smooth reverse animations
+                    document.body.classList.add('is-exiting'); 
                     
                     setTimeout(() => {
                         overlay.classList.remove('loaded');
@@ -271,20 +332,22 @@
         });
 
         // --- Video Player Logic ---
-        const videoNode = document.getElementById('project-node');
+        const videoNodes = document.querySelectorAll('.video-node');
         const overlay = document.getElementById('video-overlay');
         const iframe = document.getElementById('vimeo-iframe');
-        const videoSrc = iframe.src;
 
-        videoNode.addEventListener('click', () => {
-            overlay.classList.add('active');
-            iframe.src = videoSrc + "&autoplay=1"; 
+        videoNodes.forEach(node => {
+            node.addEventListener('click', () => {
+                const src = node.getAttribute('data-video-src');
+                iframe.src = src; 
+                overlay.classList.add('active');
+            });
         });
 
         overlay.addEventListener('click', (e) => {
             if (e.target.closest('.video-container')) return; 
             overlay.classList.remove('active');
-            iframe.src = videoSrc; 
+            iframe.src = ""; 
         });
 
         // --- Network Panning & Zooming Logic ---
@@ -351,28 +414,34 @@
             updateTransform();
         }, {passive: false});
 
-        function drawWire() {
-            const pNode = document.getElementById('project-node');
-            const dNode = document.getElementById('download-node');
-            const wirePath = document.getElementById('wire-path');
+        function drawWires() {
+            const connections = [
+                { outId: 'project-node', inId: 'download-node', pathId: 'wire-path-1' },
+                { outId: 'project-node-2', inId: 'download-node-2', pathId: 'wire-path-2' }
+            ];
 
-            const startX = pNode.offsetLeft + pNode.offsetWidth;
-            const startY = pNode.offsetTop + (pNode.offsetHeight / 2);
-            
-            const endX = dNode.offsetLeft;
-            const endY = dNode.offsetTop + (dNode.offsetHeight / 2);
+            connections.forEach(conn => {
+                const outNode = document.getElementById(conn.outId);
+                const inNode = document.getElementById(conn.inId);
+                const wirePath = document.getElementById(conn.pathId);
 
-            const cp1X = startX + 60;
-            const cp1Y = startY;
-            const cp2X = endX - 60;
-            const cp2Y = endY;
+                const startX = outNode.offsetLeft + outNode.offsetWidth;
+                const startY = outNode.offsetTop + (outNode.offsetHeight / 2);
+                
+                const endX = inNode.offsetLeft;
+                const endY = inNode.offsetTop + (inNode.offsetHeight / 2);
 
-            wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
+                const cp1X = startX + 60;
+                const cp1Y = startY;
+                const cp2X = endX - 60;
+                const cp2Y = endY;
+
+                wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
+            });
         }
 
-        // Draw line on load and when window resizes
-        drawWire();
-        window.addEventListener('resize', drawWire);
+        drawWires();
+        window.addEventListener('resize', drawWires);
 
     </script>
 </body>
