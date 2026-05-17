@@ -15,21 +15,31 @@
         #bouncing-container { 
             position: absolute; width: 180px; height: 180px; 
             z-index: 1; top: 0; left: 0; will-change: transform; 
+            cursor: grab; touch-action: none; /* Prevents screen scrolling when throwing */
         }
+        #bouncing-container:active { cursor: grabbing; }
+        
         @media (min-width: 768px) { #bouncing-container { width: 320px; height: 320px; } }
-        .art-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; }
-        .art-layer.active { opacity: 0.9; }
+        
+        .art-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; 
+        }
+        .art-layer.active { opacity: 1; }
 
         /* --- UI WRAPPER (LAYER 10) --- */
         #app-wrapper { 
             width: 100%; height: 100%; position: relative; z-index: 10; 
             animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
-            display: flex; flex-direction: column;
+            display: flex; flex-direction: column; pointer-events: none;
         }
         
         @keyframes continuityGlide { 0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); } }
 
-        .status-area { position: absolute; top: 75px; right: 30px; display: flex; align-items: center; font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; z-index: 30; }
+        .status-area { 
+            position: absolute; top: 75px; right: 30px; display: flex; align-items: center; 
+            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; z-index: 30; 
+        }
         
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
@@ -37,7 +47,10 @@
             display: flex; z-index: 30; 
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
-        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; }
+        .marquee-wrapper { 
+            display: flex; white-space: nowrap; animation: marquee linear infinite; 
+            width: fit-content; transition: opacity 0.5s ease-in-out; /* Smooth fade added here */
+        }
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
@@ -55,7 +68,7 @@
         }
         
         h1 { 
-            font-size: clamp(5rem, 20vw, 25rem); /* Scaled down slightly so buttons fit */
+            font-size: clamp(5rem, 20vw, 25rem); 
             font-weight: 950; text-transform: uppercase; 
             letter-spacing: -10px; margin: 0; color: #000; line-height: 0.8; 
         }
@@ -66,7 +79,11 @@
             margin-left: 5px; color: #000; letter-spacing: -2px;
         }
         
-        .live-status { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 10px; position: relative; z-index: 40; }
+        .live-status { 
+            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; 
+            margin-top: 20px; margin-bottom: 25px; /* Added margin-top to separate from logo */
+            display: inline-flex; align-items: center; gap: 10px; position: relative; z-index: 40; 
+        }
         .pulse-dot { height: 10px; width: 10px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; }
         .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
@@ -80,11 +97,27 @@
             position: relative; z-index: 40; pointer-events: auto;
         }
 
-        .history-wrapper { width: 100%; max-width: 360px; margin-top: 25px; position: relative; z-index: 40; }
-        #history-toggle { background: none; border: none; color: #000; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; }
-        #history-list { width: 100%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); margin: 8px 0 0 0; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; border-radius: 12px; transition: all 0.5s ease; }
+        .history-wrapper { 
+            width: 100%; max-width: 360px; 
+            margin: 25px auto 0; /* Auto centers the wrapper perfectly */
+            position: relative; z-index: 40; 
+        }
+        #history-toggle { 
+            background: none; border: none; color: #000; font-size: 0.8rem; 
+            font-weight: 900; text-transform: uppercase; cursor: pointer; 
+            display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; 
+        }
+        #history-list { 
+            width: 100%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            margin: 8px 0 0 0; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
+            border-radius: 12px; transition: all 0.5s ease; box-sizing: border-box;
+        }
         #history-list.open { max-height: 300px; opacity: 1; padding: 10px; border: 1px solid rgba(0,0,0,0.05); }
-        .history-item { padding: 10px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.03); text-align: left; }
+        .history-item { 
+            padding: 10px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; 
+            border-bottom: 1px solid rgba(0,0,0,0.03); 
+            text-align: center; /* Centered history text */
+        }
 
         @media (max-width: 600px) { h1 { font-size: 5rem; letter-spacing: -4px; } .fm-text { font-size: 2rem; } }
     </style>
@@ -110,7 +143,7 @@
             <button id="btn">▶ Listen</button>
             <div class="history-wrapper">
                 <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
-                <ul id="history-list"><li class="history-item" style="border:none; text-align:center;">Loading...</li></ul>
+                <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
             </div>
         </div>
 
@@ -137,15 +170,92 @@
 
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
     let artX = 50, artY = 150, artDX = 1.8, artDY = 1.8, isBouncing = false;
+    const baseSpeed = 1.8;
+
+    // --- NEW THROW & DRAG LOGIC ---
+    let isDragging = false;
+    let lastX = 0, lastY = 0, lastTime = 0;
+
+    function startDrag(e) {
+        isDragging = true;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        lastX = clientX; lastY = clientY; lastTime = performance.now();
+        artDX = 0; artDY = 0; 
+    }
+
+    function moveDrag(e) {
+        if (!isDragging) return;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        let currentTime = performance.now();
+        let dt = currentTime - lastTime || 1;
+
+        let dx = clientX - lastX;
+        let dy = clientY - lastY;
+
+        artX += dx; artY += dy;
+
+        const rect = bouncingContainer.getBoundingClientRect();
+        const bX = window.innerWidth - rect.width, bYMax = window.innerHeight - rect.height - 60, bYMin = 60;
+        artX = Math.max(0, Math.min(artX, bX));
+        artY = Math.max(bYMin, Math.min(artY, bYMax));
+
+        bouncingContainer.style.transform = `translate(${artX}px, ${artY}px)`;
+
+        // Calculate throwing velocity
+        artDX = (dx / dt) * 16; 
+        artDY = (dy / dt) * 16;
+
+        lastX = clientX; lastY = clientY; lastTime = currentTime;
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        // Cap max speed so it doesn't fly off screen instantly
+        artDX = Math.max(-25, Math.min(artDX, 25));
+        artDY = Math.max(-25, Math.min(artDY, 25));
+
+        // If placed gently, ensure it keeps bouncing at base speed
+        if (Math.abs(artDX) < baseSpeed) artDX = artDX >= 0 ? baseSpeed : -baseSpeed;
+        if (Math.abs(artDY) < baseSpeed) artDY = artDY >= 0 ? baseSpeed : -baseSpeed;
+
+        if (!isBouncing) { isBouncing = true; animateBounce(); }
+    }
+
+    // Attach Drag Events
+    bouncingContainer.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+
+    bouncingContainer.addEventListener('touchstart', startDrag, {passive: true});
+    window.addEventListener('touchmove', moveDrag, {passive: true});
+    window.addEventListener('touchend', endDrag);
+
 
     function animateBounce() {
-        if (!isBouncing) return;
+        if (!isBouncing || isDragging) return;
         const rect = bouncingContainer.getBoundingClientRect();
-        const topB = 60, bottomB = 60; // Tape barriers
+        const topB = 60, bottomB = 60; 
         const bX = window.innerWidth - rect.width, bYMax = window.innerHeight - rect.height - bottomB, bYMin = topB;
+        
+        // Apply friction to slow down from a "throw" back to base speed
+        let speedX = Math.abs(artDX);
+        let speedY = Math.abs(artDY);
+        
+        if (speedX > baseSpeed) { artDX *= 0.98; if (Math.abs(artDX) < baseSpeed) artDX = Math.sign(artDX) * baseSpeed; }
+        if (speedY > baseSpeed) { artDY *= 0.98; if (Math.abs(artDY) < baseSpeed) artDY = Math.sign(artDY) * baseSpeed; }
+
         artX += artDX; artY += artDY;
-        if (artX <= 0 || artX >= bX) { artDX *= -1; artX = Math.max(0, Math.min(artX, bX)); }
-        if (artY <= bYMin || artY >= bYMax) { artDY *= -1; artY = Math.max(bYMin, Math.min(artY, bYMax)); }
+        
+        if (artX <= 0) { artX = 0; artDX *= -1; }
+        else if (artX >= bX) { artX = bX; artDX *= -1; }
+        
+        if (artY <= bYMin) { artY = bYMin; artDY *= -1; }
+        else if (artY >= bYMax) { artY = bYMax; artDY *= -1; }
+        
         bouncingContainer.style.transform = `translate(${artX}px, ${artY}px)`;
         requestAnimationFrame(animateBounce); 
     }
@@ -157,9 +267,21 @@
             const cleanUrl = (await res.text()).trim();
             if (cleanUrl && cleanUrl.startsWith('http') && currentArtUrl !== cleanUrl) {
                 currentArtUrl = cleanUrl;
-                const nextL = document.getElementById(`art-layer-${currentLayer === 1 ? 2 : 1}`), oldL = document.getElementById(`art-layer-${currentLayer}`);
+                const nextL = document.getElementById(`art-layer-${currentLayer === 1 ? 2 : 1}`);
+                const oldL = document.getElementById(`art-layer-${currentLayer}`);
+                
                 nextL.src = cleanUrl;
-                nextL.onload = () => { nextL.classList.add('active'); oldL.classList.remove('active'); currentLayer = currentLayer === 1 ? 2 : 1; if (!isBouncing) { isBouncing = true; animateBounce(); } };
+                nextL.onload = () => { 
+                    nextL.style.zIndex = "2"; 
+                    oldL.style.zIndex = "1";
+                    nextL.classList.add('active'); 
+                    
+                    // Wait for the new one to fade in fully before resetting the old one
+                    setTimeout(() => { oldL.classList.remove('active'); }, 1500);
+                    
+                    currentLayer = currentLayer === 1 ? 2 : 1; 
+                    if (!isBouncing) { isBouncing = true; animateBounce(); } 
+                };
             }
         } catch(e) {}
     }
@@ -171,7 +293,14 @@
     function updateTicker(base) {
         if (currentTrackText === base) return; currentTrackText = base;
         const content = Array(10).fill(`<span class="song-display">${base}</span>`).join('');
-        [topMarquee, bottomMarquee].forEach(m => { m.style.opacity = 0; setTimeout(() => { m.innerHTML = content + content; m.style.animationDuration = `${(base.length + 10) * 1.5}s`; m.style.opacity = 1; }, 500); });
+        [topMarquee, bottomMarquee].forEach(m => { 
+            m.style.opacity = 0; 
+            setTimeout(() => { 
+                m.innerHTML = content + content; 
+                m.style.animationDuration = `${(base.length + 10) * 1.5}s`; 
+                m.style.opacity = 1; 
+            }, 500); // 500ms allows the CSS transition fade out to complete before swapping text
+        });
     }
 
     function setStatus(text, dot) { centerStatus.innerText = text; pulseIndicator.className = "pulse-dot " + dot; }
