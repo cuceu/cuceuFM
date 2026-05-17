@@ -72,13 +72,13 @@
 
         .marquee-track {
             display: flex;
+            flex-wrap: nowrap; /* Forces everything onto one straight line */
             width: max-content;
             will-change: transform;
-            /* Reduced negative margin to keep the rows tight with the new smaller size */
             margin-top: -0.8vw; 
         }
         .marquee-track:first-child {
-            margin-top: 0; /* Keeps the first row in place */
+            margin-top: 0; 
         }
 
         .track-right { animation: scrollRight 30s linear infinite; }
@@ -93,10 +93,10 @@
         }
 
         img.cuceu-img {
-            /* Shrunk the vw value from 9vw to 4.5vw so it doesn't get massive on desktop */
             height: clamp(3rem, 4.5vw, 6rem); 
             width: auto; 
-            margin-right: 1vw; /* Tighter horizontal spacing to match */
+            margin-right: 1vw; 
+            flex-shrink: 0; /* Prevents the logos from ever squishing */
             user-select: none;
             -webkit-user-drag: none; 
         }
@@ -196,93 +196,43 @@
     <div class="main-content">
         <div id="logo-wrapper">
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
         </div>
     </div>
