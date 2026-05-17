@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>c.fm</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
+    <title>cuceu.fm</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2255%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22 letter-spacing=%22-2%22>.fm</text></svg>">
     <style>
         html, body { 
             margin: 0; padding: 0; height: 100%; overflow: hidden; 
             background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif; 
         }
+
+        /* --- SMOOTH PAGE TRANSITIONS --- */
+        #page-transition-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; z-index: 99999;
+            pointer-events: none; opacity: 1;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #page-transition-overlay.loaded { opacity: 0; }
+        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
         
         /* --- BACKGROUND ART (LAYER 1) --- */
         #bouncing-container { 
-            position: absolute; width: 160px; height: 160px; /* Shrunk slightly for mobile */
+            position: absolute; width: 160px; height: 160px; 
             z-index: 1; top: 0; left: 0; will-change: transform; 
             cursor: grab; touch-action: none; 
             user-select: none; -webkit-user-select: none;
         }
         #bouncing-container:active { cursor: grabbing; }
         
-        @media (min-width: 768px) { #bouncing-container { width: 260px; height: 260px; } } /* Shrunk for TV/MacBook */
+        @media (min-width: 768px) { #bouncing-container { width: 260px; height: 260px; } }
         
         .art-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
@@ -33,22 +43,34 @@
         /* --- UI WRAPPER (LAYER 10) --- */
         #app-wrapper { 
             width: 100%; height: 100%; position: relative; z-index: 10; 
-            animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
+            animation: continuityGlide 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
             display: flex; flex-direction: column; pointer-events: none;
         }
         
-        @keyframes continuityGlide { 0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); } }
+        /* Fixed horizontal glitch by using fixed pixels instead of vh */
+        @keyframes continuityGlide { 0% { opacity: 0; transform: translateY(-30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* --- BACK HOME BUTTON --- */
+        .back-btn-top {
+            position: absolute; left: 30px; top: 60px; /* Placed below ticker */
+            color: #000; text-decoration: none; font-weight: 800; 
+            text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
+            border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
+            transition: all 0.2s ease; z-index: 50; pointer-events: auto;
+            background-color: rgba(255,255,255,0.7); backdrop-filter: blur(5px);
+        }
+        .back-btn-top:hover { background-color: #000; color: #fff; }
 
         .status-area { 
             position: absolute; top: 75px; right: 30px; display: flex; align-items: center; 
             font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; z-index: 30; 
-            text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,0.9); /* White Glow */
+            text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,0.9); 
         }
         
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
             padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000; 
-            display: flex; z-index: 30; 
+            display: flex; z-index: 60; 
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         .marquee-wrapper { 
@@ -75,21 +97,21 @@
             font-size: clamp(5rem, 20vw, 25rem); 
             font-weight: 950; text-transform: uppercase; 
             letter-spacing: -10px; margin: 0; color: #000; line-height: 0.8; 
-            text-shadow: 0 0 20px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,0.8); /* White Glow */
+            text-shadow: 0 0 20px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,0.8); 
         }
 
         .fm-text { 
             font-size: clamp(2rem, 8vw, 6rem); 
             font-weight: 400; text-transform: lowercase; 
             margin-left: 5px; color: #000; letter-spacing: -2px;
-            text-shadow: 0 0 20px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,0.8); /* White Glow */
+            text-shadow: 0 0 20px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,0.8); 
         }
         
         .live-status { 
             font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; 
             margin-top: 20px; margin-bottom: 25px; 
             display: inline-flex; align-items: center; gap: 10px; position: relative; z-index: 40; 
-            text-shadow: 0 0 10px rgba(255,255,255,1), 0 0 20px rgba(255,255,255,0.9); /* White Glow */
+            text-shadow: 0 0 10px rgba(255,255,255,1), 0 0 20px rgba(255,255,255,0.9); 
         }
         .pulse-dot { height: 10px; width: 10px; background-color: #777; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,1); }
         .pulse-dot.live { background-color: #34c759; }
@@ -113,7 +135,7 @@
             background: none; border: none; color: #000; font-size: 0.8rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; 
             display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; 
-            text-shadow: 0 0 10px rgba(255,255,255,1), 0 0 20px rgba(255,255,255,0.9); /* White Glow */
+            text-shadow: 0 0 10px rgba(255,255,255,1), 0 0 20px rgba(255,255,255,0.9); 
         }
         #history-list { 
             width: 100%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
@@ -131,20 +153,27 @@
         @media (max-width: 600px) { 
             h1 { font-size: 5rem; letter-spacing: -4px; } 
             .fm-text { font-size: 2rem; } 
-            
-            /* Smaller Ticker Tape for Phones */
             .ticker-tape { padding: 6px 0; border-top-width: 3px; border-bottom-width: 3px; }
             .song-display { font-size: 1.2rem; letter-spacing: 2px; padding-right: 40px; }
+            
+            /* Scale down back button for phones perfectly */
+            .back-btn-top { left: 15px; top: 50px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
         }
     </style>
 </head>
 <body>
+    
+    <div id="page-transition-overlay"></div>
+
     <div id="bouncing-container">
         <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
         <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
     </div>
+
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
+        
+        <a href="/" class="back-btn-top internal-link">← Home</a>
         <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
         
         <div class="main-container">
@@ -168,6 +197,32 @@
     <audio id="radioPlayer" preload="none"></audio>
 
 <script>
+    // --- PAGE TRANSITION LOGIC ---
+    document.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById('page-transition-overlay');
+        requestAnimationFrame(() => overlay.classList.add('loaded'));
+
+        document.querySelectorAll('.internal-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.classList.remove('loaded');
+                overlay.classList.add('leaving');
+                document.getElementById('app-wrapper').style.transform = "scale(0.98)";
+                document.getElementById('app-wrapper').style.opacity = "0";
+                setTimeout(() => window.location.href = link.href, 500); 
+            });
+        });
+    });
+
+    window.addEventListener('pageshow', (e) => { 
+        if (e.persisted) {
+            document.getElementById('page-transition-overlay').classList.add('loaded');
+            document.getElementById('page-transition-overlay').classList.remove('leaving');
+            document.getElementById('app-wrapper').style.transform = "";
+            document.getElementById('app-wrapper').style.opacity = "1";
+        }
+    });
+
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     function updateClock() {
         const now = new Date();
@@ -238,19 +293,16 @@
     // --- SHAKE TO BOUNCE LOGIC ---
     let motionRequested = false;
     let lastShakeTime = 0;
-    const shakeThreshold = 15; // How hard you have to shake
+    const shakeThreshold = 15;
 
     function handleMotion(event) {
         let acc = event.acceleration || event.accelerationIncludingGravity;
         if (!acc) return;
-        
         let totalForce = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-        
         if (totalForce > shakeThreshold) {
             let now = performance.now();
-            if (now - lastShakeTime > 200) { // Prevent it from triggering a million times a second
+            if (now - lastShakeTime > 200) { 
                 lastShakeTime = now;
-                // Give it a massive random speed boost
                 artDX = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 15);
                 artDY = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 15);
                 if (!isBouncing) { isBouncing = true; animateBounce(); }
@@ -261,22 +313,18 @@
     function requestMotionPermission() {
         if (motionRequested) return;
         if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-            // iOS 13+ requires permission prompt
             DeviceMotionEvent.requestPermission()
                 .then(permissionState => {
                     if (permissionState === 'granted') {
                         window.addEventListener('devicemotion', handleMotion);
                         motionRequested = true;
                     }
-                })
-                .catch(console.error);
+                }).catch(console.error);
         } else {
-            // Android or older iOS
             window.addEventListener('devicemotion', handleMotion);
             motionRequested = true;
         }
     }
-
 
     function animateBounce() {
         if (!isBouncing || isDragging) return;
@@ -350,8 +398,7 @@
     }
 
     btn.onclick = () => {
-        requestMotionPermission(); // Asks for shake permission on first click
-        
+        requestMotionPermission();
         if (!playing) { player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play(); btn.innerText = "⏸ Disconnect"; setStatus("CONNECTING...", ""); }
         else { player.pause(); player.src = ""; btn.innerText = "▶ Listen"; setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : ""); }
         playing = !playing;
