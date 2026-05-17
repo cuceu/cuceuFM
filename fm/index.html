@@ -20,7 +20,26 @@
             transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #page-transition-overlay.loaded { opacity: 0; }
-        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
+
+        /* --- THE GENIE CONTAINER --- */
+        #app-container {
+            width: 100vw; height: 100vh;
+            display: flex; flex-direction: column;
+            background-color: #ffffff;
+            transform-origin: 60% 100%; /* Sucks down into the 3rd dock slot */
+            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .genie-state {
+            transform: scale(0.05) translateY(50vh) !important;
+            opacity: 0 !important;
+            border-radius: 100px !important;
+        }
         
         /* --- BACKGROUND ART (LAYER 1) --- */
         #bouncing-container { 
@@ -41,30 +60,24 @@
         .art-layer.active { opacity: 1; }
 
         /* --- UI SEQUENCED ANIMATIONS --- */
-        /* Opening sequence */
         .main-container { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
         .ticker-top { animation: slideTopIn 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; transform: translateY(-100%); }
         .ticker-bottom { animation: slideBottomIn 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; transform: translateY(100%); }
         .back-btn-top, .status-area { animation: slideDownFromBanner 0.6s cubic-bezier(0.25,1,0.5,1) 0.8s forwards; opacity: 0; transform: translateY(-20px); }
 
-        /* Reverse Exit Sequence */
-        body.is-exiting .back-btn-top, body.is-exiting .status-area { animation: slideUpToBanner 0.4s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .ticker-top { animation: slideTopOut 0.5s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.5s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        body.is-exiting .main-container { animation: breatheDown 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; }
+        body.is-exiting .back-btn-top, body.is-exiting .status-area { animation: slideUpToBanner 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .ticker-top { animation: slideTopOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .main-container { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
 
         @keyframes breatheUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes breatheDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
-        
         @keyframes slideTopIn { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         @keyframes slideTopOut { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
-        
         @keyframes slideBottomIn { 0% { transform: translateY(100%); } 100% { transform: translateY(0); } }
         @keyframes slideBottomOut { 0% { transform: translateY(0); } 100% { transform: translateY(100%); } }
-        
         @keyframes slideDownFromBanner { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes slideUpToBanner { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
-
 
         /* --- ALIGNED CONTROLS --- */
         .back-btn-top {
@@ -96,7 +109,6 @@
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
-        /* THIS IS THE FIX! Added position:absolute and 100% height/width */
         .main-container { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; 
@@ -183,52 +195,62 @@
     
     <div id="page-transition-overlay"></div>
 
-    <div id="bouncing-container">
-        <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
-        <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
+    <div id="app-container" class="genie-state">
+        <div id="bouncing-container">
+            <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
+            <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
+        </div>
+
+        <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
+        
+        <a href="/" class="back-btn-top internal-link">← Home</a>
+        <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
+        
+        <div class="main-container">
+            <div class="logo-group">
+                <h1>CUCEU</h1>
+                <span class="fm-text">.fm</span>
+            </div>
+            <div class="live-status">
+                <div class="pulse-dot" id="pulse-indicator"></div> 
+                <span id="center-status">CHECKING...</span>
+            </div>
+            <button id="btn">▶ Listen</button>
+            <div class="history-wrapper">
+                <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
+                <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
+            </div>
+        </div>
+
+        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
+
+        <audio id="radioPlayer" preload="none"></audio>
     </div>
-
-    <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
-    
-    <a href="/" class="back-btn-top internal-link">← Home</a>
-    <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
-    
-    <div class="main-container">
-        <div class="logo-group">
-            <h1>CUCEU</h1>
-            <span class="fm-text">.fm</span>
-        </div>
-        <div class="live-status">
-            <div class="pulse-dot" id="pulse-indicator"></div> 
-            <span id="center-status">CHECKING...</span>
-        </div>
-        <button id="btn">▶ Listen</button>
-        <div class="history-wrapper">
-            <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
-            <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
-        </div>
-    </div>
-
-    <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
-
-    <audio id="radioPlayer" preload="none"></audio>
 
 <script>
-    // --- REVERSE EXIT ANIMATION LOGIC ---
+    // --- COMBINED GENIE & REVERSE EXIT ANIMATION LOGIC ---
     document.addEventListener("DOMContentLoaded", () => {
         const overlay = document.getElementById('page-transition-overlay');
         requestAnimationFrame(() => overlay.classList.add('loaded'));
 
+        // Trigger entrance genie immediately
+        setTimeout(() => {
+            document.getElementById('app-container').classList.remove('genie-state');
+        }, 50);
+
         document.querySelectorAll('.internal-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
+                // Phase 1: Internal UI elements fade/slide out quickly
                 document.body.classList.add('is-exiting'); 
                 
+                // Phase 2: The entire container sucks down into the dock
                 setTimeout(() => {
-                    overlay.classList.remove('loaded');
-                    overlay.classList.add('leaving');
-                }, 600); 
-                setTimeout(() => window.location.href = link.href, 1000); 
+                    document.getElementById('app-container').classList.add('genie-state');
+                }, 350); 
+                
+                // Phase 3: Redirect to the desktop
+                setTimeout(() => window.location.assign('/'), 850); 
             });
         });
     });
@@ -237,7 +259,7 @@
         if (e.persisted) {
             document.body.classList.remove('is-exiting');
             document.getElementById('page-transition-overlay').classList.add('loaded');
-            document.getElementById('page-transition-overlay').classList.remove('leaving');
+            document.getElementById('app-container').classList.remove('genie-state');
         }
     });
 
