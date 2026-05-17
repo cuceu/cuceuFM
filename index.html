@@ -42,8 +42,11 @@
 
         /* --- THE TYPOGRAPHIC BACKGROUND --- */
         #logo-wrapper {
-            position: absolute; top: 0; left: 0;
-            width: 100vw; height: 100dvh;
+            position: absolute; 
+            top: 50px; /* Clears the space for the top clock */
+            left: 0;
+            width: 100vw; 
+            height: calc(100dvh - 160px); /* Calculates the safe area between clock and dock */
             display: flex; flex-direction: column;
             justify-content: center;
             overflow: hidden; 
@@ -70,10 +73,10 @@
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
         h1.cuceu-logo {
-            font-size: clamp(5rem, 12vw, 15rem); 
+            font-size: clamp(3.5rem, 8vw, 10rem); /* Scaled down further */
             font-weight: 950;
             text-transform: uppercase;
-            letter-spacing: -10px;
+            letter-spacing: -7px; /* Adjusted to prevent text overlapping too much */
             margin: 0; color: #000000; line-height: 0.85;
             user-select: none; cursor: default;
             padding-right: 4vw; 
@@ -154,7 +157,7 @@
         @keyframes subtle-pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
 
         @media (max-width: 600px) {
-            h1.cuceu-logo { font-size: 5rem; letter-spacing: -4px; }
+            h1.cuceu-logo { font-size: 3.5rem; letter-spacing: -3px; }
             .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
