@@ -40,7 +40,7 @@
             flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;
         }
 
-        /* --- THE TYPOGRAPHIC BACKGROUND --- */
+        /* --- THE IMAGE BACKGROUND --- */
         #logo-wrapper {
             position: absolute; 
             top: 50px; 
@@ -72,14 +72,13 @@
         @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-        h1.cuceu-logo {
-            font-size: clamp(3.5rem, 8vw, 10rem); 
-            font-weight: 950;
-            text-transform: uppercase;
-            letter-spacing: -7px; 
-            margin: 0; color: #000000; line-height: 0.85;
-            user-select: none; cursor: default;
-            padding-right: 4vw; 
+        /* Updated CSS to handle the image exactly like the old text */
+        img.cuceu-img {
+            height: clamp(3.5rem, 8vw, 10rem); /* Matches the old font-size */
+            width: auto; /* Keeps the image proportions correct */
+            margin-right: 4vw; /* Replaces the old padding-right for spacing */
+            user-select: none;
+            -webkit-user-drag: none; /* Stops the image from being draggable */
         }
 
         /* --- THE DOCK (SCALED DOWN) --- */
@@ -157,7 +156,7 @@
         @keyframes subtle-pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
 
         @media (max-width: 600px) {
-            h1.cuceu-logo { font-size: 3.5rem; letter-spacing: -3px; }
+            img.cuceu-img { height: 3.5rem; } /* Adjusted for mobile */
             .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
@@ -176,34 +175,66 @@
     <div class="main-content">
         <div id="logo-wrapper">
             <div class="marquee-track track-left">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-right">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-            </div>
-            <div class="marquee-track track-left">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-            </div>
-            <div class="marquee-track track-right">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-            </div>
-            <div class="marquee-track track-left">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-            </div>
-            <div class="marquee-track track-right">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
-                <h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1><h1 class="cuceu-logo">CUCEU</h1>
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
         </div>
     </div>
