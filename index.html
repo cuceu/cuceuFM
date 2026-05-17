@@ -107,7 +107,9 @@
         }
         .icon-td svg { width: 44px; height: 44px; border-radius: 2px;}
 
-        .icon-trash { background: rgba(255, 255, 255, 0.1); font-size: 2.2rem; }
+        /* Custom Trash Icon Styling */
+        .icon-trash { background: rgba(255, 255, 255, 0.1); }
+        .icon-trash svg { width: 42px; height: 42px; margin-top: 2px; }
         
         .app-tooltip {
             position: absolute; top: -35px; background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(10px);
@@ -154,7 +156,6 @@
     <div class="mac-dock-container">
         <div class="mac-dock">
             
-            <!-- Instagram App: Now points to /ig and uses the transition -->
             <a href="/ig" class="dock-app internal-link">
                 <div class="app-tooltip">Instagram</div>
                 <div class="app-icon icon-ig">
@@ -162,7 +163,6 @@
                 </div>
             </a>
 
-            <!-- TouchDesigner App -->
             <a href="/td" class="dock-app internal-link">
                 <div class="app-tooltip">TouchDesigner</div>
                 <div class="app-icon icon-td">
@@ -180,7 +180,6 @@
                 </div>
             </a>
 
-            <!-- cuceuFM App -->
             <a href="/fm" class="dock-app is-open internal-link" id="fm-app">
                 <div class="app-tooltip">cuceuFM</div>
                 <div class="app-badge" id="fm-badge">
@@ -190,17 +189,26 @@
                 <div class="app-icon">.fm</div>
             </a>
 
-            <!-- Bin App: Now points to /bin and uses the transition -->
             <a href="/bin" class="dock-app internal-link">
-                <div class="app-tooltip">Bin</div>
-                <div class="app-icon icon-trash">🗑️</div>
+                <div class="app-tooltip">Trash</div>
+                <div class="app-icon icon-trash">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 25 30 L 75 30 L 65 90 L 35 90 Z" fill="rgba(255,255,255,0.15)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+                        <line x1="40" y1="35" x2="42" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                        <line x1="50" y1="35" x2="50" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                        <line x1="60" y1="35" x2="58" y2="85" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                        <path d="M 26 30 C 23 20, 35 12, 42 22 C 48 8, 58 10, 62 20 C 68 15, 78 20, 74 30 Z" fill="#e2e2e2" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 35 22 C 35 15, 45 18, 50 24" stroke="#a0a0a0" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                        <path d="M 55 20 C 55 14, 65 18, 65 24" stroke="#a0a0a0" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                        <ellipse cx="50" cy="30" rx="26" ry="4" fill="none" stroke="#fff" stroke-width="3"/>
+                    </svg>
+                </div>
             </a>
             
         </div>
     </div>
 
     <script>
-        // --- PAGE TRANSITION LOGIC ---
         document.addEventListener("DOMContentLoaded", () => {
             const overlay = document.getElementById('page-transition-overlay');
             requestAnimationFrame(() => overlay.classList.add('loaded'));
