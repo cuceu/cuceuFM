@@ -30,8 +30,11 @@
         .status-area {
             position: absolute; top: 25px; right: 30px; display: flex; align-items: center;
             font-size: 17.5px; 
-            font-weight: 600; color: #000000; z-index: 100;
+            font-weight: 800; /* Made it a bit bolder to match the glow */
+            color: #000000; z-index: 100;
             letter-spacing: 0.5px;
+            /* Added the massive white glow so it's always readable */
+            text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,1), 0 0 45px rgba(255,255,255,0.9);
         }
 
         .main-content {
