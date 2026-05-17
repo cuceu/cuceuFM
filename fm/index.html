@@ -15,8 +15,8 @@
         #bouncing-container { 
             position: absolute; width: 180px; height: 180px; 
             z-index: 1; top: 0; left: 0; will-change: transform; 
-            cursor: grab; touch-action: none; /* Prevents screen scrolling when throwing */
-            user-select: none; /* Stops text/image highlighting */
+            cursor: grab; touch-action: none; 
+            user-select: none; -webkit-user-select: none;
         }
         #bouncing-container:active { cursor: grabbing; }
         
@@ -25,8 +25,8 @@
         .art-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; 
-            pointer-events: none; /* CRITICAL: Lets the container handle the drag, not the image */
-            -webkit-user-drag: none; /* Stops Mac/Safari native image dragging */
+            pointer-events: none; 
+            -webkit-user-drag: none; 
         }
         .art-layer.active { opacity: 1; }
 
@@ -127,7 +127,6 @@
 </head>
 <body>
     <div id="bouncing-container">
-        <!-- CRITICAL: Added draggable="false" here -->
         <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
         <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
     </div>
@@ -176,14 +175,11 @@
     let artX = 50, artY = 150, artDX = 1.8, artDY = 1.8, isBouncing = false;
     const baseSpeed = 1.8;
 
-    // --- NEW THROW & DRAG LOGIC ---
-    let isDragging = false;
-    let lastX = 0, lastY = 0, lastTime = 0;
+    // --- DRAG LOGIC ---
+    let isDragging = false, lastX = 0, lastY = 0, lastTime = 0;
 
     function startDrag(e) {
-        // Prevent default behavior which triggers native image dragging
-        e.preventDefault(); 
-        
+        if(e.type === 'touchstart') e.preventDefault(); 
         isDragging = true;
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -198,49 +194,75 @@
         let currentTime = performance.now();
         let dt = currentTime - lastTime || 1;
 
-        let dx = clientX - lastX;
-        let dy = clientY - lastY;
-
+        let dx = clientX - lastX; let dy = clientY - lastY;
         artX += dx; artY += dy;
 
         const rect = bouncingContainer.getBoundingClientRect();
         const bX = window.innerWidth - rect.width, bYMax = window.innerHeight - rect.height - 60, bYMin = 60;
-        artX = Math.max(0, Math.min(artX, bX));
-        artY = Math.max(bYMin, Math.min(artY, bYMax));
+        artX = Math.max(0, Math.min(artX, bX)); artY = Math.max(bYMin, Math.min(artY, bYMax));
 
         bouncingContainer.style.transform = `translate(${artX}px, ${artY}px)`;
-
-        // Calculate throwing velocity
-        artDX = (dx / dt) * 16; 
-        artDY = (dy / dt) * 16;
-
+        artDX = (dx / dt) * 16; artDY = (dy / dt) * 16;
         lastX = clientX; lastY = clientY; lastTime = currentTime;
     }
 
     function endDrag() {
         if (!isDragging) return;
         isDragging = false;
-        
-        // Cap max speed so it doesn't fly off screen instantly
-        artDX = Math.max(-25, Math.min(artDX, 25));
-        artDY = Math.max(-25, Math.min(artDY, 25));
-
-        // If placed gently, ensure it keeps bouncing at base speed
+        artDX = Math.max(-25, Math.min(artDX, 25)); artDY = Math.max(-25, Math.min(artDY, 25));
         if (Math.abs(artDX) < baseSpeed) artDX = artDX >= 0 ? baseSpeed : -baseSpeed;
         if (Math.abs(artDY) < baseSpeed) artDY = artDY >= 0 ? baseSpeed : -baseSpeed;
-
         if (!isBouncing) { isBouncing = true; animateBounce(); }
     }
 
-    // Attach Drag Events
-    // Using { passive: false } on touchstart so we can use e.preventDefault()
     bouncingContainer.addEventListener('mousedown', startDrag);
     window.addEventListener('mousemove', moveDrag);
     window.addEventListener('mouseup', endDrag);
-
     bouncingContainer.addEventListener('touchstart', startDrag, {passive: false});
     window.addEventListener('touchmove', moveDrag, {passive: false});
     window.addEventListener('touchend', endDrag);
+
+    // --- SHAKE TO BOUNCE LOGIC ---
+    let motionRequested = false;
+    let lastShakeTime = 0;
+    const shakeThreshold = 15; // How hard you have to shake
+
+    function handleMotion(event) {
+        let acc = event.acceleration || event.accelerationIncludingGravity;
+        if (!acc) return;
+        
+        let totalForce = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+        
+        if (totalForce > shakeThreshold) {
+            let now = performance.now();
+            if (now - lastShakeTime > 200) { // Prevent it from triggering a million times a second
+                lastShakeTime = now;
+                // Give it a massive random speed boost
+                artDX = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 15);
+                artDY = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 15);
+                if (!isBouncing) { isBouncing = true; animateBounce(); }
+            }
+        }
+    }
+
+    function requestMotionPermission() {
+        if (motionRequested) return;
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            // iOS 13+ requires permission prompt
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion);
+                        motionRequested = true;
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // Android or older iOS
+            window.addEventListener('devicemotion', handleMotion);
+            motionRequested = true;
+        }
+    }
 
 
     function animateBounce() {
@@ -249,10 +271,7 @@
         const topB = 60, bottomB = 60; 
         const bX = window.innerWidth - rect.width, bYMax = window.innerHeight - rect.height - bottomB, bYMin = topB;
         
-        // Apply friction to slow down from a "throw" back to base speed
-        let speedX = Math.abs(artDX);
-        let speedY = Math.abs(artDY);
-        
+        let speedX = Math.abs(artDX); let speedY = Math.abs(artDY);
         if (speedX > baseSpeed) { artDX *= 0.98; if (Math.abs(artDX) < baseSpeed) artDX = Math.sign(artDX) * baseSpeed; }
         if (speedY > baseSpeed) { artDY *= 0.98; if (Math.abs(artDY) < baseSpeed) artDY = Math.sign(artDY) * baseSpeed; }
 
@@ -260,7 +279,6 @@
         
         if (artX <= 0) { artX = 0; artDX *= -1; }
         else if (artX >= bX) { artX = bX; artDX *= -1; }
-        
         if (artY <= bYMin) { artY = bYMin; artDY *= -1; }
         else if (artY >= bYMax) { artY = bYMax; artDY *= -1; }
         
@@ -280,13 +298,9 @@
                 
                 nextL.src = cleanUrl;
                 nextL.onload = () => { 
-                    nextL.style.zIndex = "2"; 
-                    oldL.style.zIndex = "1";
+                    nextL.style.zIndex = "2"; oldL.style.zIndex = "1";
                     nextL.classList.add('active'); 
-                    
-                    // Wait for the new one to fade in fully before resetting the old one
                     setTimeout(() => { oldL.classList.remove('active'); }, 1500);
-                    
                     currentLayer = currentLayer === 1 ? 2 : 1; 
                     if (!isBouncing) { isBouncing = true; animateBounce(); } 
                 };
@@ -304,10 +318,8 @@
         [topMarquee, bottomMarquee].forEach(m => { 
             m.style.opacity = 0; 
             setTimeout(() => { 
-                m.innerHTML = content + content; 
-                m.style.animationDuration = `${(base.length + 10) * 1.5}s`; 
-                m.style.opacity = 1; 
-            }, 500); // 500ms allows the CSS transition fade out to complete before swapping text
+                m.innerHTML = content + content; m.style.animationDuration = `${(base.length + 10) * 1.5}s`; m.style.opacity = 1; 
+            }, 500); 
         });
     }
 
@@ -325,6 +337,8 @@
     }
 
     btn.onclick = () => {
+        requestMotionPermission(); // Asks for shake permission on first click
+        
         if (!playing) { player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play(); btn.innerText = "⏸ Disconnect"; setStatus("CONNECTING...", ""); }
         else { player.pause(); player.src = ""; btn.innerText = "▶ Listen"; setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : ""); }
         playing = !playing;
