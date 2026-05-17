@@ -23,29 +23,40 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #ffffff; z-index: 99999;
             pointer-events: none; opacity: 1;
-            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #page-transition-overlay.loaded { opacity: 0; }
         #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
+
+        /* --- UI SEQUENCED ANIMATIONS --- */
+        .logo-group { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
+        .td-window { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; opacity: 0; transform: translateY(40px); }
+        .back-btn-top { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity: 0; transform: translateY(-20px); }
+
+        body.is-exiting .back-btn-top { animation: slideUpToTop 0.4s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .td-window { animation: breatheDown 0.5s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
+        body.is-exiting .logo-group { animation: breatheDown 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; }
+
+        @keyframes breatheUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes breatheDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
+        @keyframes slideDownFromTop { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUpToTop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+
 
         /* --- HEADER SECTION --- */
         .brand-header {
             background-color: #ffffff; padding: 30px 20px;
             display: flex; flex-direction: column; align-items: center;
             position: relative; flex-shrink: 0;
-            animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
-
-        @keyframes glideIn { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .back-btn-top {
             position: absolute; left: 30px; top: 30px;
             color: #000; text-decoration: none; font-weight: 800; 
             text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
             border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
-
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
         .logo-group { display: flex; align-items: flex-end; justify-content: center; margin-top: 10px; }
@@ -67,10 +78,7 @@
             border-radius: 12px; background-color: #1a1a1a; color: #d0d0d0;
             display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333;
-            animation: glideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
-
-        @keyframes glideUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .top-bar {
             background-color: #2b2b2b; height: 28px; display: flex; align-items: center;
@@ -115,8 +123,9 @@
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
-        #project-node { width: 160px; left: 100px; top: 100px; }
-        #download-node { width: 120px; left: 320px; top: 250px; }
+        /* Centered Node Placement using Viewport Math! */
+        #project-node { width: 160px; left: calc(50vw - 150px); top: calc(50vh - 100px); }
+        #download-node { width: 120px; left: calc(50vw + 50px); top: calc(50vh + 80px); }
 
         .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; }
         .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; }
@@ -242,25 +251,22 @@
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    overlay.classList.remove('loaded');
-                    overlay.classList.add('leaving');
-                    document.querySelector('.brand-header').style.transform = "translateY(-20px)";
-                    document.querySelector('.brand-header').style.opacity = "0";
-                    document.getElementById('td-window').style.transform = "translateY(30px) scale(0.98)";
-                    document.getElementById('td-window').style.opacity = "0";
-                    setTimeout(() => window.location.href = link.href, 500); 
+                    document.body.classList.add('is-exiting'); // Triggers smooth reverse animations
+                    
+                    setTimeout(() => {
+                        overlay.classList.remove('loaded');
+                        overlay.classList.add('leaving');
+                    }, 600); 
+                    setTimeout(() => window.location.href = link.href, 1000); 
                 });
             });
         });
 
         window.addEventListener('pageshow', (e) => { 
             if (e.persisted) {
+                document.body.classList.remove('is-exiting');
                 document.getElementById('page-transition-overlay').classList.add('loaded');
                 document.getElementById('page-transition-overlay').classList.remove('leaving');
-                document.querySelector('.brand-header').style.transform = "";
-                document.querySelector('.brand-header').style.opacity = "1";
-                document.getElementById('td-window').style.transform = "";
-                document.getElementById('td-window').style.opacity = "1";
             }
         });
 
@@ -364,13 +370,9 @@
             wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
         }
 
+        // Draw line on load and when window resizes
         drawWire();
-        
-        if(window.innerWidth < 768) {
-            panX = -50;
-            scale = 0.8;
-            updateTransform();
-        }
+        window.addEventListener('resize', drawWire);
 
     </script>
 </body>
