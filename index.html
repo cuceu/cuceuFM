@@ -74,8 +74,8 @@
             display: flex;
             width: max-content;
             will-change: transform;
-            /* Negative margin pulls the rows tightly together to remove empty space */
-            margin-top: -1.5vw; 
+            /* Reduced negative margin to keep the rows tight with the new smaller size */
+            margin-top: -0.8vw; 
         }
         .marquee-track:first-child {
             margin-top: 0; /* Keeps the first row in place */
@@ -87,17 +87,16 @@
         @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-        /* Rotate the images upside down for rows 2, 4, and 6 */
-        .marquee-track:nth-child(2) img.cuceu-img,
-        .marquee-track:nth-child(4) img.cuceu-img,
-        .marquee-track:nth-child(6) img.cuceu-img {
+        /* Rotate the images upside down for all even rows */
+        .marquee-track:nth-child(even) img.cuceu-img {
             transform: rotate(180deg);
         }
 
         img.cuceu-img {
-            height: clamp(4rem, 9vw, 12rem); /* Slightly larger to fill the tight space */
+            /* Shrunk the vw value from 9vw to 4.5vw so it doesn't get massive on desktop */
+            height: clamp(3rem, 4.5vw, 6rem); 
             width: auto; 
-            margin-right: 2vw; /* Reduced spacing between words horizontally too */
+            margin-right: 1vw; /* Tighter horizontal spacing to match */
             user-select: none;
             -webkit-user-drag: none; 
         }
@@ -249,8 +248,35 @@
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-
+            
             <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-left">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
