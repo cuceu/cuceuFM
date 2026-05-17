@@ -7,27 +7,30 @@
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background-color: transparent; /* Changed to transparent so the background doesn't block the animation */
+            background-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             color: white;
         }
 
-        /* The container that holds everything, so we can animate the whole window at once */
+        /* The container that holds everything */
         #app-container {
             width: 100vw; height: 100vh;
             display: flex; flex-direction: column;
             background-color: #111;
-            /* The origin points towards the bottom right (where the trash dock icon is) */
             transform-origin: 70% 100%; 
-            /* The bezier curve gives it that snappy "suck in" genie feel */
             transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
+            
+            /* Explicitly define the open state */
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            border-radius: 0;
         }
 
-        /* The class that gets added when you click the red dot */
-        .genie-out {
-            transform: scale(0.05) translateY(50vh);
-            opacity: 0;
-            border-radius: 100px;
+        /* The Genie State (used for both opening and closing) */
+        .genie-state {
+            transform: scale(0.05) translateY(50vh) !important;
+            opacity: 0 !important;
+            border-radius: 100px !important;
         }
 
         /* The fake macOS app window bar */
@@ -36,7 +39,7 @@
             border-bottom: 1px solid #ccc; position: relative; z-index: 9999;
         }
 
-        /* The close button - forced to the very front so it can't be blocked */
+        /* The close button */
         .close-btn {
             width: 13px; height: 13px; background-color: #ff5f56; border-radius: 50%;
             display: inline-block; cursor: pointer; border: 1px solid #e0443e;
@@ -56,7 +59,6 @@
         /* The video feed */
         video {
             width: 100%; height: 100%; object-fit: cover;
-            /* Flip the camera horizontally so it behaves like a mirror */
             transform: scaleX(-1);
         }
 
@@ -69,7 +71,7 @@
 </head>
 <body>
 
-    <div id="app-container">
+    <div id="app-container" class="genie-state">
         
         <div class="mac-titlebar">
             <div onclick="closeApp()" class="close-btn" title="Close App"></div>
@@ -90,12 +92,20 @@
         const video = document.getElementById('camera-feed');
         const errorMsg = document.getElementById('error-msg');
 
-        // The new function that handles the Genie animation!
+        // --- THE GENIE ENTRANCE ANIMATION ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // A tiny delay gives the browser time to draw the tiny window first, 
+            // then we remove the class so it animates up to full size!
+            setTimeout(() => {
+                document.getElementById('app-container').classList.remove('genie-state');
+            }, 50);
+        });
+
+        // --- THE GENIE EXIT ANIMATION ---
         function closeApp() {
-            // 1. Add the animation class to suck the window down
-            document.getElementById('app-container').classList.add('genie-out');
+            // Add the class back so it sucks down into the dock
+            document.getElementById('app-container').classList.add('genie-state');
             
-            // 2. Wait 550 milliseconds for the animation to finish, THEN redirect
             setTimeout(() => {
                 window.location.assign('/');
             }, 550);
@@ -105,7 +115,6 @@
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
             .then(stream => {
                 video.srcObject = stream;
-                // Force play to prevent browsers from freezing it
                 video.play().catch(err => console.error("Video play error:", err));
             })
             .catch(err => {
