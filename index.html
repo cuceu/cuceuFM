@@ -59,7 +59,7 @@
         /* --- THE INTERACTIVE DIAL --- */
         .dial-container {
             display: flex;
-            margin-top: 20px;
+            margin-top: 30px; /* Adjusted spacing for longer lines */
             width: 100%;
             justify-content: center;
             position: relative;
@@ -82,14 +82,15 @@
             transition: all 0.3s ease;
         }
 
-        .line:nth-child(even) { height: 12px; }
-        .line:nth-child(odd) { height: 22px; }
-        .line:nth-child(5n) { height: 35px; opacity: 0.4; }
+        /* --- LONGER LINES (ADJUSTED HEIGHTS) --- */
+        .line:nth-child(even) { height: 25px; } /* Thinner/shorter lines are longer */
+        .line:nth-child(odd) { height: 45px; } /* Mid lines are longer */
+        .line:nth-child(5n) { height: 70px; opacity: 0.4; } /* Major frequency marks are very long */
 
         /* --- THE "TUNING" EFFECT --- */
         /* When hovering a segment, the specific letter above it pops! */
         
-        .dial-segment:hover .line { opacity: 1; height: 45px; }
+        .dial-segment:hover .line { opacity: 1; height: 90px; } /* Max height on hover */
 
         /* Logic to link segments to letters */
         #interactive-logo-container:has(.seg-1:hover) .char-1,
@@ -126,7 +127,17 @@
             color: #ffffff; border-radius: 18px; display: flex; align-items: center; justify-content: center;
             font-size: 1.8rem; font-weight: 900;
         }
-        .icon-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+
+        /* --- NEW CLEAN INSTAGRAM ICON (FIXED OUTLINE) --- */
+        .icon-ig { 
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; 
+            border: none !important; /* Remove giant outline */
+            backdrop-filter: none !important; /* Remove big blur inner box */
+            -webkit-backdrop-filter: none !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; /* Standard drop shadow only */
+        }
+        .icon-ig svg { width: 42px; height: 42px; }
+
         .icon-trash { background: rgba(255, 255, 255, 0.1); font-size: 2.2rem; }
         .app-tooltip {
             position: absolute; top: -35px; background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(10px);
@@ -141,6 +152,7 @@
             backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px; padding: 3px 7px; display: flex; align-items: center; gap: 4px;
             font-size: 8px; font-weight: 800; color: #ffffff; opacity: 0;
+            z-index: 20; /* Brought to the absolute front layered over .fm */
         }
         .app-badge.visible { opacity: 1; }
         .recording-dot { width: 5px; height: 5px; background-color: #ff3b30; border-radius: 50%; animation: subtle-pulse 2s infinite ease-in-out; }
