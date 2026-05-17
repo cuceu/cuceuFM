@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cuceu.td</title>
+    <title>TouchDesigner | CUCEU</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><circle cx=%2250%22 cy=%2250%22 r=%2225%22 fill=%22white%22/></svg>">
     <style>
         * {
@@ -67,13 +67,23 @@
                 linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 40px 40px;
             cursor: crosshair;
+            background-position: center center;
         }
 
-        /* The Node (Movie File In TOP) */
+        /* SVG Wire Layer */
+        #wire-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* The Nodes */
         .td-node {
             position: absolute;
-            top: 20%;
-            left: 25%;
             width: 160px;
             background-color: #1e1e1e;
             border: 1px solid #000;
@@ -81,6 +91,7 @@
             box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
             cursor: pointer;
             transition: border-color 0.1s, transform 0.1s;
+            z-index: 5;
         }
 
         .td-node:hover {
@@ -91,9 +102,14 @@
             transform: scale(0.98);
         }
 
-        /* TOPs are purple */
-        .node-header {
-            background-color: #7b4b8a; 
+        /* Video Node Specifics */
+        #project-node {
+            left: 35%;
+            top: 30%;
+        }
+
+        .node-header-top {
+            background-color: #7b4b8a; /* TOP Purple */
             color: white;
             padding: 3px 6px;
             font-size: 11px;
@@ -102,170 +118,11 @@
             justify-content: space-between;
         }
 
-        .node-viewer {
-            height: 100px;
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+        /* Download Node Specifics */
+        #download-node {
+            left: 55%;
+            top: 55%;
         }
 
-        /* A little preview image or GIF can go here. For now, an icon */
-        .node-viewer::after {
-            content: '▶';
-            color: #555;
-            font-size: 24px;
-        }
-
-        .node-footer {
-            padding: 4px;
-            font-size: 10px;
-            color: #888;
-            background: #2a2a2a;
-            text-align: center;
-        }
-
-        /* Bottom Timeline (Visual Mockup) */
-        .timeline {
-            height: 35px;
-            background-color: #2b2b2b;
-            border-top: 1px solid #111;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 11px;
-            font-family: monospace;
-            color: #888;
-        }
-        
-        .timeline span { margin-right: 20px; }
-        .play-btn { color: #d0d0d0; font-size: 16px; cursor: pointer; }
-
-        /* Video Modal/Lightbox */
-        .video-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .video-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .video-container {
-            width: 80%;
-            max-width: 1000px;
-            position: relative;
-        }
-
-        video {
-            width: 100%;
-            border: 1px solid #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            border-radius: 4px;
-        }
-        
-        .close-hint {
-            position: absolute;
-            top: -30px;
-            right: 0;
-            color: #aaa;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        a.back-btn {
-            color: #aaa;
-            text-decoration: none;
-            margin-right: 20px;
-        }
-        a.back-btn:hover { color: white; }
-
-    </style>
-</head>
-<body>
-
-    <div class="top-bar">
-        <a href="/" class="back-btn">← Home</a>
-        <div class="menu-items">
-            <span>File</span>
-            <span>Edit</span>
-            <span>Dialogs</span>
-            <span>View</span>
-            <span>Window</span>
-            <span>Help</span>
-        </div>
-    </div>
-
-    <div class="path-bar">
-        /project1/portfolio
-    </div>
-
-    <div class="network-editor" id="network-bg">
-        
-        <div class="td-node" id="project-node" title="Click to view project">
-            <div class="node-header">
-                <span>moviefilein1</span>
-                <span>✖</span>
-            </div>
-            <div class="node-viewer">
-                </div>
-            <div class="node-footer">
-                1280x720
-            </div>
-        </div>
-
-    </div>
-
-    <div class="timeline">
-        <span>Start: 1</span>
-        <span>End: 600</span>
-        <span class="play-btn">▶</span>
-        <span>FPS: 60</span>
-        <span style="color: #4a90e2;">00:00:00:00</span>
-    </div>
-
-    <div class="video-modal" id="video-overlay">
-        <div class="video-container">
-            <div class="close-hint">Click anywhere to close</div>
-            <video id="project-video" controls>
-                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-    </div>
-
-    <script>
-        const node = document.getElementById('project-node');
-        const overlay = document.getElementById('video-overlay');
-        const video = document.getElementById('project-video');
-
-        // Open video on node click
-        node.addEventListener('click', () => {
-            overlay.classList.add('active');
-            video.play();
-        });
-
-        // Close video on overlay click
-        overlay.addEventListener('click', (e) => {
-            // Prevent closing if they clicked the video controls itself
-            if (e.target === video) return; 
-            
-            overlay.classList.remove('active');
-            video.pause();
-            video.currentTime = 0; // Reset video to start
-        });
-    </script>
-</body>
-</html>
+        .node-header-comp {
+            background-color: #555555;
