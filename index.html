@@ -42,7 +42,6 @@
 
         /* --- THE IMAGE BACKGROUND & GLITCH --- */
         
-        /* The Glitch Animation Keyframes */
         @keyframes subtle-glitch {
             0%, 95% { transform: translate(0, 0) skew(0deg); filter: none; }
             96% { transform: translate(-4px, 2px) skew(-1deg); filter: drop-shadow(4px 0 0 rgba(255,0,0,0.6)); }
@@ -61,18 +60,17 @@
             justify-content: center;
             overflow: hidden; 
             pointer-events: none;
-            /* Added the glitch animation to run continuously every 8 seconds */
-            animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards, subtle-glitch 8s infinite 2s;
+            /* Glitch runs continuously, entrance animation moved to individual rows */
+            animation: subtle-glitch 8s infinite 2s;
         }
         
         body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-        @keyframes glideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes glideOut { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.95); } }
 
         .marquee-track {
             display: flex;
-            flex-wrap: nowrap; /* Forces everything onto one straight line */
+            flex-wrap: nowrap; 
             width: max-content;
             will-change: transform;
             margin-top: -0.8vw; 
@@ -87,19 +85,46 @@
         @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-        /* Rotate the images upside down for all even rows */
-        .marquee-track:nth-child(even) img.cuceu-img {
-            transform: rotate(180deg);
-        }
-
+        /* Base styles for the logos */
         img.cuceu-img {
             height: clamp(3rem, 4.5vw, 6rem); 
             width: auto; 
             margin-right: 1vw; 
-            flex-shrink: 0; /* Prevents the logos from ever squishing */
+            flex-shrink: 0; 
             user-select: none;
             -webkit-user-drag: none; 
+            opacity: 0; /* Hidden initially so they can fade in */
         }
+
+        /* --- THE BREATHING DROP-IN ANIMATIONS --- */
+        @keyframes dropInOdd {
+            0% { opacity: 0; transform: translateY(-40px) scale(0.85); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        @keyframes dropInEven {
+            0% { opacity: 0; transform: translateY(-40px) scale(0.85) rotate(180deg); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(180deg); filter: blur(0); }
+        }
+
+        /* Apply the animations with 'both' to keep them hidden during the delay, and rotated properly */
+        .marquee-track:nth-child(odd) img.cuceu-img {
+            animation: dropInOdd 1.2s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+        .marquee-track:nth-child(even) img.cuceu-img {
+            animation: dropInEven 1.2s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+
+        /* Stagger the entrance line by line */
+        .marquee-track:nth-child(1) img.cuceu-img { animation-delay: 0.1s; }
+        .marquee-track:nth-child(2) img.cuceu-img { animation-delay: 0.2s; }
+        .marquee-track:nth-child(3) img.cuceu-img { animation-delay: 0.3s; }
+        .marquee-track:nth-child(4) img.cuceu-img { animation-delay: 0.4s; }
+        .marquee-track:nth-child(5) img.cuceu-img { animation-delay: 0.5s; }
+        .marquee-track:nth-child(6) img.cuceu-img { animation-delay: 0.6s; }
+        .marquee-track:nth-child(7) img.cuceu-img { animation-delay: 0.7s; }
+        .marquee-track:nth-child(8) img.cuceu-img { animation-delay: 0.8s; }
+        .marquee-track:nth-child(9) img.cuceu-img { animation-delay: 0.9s; }
+        .marquee-track:nth-child(10) img.cuceu-img { animation-delay: 1.0s; }
 
         /* --- THE DOCK --- */
         .mac-dock-container {
@@ -112,7 +137,7 @@
             padding: 8px 16px; display: flex; gap: 12px; align-items: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             opacity: 0;
-            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards;
+            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s forwards; /* Delayed slightly so logos appear first */
         }
         
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
