@@ -38,21 +38,18 @@
 
         .main-content {
             flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;
+            transform: translateY(-20px); /* Moves everything up slightly for center framing */
         }
 
         /* --- THE IMAGE BACKGROUND --- */
         #logo-wrapper {
-            position: absolute; 
-            top: 50px; 
-            left: 0;
             width: 100vw; 
-            height: calc(100dvh - 160px); 
             display: flex; flex-direction: column;
             justify-content: center;
             overflow: hidden; 
-            transform-origin: center center; z-index: 5;
             pointer-events: none;
             animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            gap: 1.5dvh; /* Tighter spacing */
         }
         
         body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -72,16 +69,22 @@
         @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
         @keyframes scrollLeft { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
-        /* Updated CSS to handle the image exactly like the old text */
-        img.cuceu-img {
-            height: clamp(3.5rem, 8vw, 10rem); /* Matches the old font-size */
-            width: auto; /* Keeps the image proportions correct */
-            margin-right: 4vw; /* Replaces the old padding-right for spacing */
-            user-select: none;
-            -webkit-user-drag: none; /* Stops the image from being draggable */
+        /* Rotate specified lines 2, 4, 6 */
+        .marquee-track:nth-child(2),
+        .marquee-track:nth-child(4),
+        .marquee-track:nth-child(6) {
+            transform: rotate(180deg);
         }
 
-        /* --- THE DOCK (SCALED DOWN) --- */
+        img.cuceu-img {
+            height: clamp(3.5rem, 8vw, 10rem); 
+            width: auto; 
+            margin-right: 4vw; 
+            user-select: none;
+            -webkit-user-drag: none; 
+        }
+
+        /* --- THE DOCK --- */
         .mac-dock-container {
             position: absolute; bottom: 30px; width: 100%;
             display: flex; justify-content: center; z-index: 10;
@@ -156,7 +159,7 @@
         @keyframes subtle-pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
 
         @media (max-width: 600px) {
-            img.cuceu-img { height: 3.5rem; } /* Adjusted for mobile */
+            img.cuceu-img { height: 3.5rem; } 
             .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
@@ -174,8 +177,15 @@
 
     <div class="main-content">
         <div id="logo-wrapper">
-            <div class="marquee-track track-left">
+            <div class="marquee-track track-right">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+
+            <div class="marquee-track track-left">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
@@ -189,11 +199,9 @@
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
@@ -207,11 +215,9 @@
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
 
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
@@ -220,16 +226,6 @@
             </div>
 
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
