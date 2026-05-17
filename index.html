@@ -66,7 +66,7 @@
             padding: 10px 20px; display: flex; gap: 15px; align-items: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             opacity: 0;
-            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards; /* Delays so it follows the logo */
+            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards;
         }
         
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -80,7 +80,6 @@
             position: relative; height: 85px; justify-content: center;
         }
         
-        /* The indicator dot for "Open" apps */
         .dock-app.is-open::after {
             content: '';
             position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
@@ -95,14 +94,13 @@
             font-size: 1.8rem; font-weight: 900;
         }
 
-        /* Instagram Icon */
+        /* Icons */
         .icon-ig { 
             background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; 
             border: none !important; backdrop-filter: none !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
         }
         .icon-ig svg { width: 42px; height: 42px; }
 
-        /* TouchDesigner Icon */
         .icon-td {
             background: linear-gradient(180deg, #f4f4f4, #e2e2e2) !important;
             border: 1px solid rgba(0, 0, 0, 0.1) !important; box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.1) !important;
@@ -156,13 +154,15 @@
     <div class="mac-dock-container">
         <div class="mac-dock">
             
-            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
+            <!-- Instagram App: Now points to /ig and uses the transition -->
+            <a href="/ig" class="dock-app internal-link">
                 <div class="app-tooltip">Instagram</div>
                 <div class="app-icon icon-ig">
                     <svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                 </div>
             </a>
 
+            <!-- TouchDesigner App -->
             <a href="/td" class="dock-app internal-link">
                 <div class="app-tooltip">TouchDesigner</div>
                 <div class="app-icon icon-td">
@@ -180,6 +180,7 @@
                 </div>
             </a>
 
+            <!-- cuceuFM App -->
             <a href="/fm" class="dock-app is-open internal-link" id="fm-app">
                 <div class="app-tooltip">cuceuFM</div>
                 <div class="app-badge" id="fm-badge">
@@ -189,7 +190,8 @@
                 <div class="app-icon">.fm</div>
             </a>
 
-            <a href="https://www.croydon.gov.uk/rubbish-and-recycling/bins/check-your-bin-collection-days" target="_blank" class="dock-app">
+            <!-- Bin App: Now points to /bin and uses the transition -->
+            <a href="/bin" class="dock-app internal-link">
                 <div class="app-tooltip">Bin</div>
                 <div class="app-icon icon-trash">🗑️</div>
             </a>
@@ -206,9 +208,8 @@
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.body.classList.add('is-exiting'); // Triggers smooth reverse animations
+                    document.body.classList.add('is-exiting'); 
                     
-                    // Wait for animations to play out, then fade to white, then redirect
                     setTimeout(() => {
                         overlay.classList.remove('loaded');
                         overlay.classList.add('leaving');
