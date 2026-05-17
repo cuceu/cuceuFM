@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUCEU.td</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
+    <title>cuceu.td</title>
+    <link rel="icon" href="data:image/svg+xml,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><rect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><path d=%22M 50 0 L 50 100 M 0 50 L 100 50%22 stroke=%22%23111%22 stroke-width=%225%22/><path d=%22M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50%22 stroke=%22%23111%22 stroke-width=%225%22/><rect x=%2212%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2212%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><circle cx=%2250%22 cy=%2250%22 r=%2223%22 fill=%22%23ffffff%22 stroke=%22%23111%22 stroke-width=%225%22 /><rect x=%2243%22 y=%2243%22 width=%2214%22 height=%2214%22 fill=%22%23111%22 /></svg>">
     <style>
         * {
             box-sizing: border-box;
@@ -18,12 +18,25 @@
             overflow: hidden; display: flex; flex-direction: column;
         }
 
+        /* --- SMOOTH PAGE TRANSITIONS --- */
+        #page-transition-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; z-index: 99999;
+            pointer-events: none; opacity: 1;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #page-transition-overlay.loaded { opacity: 0; }
+        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
+
         /* --- HEADER SECTION --- */
         .brand-header {
             background-color: #ffffff; padding: 30px 20px;
             display: flex; flex-direction: column; align-items: center;
             position: relative; flex-shrink: 0;
+            animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
+
+        @keyframes glideIn { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .back-btn-top {
             position: absolute; left: 30px; top: 30px;
@@ -54,7 +67,10 @@
             border-radius: 12px; background-color: #1a1a1a; color: #d0d0d0;
             display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333;
+            animation: glideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
+
+        @keyframes glideUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .top-bar {
             background-color: #2b2b2b; height: 28px; display: flex; align-items: center;
@@ -75,13 +91,13 @@
                 linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 40px 40px; cursor: crosshair;
-            overflow: hidden; touch-action: none; /* Prevents mobile scroll so you can pan */
+            overflow: hidden; touch-action: none;
         }
 
         /* The Canvas that actually moves when you pan/zoom */
         #network-canvas {
             position: absolute; top: 0; left: 0; width: 0; height: 0;
-            transform-origin: 0 0; /* Important for zooming correctly */
+            transform-origin: 0 0; 
         }
 
         #wire-layer {
@@ -99,16 +115,12 @@
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
-        /* Hardcoded positions so panning works like an infinite canvas */
         #project-node { width: 160px; left: 100px; top: 100px; }
-        
-        /* Smaller Download Node */
         #download-node { width: 120px; left: 320px; top: 250px; }
 
         .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; }
         .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; }
 
-        /* Node Viewer Heights */
         #project-node .node-viewer { height: 90px; }
         #download-node .node-viewer { height: 60px; font-size: 20px;}
 
@@ -129,7 +141,6 @@
         .timeline span { margin-right: 20px; }
         .play-btn { color: #d0d0d0; font-size: 16px; cursor: pointer; }
 
-        /* Fixed Video Overlay Modal */
         .video-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center;
@@ -140,10 +151,9 @@
 
         .video-container { 
             position: relative; 
-            max-height: 85vh; /* Prevents vertical videos from falling off screen */
-            aspect-ratio: 9/16; /* Perfect vertical video ratio */
-            width: auto;
-            max-width: 90vw;
+            max-height: 85vh;
+            aspect-ratio: 9/16; 
+            width: auto; max-width: 90vw;
         }
         
         .close-hint { position: absolute; top: -30px; width: 100%; text-align: center; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -153,21 +163,23 @@
         @media (max-width: 768px) {
             h1 { font-size: 4.5rem; letter-spacing: -4px; }
             .td-window { margin: 0 10px 10px 10px; }
-            .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; }
+            .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
         }
     </style>
 </head>
 <body>
 
+    <div id="page-transition-overlay"></div>
+
     <div class="brand-header">
-        <a href="/" class="back-btn-top">← Home</a>
+        <a href="/" class="back-btn-top internal-link">← Home</a>
         <div class="logo-group">
             <h1>CUCEU</h1>
             <span class="td-text">.td</span>
         </div>
     </div>
 
-    <div class="td-window">
+    <div class="td-window" id="td-window">
         <div class="top-bar">
             <div class="menu-items">
                 <span>File</span><span>Edit</span><span>Dialogs</span><span>View</span><span>Window</span><span>Help</span>
@@ -222,6 +234,36 @@
     </div>
 
     <script>
+        // --- PAGE TRANSITION LOGIC ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const overlay = document.getElementById('page-transition-overlay');
+            requestAnimationFrame(() => overlay.classList.add('loaded'));
+
+            document.querySelectorAll('.internal-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    overlay.classList.remove('loaded');
+                    overlay.classList.add('leaving');
+                    document.querySelector('.brand-header').style.transform = "translateY(-20px)";
+                    document.querySelector('.brand-header').style.opacity = "0";
+                    document.getElementById('td-window').style.transform = "translateY(30px) scale(0.98)";
+                    document.getElementById('td-window').style.opacity = "0";
+                    setTimeout(() => window.location.href = link.href, 500); 
+                });
+            });
+        });
+
+        window.addEventListener('pageshow', (e) => { 
+            if (e.persisted) {
+                document.getElementById('page-transition-overlay').classList.add('loaded');
+                document.getElementById('page-transition-overlay').classList.remove('leaving');
+                document.querySelector('.brand-header').style.transform = "";
+                document.querySelector('.brand-header').style.opacity = "1";
+                document.getElementById('td-window').style.transform = "";
+                document.getElementById('td-window').style.opacity = "1";
+            }
+        });
+
         // --- Video Player Logic ---
         const videoNode = document.getElementById('project-node');
         const overlay = document.getElementById('video-overlay');
@@ -247,16 +289,13 @@
         let isDragging = false, startX, startY;
 
         function updateTransform() {
-            // Move the canvas holding the nodes
             canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-            // Move and scale the background grid to match
             editor.style.backgroundPosition = `${panX}px ${panY}px`;
             editor.style.backgroundSize = `${40 * scale}px ${40 * scale}px`;
         }
 
-        // Mouse Drag
         editor.addEventListener('mousedown', (e) => {
-            if(e.target.closest('.td-node')) return; // Don't drag background if clicking a node
+            if(e.target.closest('.td-node')) return; 
             isDragging = true;
             startX = e.clientX - panX;
             startY = e.clientY - panY;
@@ -275,7 +314,6 @@
             editor.style.cursor = 'crosshair';
         });
 
-        // Touch Drag (Mobile)
         editor.addEventListener('touchstart', (e) => {
             if(e.target.closest('.td-node')) return;
             if(e.touches.length === 1) {
@@ -295,27 +333,23 @@
 
         window.addEventListener('touchend', () => { isDragging = false; });
 
-        // Scroll Wheel / Trackpad Zooming
         editor.addEventListener('wheel', (e) => {
-            e.preventDefault(); // Stop normal scrolling inside the window
+            e.preventDefault(); 
             const zoomSensitivity = -0.002;
             const delta = e.deltaY * zoomSensitivity;
             
             let newScale = scale * Math.exp(delta);
-            newScale = Math.max(0.3, Math.min(newScale, 3)); // Limit zoom between 0.3x and 3x
+            newScale = Math.max(0.3, Math.min(newScale, 3)); 
             
             scale = newScale;
             updateTransform();
         }, {passive: false});
 
-        // --- Wire Drawing Logic ---
         function drawWire() {
             const pNode = document.getElementById('project-node');
             const dNode = document.getElementById('download-node');
             const wirePath = document.getElementById('wire-path');
 
-            // Because nodes are now absolutely positioned on the canvas, 
-            // we just use their offsetLeft/offsetTop. No need to recalculate when panning!
             const startX = pNode.offsetLeft + pNode.offsetWidth;
             const startY = pNode.offsetTop + (pNode.offsetHeight / 2);
             
@@ -330,10 +364,8 @@
             wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
         }
 
-        // Initialize Canvas
         drawWire();
         
-        // Center the view slightly on mobile load
         if(window.innerWidth < 768) {
             panX = -50;
             scale = 0.8;
