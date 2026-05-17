@@ -20,7 +20,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #ffffff; z-index: 99999;
             pointer-events: none; opacity: 1;
-            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #page-transition-overlay.loaded { opacity: 0; }
         #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
@@ -37,28 +37,22 @@
 
         /* --- THE PLAIN BOLD LOGO --- */
         #logo-wrapper {
-            transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
-            transform-origin: center center;
-            z-index: 5;
+            transform-origin: center center; z-index: 5;
             animation: glideIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
+        
+        body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-        @keyframes glideIn { 0% { opacity: 0; transform: translateY(30px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-
-        #logo-wrapper.glide-down {
-            transform: translateY(30px) scale(0.95); opacity: 0;
-        }
+        @keyframes glideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes glideOut { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.95); } }
 
         h1#cuceu-logo {
             font-size: clamp(8rem, 28vw, 35rem); 
             font-weight: 950;
             text-transform: uppercase;
             letter-spacing: -12px;
-            margin: 0;
-            color: #000000;
-            line-height: 0.8;
-            user-select: none;
-            cursor: default;
+            margin: 0; color: #000000; line-height: 0.8;
+            user-select: none; cursor: default;
         }
 
         /* --- THE DOCK --- */
@@ -71,10 +65,14 @@
             border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 35px;
             padding: 10px 20px; display: flex; gap: 15px; align-items: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            opacity: 0;
+            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards; /* Delays so it follows the logo */
         }
         
-        @keyframes dockSlideUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+        @keyframes dockSlideUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes dockSlideDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
 
         .dock-app {
             text-decoration: none; display: flex; flex-direction: column; align-items: center;
@@ -100,17 +98,14 @@
         /* Instagram Icon */
         .icon-ig { 
             background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; 
-            border: none !important; 
-            backdrop-filter: none !important;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            border: none !important; backdrop-filter: none !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
         }
         .icon-ig svg { width: 42px; height: 42px; }
 
         /* TouchDesigner Icon */
         .icon-td {
             background: linear-gradient(180deg, #f4f4f4, #e2e2e2) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.1) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important; box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.1) !important;
         }
         .icon-td svg { width: 44px; height: 44px; border-radius: 2px;}
 
@@ -119,8 +114,7 @@
         .app-tooltip {
             position: absolute; top: -35px; background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(10px);
             padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700;
-            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
-            white-space: nowrap; text-transform: uppercase;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
         }
         .dock-app:hover .app-tooltip { opacity: 1; }
         .dock-app:hover { transform: translateY(-10px); }
@@ -212,19 +206,23 @@
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.getElementById('logo-wrapper').classList.add('glide-down');
-                    overlay.classList.remove('loaded');
-                    overlay.classList.add('leaving');
-                    setTimeout(() => window.location.href = link.href, 500); 
+                    document.body.classList.add('is-exiting'); // Triggers smooth reverse animations
+                    
+                    // Wait for animations to play out, then fade to white, then redirect
+                    setTimeout(() => {
+                        overlay.classList.remove('loaded');
+                        overlay.classList.add('leaving');
+                    }, 500); 
+                    setTimeout(() => window.location.href = link.href, 900); 
                 });
             });
         });
 
         window.addEventListener('pageshow', (e) => { 
             if (e.persisted) {
+                document.body.classList.remove('is-exiting');
                 document.getElementById('page-transition-overlay').classList.add('loaded');
                 document.getElementById('page-transition-overlay').classList.remove('leaving');
-                document.getElementById('logo-wrapper').classList.remove('glide-down');
             }
         });
 
