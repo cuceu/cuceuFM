@@ -3,342 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>c.fm</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
-
     <style>
-        html, body {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;
-        }
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* --- THE BOUNCING BACKGROUND --- */
-        #bouncing-container {
-            position: absolute;
-            width: 180px; height: 180px;
-            z-index: 1; 
-            top: 0; left: 0;
-            will-change: transform;
-        }
-        
-        @media (min-width: 768px) {
-            #bouncing-container { width: 320px; height: 320px; }
-        }
+        /* Bouncing art stays behind at 90% opacity */
+        #bouncing-container { position: absolute; width: 180px; height: 180px; z-index: 1; top: 0; left: 0; will-change: transform; }
+        @media (min-width: 768px) { #bouncing-container { width: 320px; height: 320px; } }
+        .art-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; }
+        .art-layer.active { opacity: 0.9; }
 
-        .art-layer {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            border-radius: 0; 
-            opacity: 0;
-            transition: opacity 1.5s ease-in-out;
-        }
-        .art-layer.active {
-            opacity: 0.9; 
-        }
-
-        #app-wrapper {
-            width: 100%; height: 100%; position: relative;
-            z-index: 10; 
-            animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-            pointer-events: none;
-        }
-        
+        #app-wrapper { width: 100%; height: 100%; position: relative; z-index: 10; animation: continuityGlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; }
         .main-container, .status-area { pointer-events: auto; }
 
-        @keyframes continuityGlide {
-            0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes continuityGlide { 0% { opacity: 0; transform: translateY(-5vh); } 100% { opacity: 1; transform: translateY(0); } }
 
-        .status-area {
-            position: absolute; top: 75px; right: 30px; display: flex; align-items: center;
-            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000000; 
-        }
-        .ticker-tape {
-            position: absolute; width: 100%; background: #000; color: #ffffff; overflow: hidden;
-            padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000;
-            display: flex;
-        }
+        .status-area { position: absolute; top: 75px; right: 30px; display: flex; align-items: center; font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; }
+        .ticker-tape { position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000; display: flex; z-index: 20; }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
-        
-        .marquee-wrapper { 
-            display: flex; white-space: nowrap; 
-            animation: marquee linear infinite; 
-            width: fit-content; 
-            transition: opacity 0.5s ease-in-out;
-        }
-        .song-display {
-            font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px;
-            padding-right: 80px;
-        }
+        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; }
+        .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
-        .main-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; width: 100%; padding: 0 20px;
-            box-sizing: border-box; 
-            display: flex; flex-direction: column; align-items: center;
-        }
+        .main-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; }
         
-        /* --- THE MASSIVE BOLD CUCEU --- */
-        h1 {
-            font-size: clamp(8rem, 28vw, 35rem); /* Massive Size */
-            font-weight: 950;
-            text-transform: uppercase;
-            letter-spacing: -12px; /* Tight Heavy Spacing */
-            margin: 0;
-            color: #000000;
-            line-height: 0.8;
-            user-select: none;
+        /* --- THE LOGO: Massively Bold & Tight --- */
+        .logo-container { margin-bottom: 20px; user-select: none; }
+        
+        h1 { 
+            font-size: clamp(6rem, 24vw, 30rem); 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            letter-spacing: -12px; 
+            margin: 0; 
+            color: #000; 
+            line-height: 0.8; 
+            display: inline-block;
         }
 
-        /* --- THE SMALLER LIGHTER .FM --- */
         .fm-text { 
-            font-size: 0.3em; /* Much smaller relative to the giant CUCEU */
-            text-transform: lowercase;
-            font-weight: 400; /* Not as bold */
-            letter-spacing: normal; /* Resets the tight spacing for readability */
-            display: inline-block;
-            vertical-align: baseline;
+            font-size: 0.3em; /* Smaller but attached to the main name */
+            font-weight: 400; 
+            text-transform: lowercase; 
+            letter-spacing: -2px; 
+            margin-left: -15px; /* Pulls it closer so it looks like part of the name */
         }
         
-        .live-status {
-            font-size: clamp(1rem, 3vw, 1.5rem); text-transform: uppercase; letter-spacing: 3px;
-            font-weight: 800; margin-top: 15px; margin-bottom: 30px;
-            display: inline-flex; align-items: center; justify-content: center; gap: 12px;
-        }
-        
-        #center-status { transition: opacity 0.3s ease-in-out; }
-        
-        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; transition: background-color 0.3s ease; }
+        .live-status { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 30px; display: inline-flex; align-items: center; gap: 10px; }
+        .pulse-dot { height: 10px; width: 10px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; }
         .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0% { transform: scale(0.9); opacity: 0.7; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.7; } }
         
-        #btn {
-            background-color: #000; color: #fff; border: 4px solid #000; padding: 20px 40px;
-            font-size: 1.2rem; text-transform: uppercase; font-weight: 800; letter-spacing: 3px;
-            cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px;
-        }
-        
-        .history-wrapper {
-            width: 100%; max-width: 360px;
-            position: relative; 
-        }
-        #history-toggle {
-            width: 100%; background: none; 
-            border: none; box-shadow: none;
-            color: #000; padding: 12px;
-            font-size: 0.85rem; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
-            transition: opacity 0.2s ease; box-sizing: border-box;
-        }
-        #history-toggle:hover { opacity: 0.6; }
-        
-        #history-list { 
-            width: 100%; 
-            background: rgba(255, 255, 255, 0.2); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            margin: 0; list-style: none; box-sizing: border-box; text-align: left;
-            max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
-            border: 1px solid rgba(0,0,0,0.05); border-radius: 12px;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        #history-list.open {
-            max-height: 350px; opacity: 1; padding: 0 12px; pointer-events: auto;
-            margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-y: auto;
-        }
-        
-        .history-item { 
-            padding: 12px 0; font-size: 0.85rem; font-weight: 900; 
-            text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.05); color: #000;
-        }
-        .history-item:last-child { border-bottom: none; }
+        #btn { background-color: #000; color: #fff; border: 4px solid #000; padding: 20px 45px; font-size: 1.2rem; text-transform: uppercase; font-weight: 800; letter-spacing: 3px; cursor: pointer; box-shadow: 8px 8px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 30px; }
+        #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        @media (max-width: 600px) {
-            h1 { font-size: 6rem; letter-spacing: -4px; }
-        }
+        .history-wrapper { width: 100%; max-width: 360px; }
+        #history-toggle { background: none; border: none; color: #000; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; }
+        #history-list { width: 100%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); margin: 10px 0 0 0; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; border-radius: 12px; transition: all 0.5s ease; }
+        #history-list.open { max-height: 300px; opacity: 1; padding: 12px; border: 1px solid rgba(0,0,0,0.05); }
+        .history-item { padding: 12px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.03); }
+
+        @media (max-width: 600px) { h1 { font-size: 5rem; letter-spacing: -4px; } .fm-text { margin-left: -5px; } }
     </style>
 </head>
 <body>
-
     <div id="bouncing-container">
         <img id="art-layer-1" class="art-layer" src="" alt="">
         <img id="art-layer-2" class="art-layer" src="" alt="">
     </div>
-
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
-        
         <div class="main-container">
-            <h1>CUCEU<span class="fm-text">.fm</span></h1>
+            
+            <div class="logo-container">
+                <h1>CUCEU<span class="fm-text">.fm</span></h1>
+            </div>
+
             <div class="live-status">
                 <div class="pulse-dot" id="pulse-indicator"></div> 
-                <span id="center-status">CHECKING...</span>
-            </div>
-            <button id="btn">▶ Listen</button>
-            <div class="history-wrapper">
-                <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
-                <ul id="history-list">
-                    <li class="history-item" style="border:none; text-align:center; color:#555;">Loading history...</li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
-    </div>
-    
-    <audio id="radioPlayer" preload="none"></audio>
-
-<script>
-    const STREAM_BASE = "https://stream.cuceu.co.uk";
-    
-    function updateClock() {
-        const now = new Date();
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-        let hours = now.getHours() % 12 || 12; 
-        let minutes = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
-        document.getElementById('mac-clock').innerText = `${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][now.getDay()]} ${hours}:${minutes} ${ampm}`;
-    }
-    updateClock(); setInterval(updateClock, 1000);
-
-    const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
-          centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
-          historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
-          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee"),
-          bouncingContainer = document.getElementById("bouncing-container");
-    
-    let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
-
-    let artX = 50, artY = 150; 
-    let artDX = 1.8, artDY = 1.8; 
-    let isBouncing = false;
-
-    function animateBounce() {
-        if (!isBouncing) return;
-        const rect = bouncingContainer.getBoundingClientRect();
-        const topBarrier = document.querySelector('.ticker-top').offsetHeight;
-        const bottomBarrier = document.querySelector('.ticker-bottom').offsetHeight;
-
-        const boundsX = window.innerWidth - rect.width;
-        const boundsYMax = window.innerHeight - rect.height - bottomBarrier;
-        const boundsYMin = topBarrier;
-
-        artX += artDX; artY += artDY;
-
-        if (artX <= 0 || artX >= boundsX) { artDX *= -1; artX = Math.max(0, Math.min(artX, boundsX)); }
-        if (artY <= boundsYMin || artY >= boundsYMax) { artDY *= -1; artY = Math.max(boundsYMin, Math.min(artY, boundsYMax)); }
-
-        bouncingContainer.style.transform = `translate(${artX}px, ${artY}px)`;
-        requestAnimationFrame(animateBounce); 
-    }
-
-    let currentArtUrl = "";
-    let currentLayer = 1;
-
-    async function fetchArtwork() {
-        try {
-            const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now(), { cache: "no-store" });
-            const cleanUrl = (await res.text()).trim();
-            
-            if (cleanUrl && cleanUrl.startsWith('http')) {
-                if (currentArtUrl !== cleanUrl) {
-                    currentArtUrl = cleanUrl;
-                    const nextLayerNum = currentLayer === 1 ? 2 : 1;
-                    const nextLayer = document.getElementById(`art-layer-${nextLayerNum}`);
-                    const oldLayer = document.getElementById(`art-layer-${currentLayer}`);
-                    
-                    nextLayer.src = cleanUrl;
-                    nextLayer.onload = () => {
-                        nextLayer.classList.add('active');
-                        oldLayer.classList.remove('active');
-                        currentLayer = nextLayerNum;
-                        if (!isBouncing) { isBouncing = true; animateBounce(); }
-                    };
-                }
-            }
-        } catch(e) {}
-    }
-
-    historyToggle.onclick = () => {
-        historyList.classList.toggle("open");
-        document.getElementById("arrow").innerText = historyList.classList.contains("open") ? "▲" : "▼";
-    };
-
-    async function directFetch(url) {
-        const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-        return await response.json();
-    }
-
-    async function fetchGlobalHistory() {
-        try {
-            const data = await directFetch(`${STREAM_BASE}/history.json`);
-            if (data && Array.isArray(data)) {
-                historyList.innerHTML = data.filter(t => t && t.trim() !== "").map(track => `<li class="history-item">${track}</li>`).join('');
-            }
-        } catch(e) {}
-    }
-
-    function updateTicker(baseString) {
-        if (currentTrackText === baseString) return;
-        currentTrackText = baseString;
-        const content = Array(10).fill(`<span class="song-display">${baseString}</span>`).join('');
-        [topMarquee, bottomMarquee].forEach(m => m.style.opacity = 0);
-        setTimeout(() => {
-            [topMarquee, bottomMarquee].forEach(m => {
-                m.innerHTML = content + content;
-                m.style.animationDuration = `${(baseString.length + 10) * 1.5}s`;
-                m.style.opacity = 1;
-            });
-        }, 500);
-    }
-
-    function setStatus(text, dotClass) {
-        if (centerStatus.innerText === text) return;
-        centerStatus.style.opacity = 0; 
-        setTimeout(() => {
-            centerStatus.innerText = text;
-            pulseIndicator.className = "pulse-dot " + dotClass;
-            centerStatus.style.opacity = 1; 
-        }, 300);
-    }
-
-    async function fetchSongData() {
-        try {
-            const data = await directFetch(`${STREAM_BASE}/status-json.xsl`);
-            let source = data.icestats ? data.icestats.source : null;
-            if (!source) throw new Error("Offline");
-            isOnline = true;
-            let newTitle = Array.isArray(source) ? (source[0].title || "ON AIR") : (source.title || "ON AIR");
-            if (!playing) setStatus("LIVE", "live");
-            if (newTitle !== currentTitle) { currentTitle = newTitle; fetchGlobalHistory(); fetchArtwork(); }
-            updateTicker(`NOW PLAYING: ${newTitle}`);
-        } catch (e) {
-            isOnline = false;
-            if (!playing) { 
-                setStatus("OFFLINE", ""); updateTicker("STANDBY");
-                document.getElementById('art-layer-1').classList.remove('active');
-                document.getElementById('art-layer-2').classList.remove('active');
-            }
-        }
-    }
-
-    btn.onclick = () => {
-        if (!playing) {
-            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play();
-            btn.innerText = "⏸ Disconnect"; setStatus("CONNECTING...", "");
-        } else {
-            player.pause(); player.src = ""; btn.innerText = "▶ Listen";
-            setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : "");
-        }
-        playing = !playing;
-    };
-
-    player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
-
-    fetchGlobalHistory(); fetchArtwork(); updateTicker("STANDBY"); fetchSongData();
-    setInterval(fetchSongData, 3000);
-</script>
-</body>
-</html>
+                <span id="
