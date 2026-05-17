@@ -9,7 +9,7 @@
         html, body { 
             margin: 0; padding: 0; height: 100%; overflow: hidden; 
             background-color: #ffffff; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; /* Unifed Font Stack! */
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
         }
 
         /* --- SMOOTH PAGE TRANSITIONS --- */
@@ -68,25 +68,25 @@
 
         /* --- ALIGNED CONTROLS --- */
         .back-btn-top {
-            position: absolute; left: 30px; top: 75px; /* Safely placed below the banner */
+            position: absolute; left: 30px; top: 75px; 
             color: #000; text-decoration: none; font-weight: 800; 
             text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
             border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
-            transition: background-color 0.2s ease, color 0.2s ease; z-index: 30; /* Slides under banner */
+            transition: background-color 0.2s ease, color 0.2s ease; z-index: 30; 
             background-color: rgba(255,255,255,0.7); backdrop-filter: blur(5px);
         }
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
         .status-area { 
             position: absolute; right: 30px; top: 75px; display: flex; align-items: center; 
-            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; z-index: 30; /* Slides under banner */
+            font-size: 16px; font-weight: 800; text-transform: uppercase; color: #000; z-index: 30; 
             text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,0.9); 
         }
         
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
             padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000; 
-            display: flex; z-index: 60; /* Banner is highest */
+            display: flex; z-index: 60; 
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         .marquee-wrapper { 
@@ -96,10 +96,12 @@
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
+        /* THIS IS THE FIX! Added position:absolute and 100% height/width */
         .main-container { 
-            flex-grow: 1; display: flex; flex-direction: column; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
-            text-align: center; width: 100%; padding: 0 20px; box-sizing: border-box;
+            text-align: center; padding: 0 20px; box-sizing: border-box;
             pointer-events: auto; z-index: 10;
         }
         
@@ -172,7 +174,6 @@
             .ticker-tape { padding: 6px 0; border-top-width: 3px; border-bottom-width: 3px; }
             .song-display { font-size: 1.2rem; letter-spacing: 2px; padding-right: 40px; }
             
-            /* Perfectly matched top alignment for mobile! */
             .back-btn-top { left: 20px; top: 60px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
             .status-area { right: 20px; top: 60px; font-size: 13px; }
         }
@@ -221,9 +222,8 @@
         document.querySelectorAll('.internal-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                document.body.classList.add('is-exiting'); // Starts the slick reverse animations
+                document.body.classList.add('is-exiting'); 
                 
-                // Wait for the UI to clear out, bring the white screen in, then switch pages
                 setTimeout(() => {
                     overlay.classList.remove('loaded');
                     overlay.classList.add('leaving');
