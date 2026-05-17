@@ -16,6 +16,7 @@
             position: absolute; width: 180px; height: 180px; 
             z-index: 1; top: 0; left: 0; will-change: transform; 
             cursor: grab; touch-action: none; /* Prevents screen scrolling when throwing */
+            user-select: none; /* Stops text/image highlighting */
         }
         #bouncing-container:active { cursor: grabbing; }
         
@@ -24,6 +25,8 @@
         .art-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; 
+            pointer-events: none; /* CRITICAL: Lets the container handle the drag, not the image */
+            -webkit-user-drag: none; /* Stops Mac/Safari native image dragging */
         }
         .art-layer.active { opacity: 1; }
 
@@ -49,7 +52,7 @@
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         .marquee-wrapper { 
             display: flex; white-space: nowrap; animation: marquee linear infinite; 
-            width: fit-content; transition: opacity 0.5s ease-in-out; /* Smooth fade added here */
+            width: fit-content; transition: opacity 0.5s ease-in-out; 
         }
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -81,7 +84,7 @@
         
         .live-status { 
             font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; 
-            margin-top: 20px; margin-bottom: 25px; /* Added margin-top to separate from logo */
+            margin-top: 20px; margin-bottom: 25px; 
             display: inline-flex; align-items: center; gap: 10px; position: relative; z-index: 40; 
         }
         .pulse-dot { height: 10px; width: 10px; background-color: #777; border-radius: 50%; }
@@ -99,7 +102,7 @@
 
         .history-wrapper { 
             width: 100%; max-width: 360px; 
-            margin: 25px auto 0; /* Auto centers the wrapper perfectly */
+            margin: 25px auto 0; 
             position: relative; z-index: 40; 
         }
         #history-toggle { 
@@ -116,7 +119,7 @@
         .history-item { 
             padding: 10px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; 
             border-bottom: 1px solid rgba(0,0,0,0.03); 
-            text-align: center; /* Centered history text */
+            text-align: center; 
         }
 
         @media (max-width: 600px) { h1 { font-size: 5rem; letter-spacing: -4px; } .fm-text { font-size: 2rem; } }
@@ -124,8 +127,9 @@
 </head>
 <body>
     <div id="bouncing-container">
-        <img id="art-layer-1" class="art-layer" src="" alt="">
-        <img id="art-layer-2" class="art-layer" src="" alt="">
+        <!-- CRITICAL: Added draggable="false" here -->
+        <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
+        <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
     </div>
     <div id="app-wrapper">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
@@ -177,6 +181,9 @@
     let lastX = 0, lastY = 0, lastTime = 0;
 
     function startDrag(e) {
+        // Prevent default behavior which triggers native image dragging
+        e.preventDefault(); 
+        
         isDragging = true;
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -226,12 +233,13 @@
     }
 
     // Attach Drag Events
+    // Using { passive: false } on touchstart so we can use e.preventDefault()
     bouncingContainer.addEventListener('mousedown', startDrag);
     window.addEventListener('mousemove', moveDrag);
     window.addEventListener('mouseup', endDrag);
 
-    bouncingContainer.addEventListener('touchstart', startDrag, {passive: true});
-    window.addEventListener('touchmove', moveDrag, {passive: true});
+    bouncingContainer.addEventListener('touchstart', startDrag, {passive: false});
+    window.addEventListener('touchmove', moveDrag, {passive: false});
     window.addEventListener('touchend', endDrag);
 
 
