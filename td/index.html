@@ -15,7 +15,7 @@
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden; display: flex; flex-direction: column;
+            overflow: hidden; 
         }
 
         /* --- SMOOTH PAGE TRANSITIONS --- */
@@ -26,16 +26,35 @@
             transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         #page-transition-overlay.loaded { opacity: 0; }
-        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
+
+        /* --- THE GENIE CONTAINER --- */
+        #app-container {
+            width: 100vw; height: 100vh;
+            display: flex; flex-direction: column;
+            background-color: #ffffff;
+            transform-origin: 40% 100%; /* Sucks down into the 2nd dock slot */
+            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .genie-state {
+            transform: scale(0.05) translateY(50vh) !important;
+            opacity: 0 !important;
+            border-radius: 100px !important;
+        }
 
         /* --- UI SEQUENCED ANIMATIONS --- */
         .logo-group { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
         .td-window { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; opacity: 0; transform: translateY(40px); }
         .back-btn-top { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity: 0; transform: translateY(-20px); }
 
-        body.is-exiting .back-btn-top { animation: slideUpToTop 0.4s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .td-window { animation: breatheDown 0.5s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        body.is-exiting .logo-group { animation: breatheDown 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; }
+        body.is-exiting .back-btn-top { animation: slideUpToTop 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .td-window { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .logo-group { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
 
         @keyframes breatheUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes breatheDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
@@ -162,7 +181,7 @@
         }
         .td-node:hover .node-fullname-tooltip { opacity: 1; transform: translateX(-50%) translateY(-5px); }
 
-        /* Node Image Viewer (New Heights handled here instead of inline) */
+        /* Node Image Viewer */
         .node-viewer { 
             background-color: #000; background-size: cover; background-position: center;
             position: relative; overflow: hidden; 
@@ -236,146 +255,157 @@
 
     <div id="page-transition-overlay"></div>
 
-    <div class="brand-header">
-        <a href="/" class="back-btn-top internal-link">← Home</a>
-        <div class="logo-group">
-            <h1>CUCEU</h1>
-            <span class="td-text">.td</span>
-        </div>
-    </div>
-
-    <div class="td-window" id="td-window">
-        <div class="top-bar">
-            <div class="menu-items">
-                <span>File</span><span>Edit</span><span>Dialogs</span><span>View</span><span>Window</span><span>Help</span>
+    <div id="app-container" class="genie-state">
+        <div class="brand-header">
+            <a href="/" class="back-btn-top internal-link">← Home</a>
+            <div class="logo-group">
+                <h1>CUCEU</h1>
+                <span class="td-text">.td</span>
             </div>
         </div>
-        <div class="path-bar">
-            CUCEU/Projects/TouchDesigner
-        </div>
 
-        <div class="network-editor" id="network-editor">
-            
-            <div class="nav-controls" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
-                <div class="nav-row"><button class="nav-btn" onclick="panView(0, 50)">▲</button></div>
-                <div class="nav-row">
-                    <button class="nav-btn" onclick="panView(50, 0)">◀</button>
-                    <button class="nav-btn" onclick="panView(0, -50)">▼</button>
-                    <button class="nav-btn" onclick="panView(-50, 0)">▶</button>
-                </div>
-                <div class="nav-divider"></div>
-                <div class="nav-row">
-                    <button class="nav-btn" onclick="zoomView(0.1)">+</button>
-                    <button class="nav-btn" onclick="zoomView(-0.1)">-</button>
+        <div class="td-window" id="td-window">
+            <div class="top-bar">
+                <div class="menu-items">
+                    <span>File</span><span>Edit</span><span>Dialogs</span><span>View</span><span>Window</span><span>Help</span>
                 </div>
             </div>
+            <div class="path-bar">
+                CUCEU/Projects/TouchDesigner
+            </div>
 
-            <div id="network-canvas">
+            <div class="network-editor" id="network-editor">
                 
-                <svg id="wire-layer">
-                    <path id="wire-path-1" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
-                    <path id="wire-path-2" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
-                </svg>
-
-                <div class="td-node video-node" id="project-node" data-video-src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0&autoplay=1">
-                    <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser</div>
-                    <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Sully-Model Collapse...</span><span>✖</span></div>
-                    
-                    <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');">
-                        <div class="play-overlay"><span>▶</span></div>
+                <div class="nav-controls" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
+                    <div class="nav-row"><button class="nav-btn" onclick="panView(0, 50)">▲</button></div>
+                    <div class="nav-row">
+                        <button class="nav-btn" onclick="panView(50, 0)">◀</button>
+                        <button class="nav-btn" onclick="panView(0, -50)">▼</button>
+                        <button class="nav-btn" onclick="panView(-50, 0)">▶</button>
                     </div>
-                    
-                    <div class="node-footer">
-                        1080 x 1920<br><span class="format-text">MOV / H.264</span>
+                    <div class="nav-divider"></div>
+                    <div class="nav-row">
+                        <button class="nav-btn" onclick="zoomView(0.1)">+</button>
+                        <button class="nav-btn" onclick="zoomView(-0.1)">-</button>
                     </div>
-                    <div class="plug plug-out" id="plug-out-1"></div>
                 </div>
 
-                <a href="Sully -Model Collapse Visualiser.toe" download>
-                    <div class="td-node" id="download-node" title="Click to download .toe file">
-                        <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser.toe</div>
-                        <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Sully -Model Collapse...</span><span>↓</span></div>
+                <div id="network-canvas">
+                    
+                    <svg id="wire-layer">
+                        <path id="wire-path-1" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
+                        <path id="wire-path-2" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
+                    </svg>
+
+                    <div class="td-node video-node" id="project-node" data-video-src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0&autoplay=1">
+                        <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser</div>
+                        <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Sully-Model Collapse...</span><span>✖</span></div>
                         
                         <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');">
-                            <div class="dl-overlay">
-                                <span>⬇</span>
-                                <span>.TOE</span>
+                            <div class="play-overlay"><span>▶</span></div>
+                        </div>
+                        
+                        <div class="node-footer">
+                            1080 x 1920<br><span class="format-text">MOV / H.264</span>
+                        </div>
+                        <div class="plug plug-out" id="plug-out-1"></div>
+                    </div>
+
+                    <a href="Sully -Model Collapse Visualiser.toe" download>
+                        <div class="td-node" id="download-node" title="Click to download .toe file">
+                            <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser.toe</div>
+                            <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Sully -Model Collapse...</span><span>↓</span></div>
+                            
+                            <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');">
+                                <div class="dl-overlay">
+                                    <span>⬇</span>
+                                    <span>.TOE</span>
+                                </div>
                             </div>
+
+                            <div class="node-footer" style="font-size: 8px;">
+                                Download<br><span class="format-text">.TOE FILE</span>
+                            </div>
+                            <div class="plug plug-in" id="plug-in-1"></div>
                         </div>
-
-                        <div class="node-footer" style="font-size: 8px;">
-                            Download<br><span class="format-text">.TOE FILE</span>
-                        </div>
-                        <div class="plug plug-in" id="plug-in-1"></div>
-                    </div>
-                </a>
+                    </a>
 
 
-                <div class="td-node video-node" id="project-node-2" data-video-src="https://player.vimeo.com/video/1193012409?title=0&byline=0&portrait=0&autoplay=1">
-                    <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video</div>
-                    <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>✖</span></div>
-                    
-                    <div class="node-viewer" style="background-image: url('poatejpeg.jpg');">
-                        <div class="play-overlay"><span>▶</span></div>
-                    </div>
-                    
-                    <div class="node-footer">
-                        1080 x 1920<br><span class="format-text">MOV / H.264</span>
-                    </div>
-                    <div class="plug plug-out" id="plug-out-2"></div>
-                </div>
-
-                <a href="Printesa De Aur - Poate Lyric Music Video.toe" download>
-                    <div class="td-node" id="download-node-2" title="Click to download .toe file">
-                        <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video.toe</div>
-                        <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>↓</span></div>
+                    <div class="td-node video-node" id="project-node-2" data-video-src="https://player.vimeo.com/video/1193012409?title=0&byline=0&portrait=0&autoplay=1">
+                        <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video</div>
+                        <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>✖</span></div>
                         
                         <div class="node-viewer" style="background-image: url('poatejpeg.jpg');">
-                            <div class="dl-overlay">
-                                <span>⬇</span>
-                                <span>.TOE</span>
-                            </div>
+                            <div class="play-overlay"><span>▶</span></div>
                         </div>
-
-                        <div class="node-footer" style="font-size: 8px;">
-                            Download<br><span class="format-text">.TOE FILE</span>
+                        
+                        <div class="node-footer">
+                            1080 x 1920<br><span class="format-text">MOV / H.264</span>
                         </div>
-                        <div class="plug plug-in" id="plug-in-2"></div>
+                        <div class="plug plug-out" id="plug-out-2"></div>
                     </div>
-                </a>
 
+                    <a href="Printesa De Aur - Poate Lyric Music Video.toe" download>
+                        <div class="td-node" id="download-node-2" title="Click to download .toe file">
+                            <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video.toe</div>
+                            <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>↓</span></div>
+                            
+                            <div class="node-viewer" style="background-image: url('poatejpeg.jpg');">
+                                <div class="dl-overlay">
+                                    <span>⬇</span>
+                                    <span>.TOE</span>
+                                </div>
+                            </div>
+
+                            <div class="node-footer" style="font-size: 8px;">
+                                Download<br><span class="format-text">.TOE FILE</span>
+                            </div>
+                            <div class="plug plug-in" id="plug-in-2"></div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="timeline">
+                <span>Start: 1</span><span>End: 600</span><span class="play-btn">▶</span>
+                <span>FPS: 60</span><span style="color: #4a90e2;">00:00:00:00</span>
             </div>
         </div>
 
-        <div class="timeline">
-            <span>Start: 1</span><span>End: 600</span><span class="play-btn">▶</span>
-            <span>FPS: 60</span><span style="color: #4a90e2;">00:00:00:00</span>
-        </div>
-    </div>
-
-    <div class="video-modal" id="video-overlay">
-        <div class="video-container">
-            <div class="close-hint">Click anywhere outside to close</div>
-            <iframe id="vimeo-iframe" src="" style="width:100%; height:100%; border:none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 4px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+        <div class="video-modal" id="video-overlay">
+            <div class="video-container">
+                <div class="close-hint">Click anywhere outside to close</div>
+                <iframe id="vimeo-iframe" src="" style="width:100%; height:100%; border:none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 4px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- PAGE TRANSITION LOGIC ---
+        // --- COMBINED GENIE & REVERSE EXIT ANIMATION LOGIC ---
         document.addEventListener("DOMContentLoaded", () => {
             const overlay = document.getElementById('page-transition-overlay');
             requestAnimationFrame(() => overlay.classList.add('loaded'));
 
+            // Trigger entrance genie immediately
+            setTimeout(() => {
+                document.getElementById('app-container').classList.remove('genie-state');
+            }, 50);
+
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
+                    
+                    // Phase 1: Internal elements fade out
                     document.body.classList.add('is-exiting'); 
                     
+                    // Phase 2: The entire container sucks down into the dock
                     setTimeout(() => {
-                        overlay.classList.remove('loaded');
-                        overlay.classList.add('leaving');
-                    }, 600); 
-                    setTimeout(() => window.location.href = link.href, 1000); 
+                        document.getElementById('app-container').classList.add('genie-state');
+                    }, 300); 
+
+                    // Phase 3: Redirect to the desktop
+                    setTimeout(() => window.location.assign('/'), 850); 
                 });
             });
         });
@@ -384,7 +414,7 @@
             if (e.persisted) {
                 document.body.classList.remove('is-exiting');
                 document.getElementById('page-transition-overlay').classList.add('loaded');
-                document.getElementById('page-transition-overlay').classList.remove('leaving');
+                document.getElementById('app-container').classList.remove('genie-state');
             }
         });
 
