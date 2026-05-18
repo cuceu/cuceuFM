@@ -44,7 +44,7 @@
         /* --- TOP NAV --- */
         .top-nav-bar {
             position: absolute; 
-            top: 70px; /* Moved down to sit under the top banner */
+            top: 65px; 
             width: 100%;
             display: flex; justify-content: space-between;
             align-items: center;
@@ -66,7 +66,8 @@
         /* --- TICKER TAPE --- */
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
-            padding: 5px 0; /* Reduced padding to make the banner slimmer */
+            height: 38px; /* Fixed identical height for both banners */
+            padding: 0; 
             border-top: 2px solid #000; border-bottom: 2px solid #000; 
             display: flex; align-items: center; z-index: 60; 
         }
@@ -75,14 +76,16 @@
         .marquee-wrapper { 
             display: flex; 
             white-space: nowrap; 
-            animation: marquee linear infinite; 
-            width: fit-content; 
             align-items: center; 
             transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease; 
             will-change: opacity, transform, filter; 
-            opacity: 1;
-            filter: blur(0px);
+            opacity: 1; filter: blur(0px);
         }
+        
+        /* Top is scrolling, Bottom is centered static */
+        #top-marquee { animation: marquee linear infinite; width: fit-content; }
+        #bottom-marquee { width: 100%; justify-content: center; animation: none; }
+
         .marquee-wrapper.refreshing { 
             opacity: 0; 
             transform: scale(0.98); 
@@ -90,14 +93,14 @@
         }
         
         .ticker-item { display: inline-flex; align-items: center; }
-        .ticker-art { height: 28px; width: 28px; margin: 0 20px; object-fit: cover; display: none; border-radius: 4px; } /* Scaled down thumbnail to fit slimmer banner */
+        .ticker-art { height: 22px; width: 22px; margin: 0 15px; object-fit: cover; display: none; border-radius: 4px; }
         .ticker-art.has-art { display: block; }
         
         .song-display { 
-            font-size: 1.25rem; /* Slightly smaller text */
-            line-height: 1; /* Removes extra vertical space from font ascenders/descenders */
+            font-size: 1.15rem; 
+            line-height: 1; /* Removes empty space around the text */
             font-weight: 900; text-transform: uppercase; letter-spacing: 2px; 
-            display: inline-block;
+            display: inline-block; transform: translateY(1px); /* Optical center adjustment */
         }
         
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -123,9 +126,7 @@
             animation: logoJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
             will-change: transform, opacity;
         }
-        body.is-exiting #logo-cluster { 
-            animation: logoJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s forwards; 
-        }
+        body.is-exiting #logo-cluster { animation: logoJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s forwards; }
 
         .logo-wrapper-img { display: flex; align-items: flex-end; justify-content: center; gap: 0; }
         .cuceu-logo-img { height: clamp(4rem, 15vw, 7rem); width: auto; user-select: none; -webkit-user-drag: none; }
@@ -140,7 +141,6 @@
             margin-top: 15px; display: inline-flex; align-items: center; gap: 10px;
         }
         
-        /* Audio Status Dots */
         .pulse-dot { height: 14px; width: 14px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
         .pulse-dot.buffering { background-color: #ffcc00; box-shadow: 0 0 12px #ffcc00; animation: pulse-yellow 1s infinite; }
@@ -160,16 +160,14 @@
 
         /* --- CONTROLS AREA --- */
         #controls-area {
-            position: absolute; top: 62%; left: 50%;
+            position: absolute; top: 60%; left: 50%; /* Adjusted slightly for dropdown room */
             display: flex; flex-direction: column; align-items: center; z-index: 30;
             transform: translateX(-50%) translateY(0) scale(1);
             opacity: 0; 
             animation: controlsJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
             will-change: transform, opacity;
         }
-        body.is-exiting #controls-area { 
-            animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; 
-        }
+        body.is-exiting #controls-area { animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
 
         @keyframes controlsJumpUp {
             0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.95); }
@@ -197,52 +195,39 @@
             font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
         #history-list { 
-            position: absolute; bottom: 100%; left: 0; width: 100%; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
-            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            transition: all 0.4s ease; border: 0px solid #000; z-index: 50; margin-bottom: 10px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            position: absolute; top: 100%; left: 0; width: 100%; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: all 0.4s ease; border: none; z-index: 50; margin-top: 10px; border-radius: 8px;
         }
-        #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border: 2px solid #000; overflow-y: auto; }
-        .history-item { padding: 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
+        #history-list.open { max-height: 220px; opacity: 1; padding: 5px 10px; overflow-y: auto; }
+        .history-item { 
+            padding: 12px 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
+            border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; color: #111;
+        }
+        .history-item:last-child { border-bottom: none; } /* Removes line from the last item */
 
         /* --- MOBILE LAYOUT OPTIMIZATIONS --- */
         @media (max-width: 600px) {
-            #app-container {
-                background-size: cover;
-                background-position: center center;
-            }
-            .top-nav-bar { 
-                top: 60px; /* Kept safe distance for mobile */
-                padding: 0 20px; 
-            }
-            .back-btn-top {
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-            .date-time-display {
-                font-size: 12px;
-            }
+            #app-container { background-size: cover; background-position: center center; }
+            .top-nav-bar { top: 55px; padding: 0 20px; }
+            .back-btn-top { padding: 6px 12px; font-size: 11px; }
+            .date-time-display { font-size: 12px; }
             #logo-cluster { 
-                top: 32%;
-                transform: translate(-50%, -50%) scale(1); 
+                top: 32%; transform: translate(-50%, -50%) scale(1); 
                 animation: logoJumpUpMobile 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
             }
-            body.is-exiting #logo-cluster { 
-                animation: logoJumpDownMobile 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s forwards; 
-            }
-            .live-status {
-                font-size: 1.2rem;
-                letter-spacing: 2px;
-            }
-            #controls-area { 
-                top: 66%; 
-            }
-            .ticker-tape { padding: 4px 0; }
-            .ticker-art { height: 24px; width: 24px; margin: 0 12px; }
-            .song-display { font-size: 1.05rem; letter-spacing: 1px; }
+            body.is-exiting #logo-cluster { animation: logoJumpDownMobile 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s forwards; }
+            .live-status { font-size: 1.2rem; letter-spacing: 2px; }
+            #controls-area { top: 62%; }
+            
+            /* Mobile Banners */
+            .ticker-tape { height: 32px; }
+            .ticker-art { height: 18px; width: 18px; margin: 0 10px; }
+            .song-display { font-size: 0.95rem; letter-spacing: 1px; }
+            
             #btn { width: 160px; height: 58px; font-size: 1rem; }
             .history-wrapper { width: min(85vw, 290px); }
-            #history-list.open { max-height: 160px; }
+            #history-list.open { max-height: 180px; }
         }
 
         @keyframes logoJumpUpMobile {
@@ -283,7 +268,7 @@
             <button id="btn">LISTEN NOW</button>
             <div class="history-wrapper">
                 <div id="history-toggle">Recently Played ▼</div>
-                <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
+                <ul id="history-list"><li class="history-item">Loading...</li></ul>
             </div>
         </div>
 
@@ -345,22 +330,30 @@
     }
 
     function updateTicker(base) {
-        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:28px"></div>`;
+        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:22px"></div>`;
         const tickerState = `${base}|${currentArtUrl || ""}`;
         if (tickerState === lastTickerState) return;
         lastTickerState = tickerState;
         currentTrackText = base;
-        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
-        const content = Array(12).fill(itemHtml).join('');
         
-        // Dynamic cross-fade step
+        // Setup Scrolling Content for Top
+        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
+        const contentTop = Array(12).fill(itemHtml).join('');
+        
+        // Setup Centered Content for Bottom
+        const itemHtmlBottom = `<div class="ticker-item"><span class="song-display">${base}</span></div>`;
+        
         [topMarquee, bottomMarquee].forEach(m => m.classList.add('refreshing'));
+        
         setTimeout(() => {
-            [topMarquee, bottomMarquee].forEach(m => {
-                m.innerHTML = content + content;
-                m.style.animationDuration = `${(base.length + 20) * 2}s`;
-                m.classList.remove('refreshing');
-            });
+            // Apply Top Marquee
+            topMarquee.innerHTML = contentTop + contentTop;
+            topMarquee.style.animationDuration = `${(base.length + 20) * 2}s`;
+            
+            // Apply Bottom Static Centered
+            bottomMarquee.innerHTML = itemHtmlBottom;
+
+            [topMarquee, bottomMarquee].forEach(m => m.classList.remove('refreshing'));
         }, 300);
     }
 
