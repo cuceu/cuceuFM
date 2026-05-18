@@ -24,12 +24,10 @@
             position: relative;
             overflow: hidden;
             
-            /* Entrance Animation */
             transform-origin: center center;
             animation: bgExpand 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
-        /* Exit Animation for Background */
         body.is-exiting #app-container {
             animation: bgShrink 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
         }
@@ -45,31 +43,21 @@
 
         /* --- TOP NAV --- */
         .top-nav-bar {
-            position: absolute;
-            top: 80px; 
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 30px;
-            box-sizing: border-box;
-            z-index: 100;
+            position: absolute; top: 80px; width: 100%;
+            display: flex; justify-content: space-between;
+            padding: 0 30px; box-sizing: border-box; z-index: 100;
         }
         .back-btn-top {
             color: #000; text-decoration: none; font-weight: 800; 
             text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
             border: 2px solid #000; padding: 8px 16px;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            background: white;
+            transition: background-color 0.2s ease, color 0.2s ease; background: white;
         }
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
         .date-time-display {
-            text-align: right;
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: 15px;
-            letter-spacing: 1px;
-            white-space: nowrap;
+            text-align: right; font-weight: 900; text-transform: uppercase;
+            font-size: 15px; letter-spacing: 1px; white-space: nowrap;
         }
 
         /* --- TICKER TAPE --- */
@@ -82,20 +70,17 @@
         .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; align-items: center;}
         
         .ticker-item { display: inline-flex; align-items: center; }
-        .ticker-art {
-            height: 40px; width: 40px; margin: 0 30px;
-            object-fit: cover; display: none;
-        }
+        .ticker-art { height: 40px; width: 40px; margin: 0 30px; object-fit: cover; display: none; }
         .ticker-art.has-art { display: block; }
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* Ticker Animations */
+        /* Sequenced Ticker Animations */
         .ticker-top { transform: translateY(-100%); animation: slideTopIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
         .ticker-bottom { transform: translateY(100%); animation: slideBottomIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
         
-        body.is-exiting .ticker-top { animation: slideTopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        body.is-exiting .ticker-top { animation: slideTopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
+        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
 
         @keyframes slideTopIn { to { transform: translateY(0); } }
         @keyframes slideBottomIn { to { transform: translateY(0); } }
@@ -105,39 +90,32 @@
         /* --- LOGO AREA (Inside Window) --- */
         #logo-cluster {
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: absolute; top: 34%; left: 50%;
-            width: 100%; pointer-events: none; z-index: 20;
-            
-            /* Entrance Jump */
-            opacity: 0;
-            animation: logoJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+            position: absolute; top: 34%; left: 50%; width: 100%; pointer-events: none; z-index: 20;
+            opacity: 0; animation: logoJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
         }
-        
-        body.is-exiting #logo-cluster {
-            animation: logoJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
-        }
+        body.is-exiting #logo-cluster { animation: logoJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards; }
 
-        /* NEW IMAGE LOGO STYLES */
-        .logo-wrapper-img {
-            display: flex; align-items: flex-end; justify-content: center; gap: 5px;
-        }
-        .cuceu-logo-img {
-            height: clamp(4rem, 15vw, 7rem); /* Scales smoothly like the old text */
-            width: auto;
-            user-select: none; -webkit-user-drag: none;
-        }
+        .logo-wrapper-img { display: flex; align-items: flex-end; justify-content: center; gap: 0; }
+        .cuceu-logo-img { height: clamp(4rem, 15vw, 7rem); width: auto; user-select: none; -webkit-user-drag: none; }
         .fm-text { 
             font-size: clamp(1.5rem, 5vw, 2.5rem); 
-            font-weight: 400; letter-spacing: -2px; 
-            padding-bottom: 0.5rem; /* Lifts the .fm slightly to align with image text baseline */
+            font-weight: 900; letter-spacing: -2px; 
+            padding-bottom: 0.5rem; margin-left: -5px; 
         }
         
         .live-status { 
-            font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
+            font-size: 1.5rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
             margin-top: 15px; display: inline-flex; align-items: center; gap: 10px;
         }
-        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
+        
+        /* Audio Status Dots */
+        .pulse-dot { height: 14px; width: 14px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
+        .pulse-dot.buffering { background-color: #ffcc00; box-shadow: 0 0 12px #ffcc00; animation: pulse-yellow 1s infinite; }
+        .pulse-dot.on-air { background-color: #ff3b30; box-shadow: 0 0 12px #ff3b30; animation: pulse-red 1.2s infinite; }
+        
+        @keyframes pulse-yellow { 0% { transform: scale(0.85); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.85); opacity: 0.8; } }
+        @keyframes pulse-red { 0% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.7; } }
 
         @keyframes logoJumpUp {
             0% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.9); }
@@ -150,19 +128,11 @@
 
         /* --- CONTROLS AREA (Under Window) --- */
         #controls-area {
-            position: absolute; 
-            top: 58%; left: 50%;
-            display: flex; flex-direction: column; align-items: center; 
-            z-index: 30;
-            
-            /* Entrance Jump */
-            opacity: 0;
-            animation: controlsJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+            position: absolute; top: 58%; left: 50%;
+            display: flex; flex-direction: column; align-items: center; z-index: 30;
+            opacity: 0; animation: controlsJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
         }
-        
-        body.is-exiting #controls-area {
-            animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
-        }
+        body.is-exiting #controls-area { animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
 
         @keyframes controlsJumpUp {
             0% { opacity: 0; transform: translateX(-50%) translateY(60px) scale(0.9); }
@@ -175,28 +145,22 @@
 
         #btn { 
             background-color: #000; color: #fff; border: 4px solid #000; 
-            padding: 12px 35px; font-size: 1.1rem; text-transform: uppercase; 
+            padding: 16px 45px; font-size: 1.3rem; text-transform: uppercase; 
             font-weight: 900; letter-spacing: 3px; cursor: pointer; 
             box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 20px;
         }
         #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
         /* --- HISTORY --- */
-        .history-wrapper { 
-            display: flex; flex-direction: column; 
-            width: 320px; position: relative; 
-        }
+        .history-wrapper { display: flex; flex-direction: column; width: 320px; position: relative; }
         #history-toggle { 
-            background: none; border: none; 
-            padding: 5px; color: #000; font-size: 0.85rem; 
+            background: none; border: none; padding: 5px; color: #000; font-size: 0.85rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
         #history-list { 
-            position: absolute; top: 100%; left: 0; width: 100%;
-            list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
+            position: absolute; top: 100%; left: 0; width: 100%; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            transition: all 0.4s ease; border: 0px solid #000;
-            z-index: 50;
+            transition: all 0.4s ease; border: 0px solid #000; z-index: 50;
         }
         #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border: 2px solid #000; }
         .history-item { padding: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
@@ -205,16 +169,8 @@
             #logo-cluster { transform: translate(-50%, -50%) scale(0.7); top: 35%; }
             #controls-area { top: 55%; }
             .top-nav-bar { top: 60px; padding: 0 15px; }
-            
-            /* Ensure jump animations respect the mobile scaling */
-            @keyframes logoJumpUp {
-                0% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); }
-                100% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
-            }
-            @keyframes logoJumpDown {
-                0% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
-                100% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); }
-            }
+            @keyframes logoJumpUp { 0% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); } }
+            @keyframes logoJumpDown { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); } 100% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); } }
         }
     </style>
 </head>
@@ -254,15 +210,12 @@
     </div>
 
 <script>
-    // New Sequenced Exit Logic
+    // Sequenced Exit Logic
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.internal-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                // Add the class that triggers all the exit CSS animations
                 document.body.classList.add('is-exiting'); 
-                
-                // Wait for the full animation sequence (1000ms) before redirecting
                 setTimeout(() => window.location.assign(link.href), 1000); 
             });
         });
@@ -270,7 +223,7 @@
 
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
-    // Single Line Clock Logic
+    // Single Line Clock
     function updateDateTime() {
         const now = new Date();
         const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
@@ -322,24 +275,47 @@
         });
     }
 
+    // Dynamic Status Control
+    function setStatus(text, dotClass) { 
+        centerStatus.innerText = text; 
+        pulseIndicator.className = "pulse-dot " + dotClass; 
+    }
+
     async function fetchSongData() {
         try {
             const data = await directFetch(`${STREAM_BASE}/status-json.xsl`);
             let s = data.icestats.source; if (!s) throw new Error();
             isOnline = true; 
             let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
-            if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
+            
+            // Only update to standard LIVE if we aren't currently playing/buffering
+            if (!playing) setStatus("LIVE", "live");
+            
             if (t !== currentTitle) { currentTitle = t; fetchGlobalHistory(); await fetchArtwork(); }
             updateTicker(`NOW PLAYING: ${t}`);
         } catch (e) { 
             isOnline = false; 
-            if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; updateTicker("STANDBY"); } 
+            if (!playing) { setStatus("OFFLINE", ""); updateTicker("STANDBY"); } 
         }
     }
 
+    // Audio Event Listeners for precise UI feedback
+    player.onwaiting = () => { if (playing) setStatus("BUFFERING...", "buffering"); };
+    player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
+    player.onpause = () => { if (isOnline) setStatus("LIVE", "live"); };
+
     btn.onclick = () => {
-        if (!playing) { player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play(); btn.innerText = "⏸ Disconnect"; } 
-        else { player.pause(); player.src = ""; btn.innerText = "▶ Listen"; }
+        if (!playing) { 
+            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; 
+            player.play(); 
+            btn.innerText = "⏸ Disconnect"; 
+            setStatus("BUFFERING...", "buffering"); // Trigger yellow immediately on click
+        } else { 
+            player.pause(); 
+            player.src = ""; 
+            btn.innerText = "▶ Listen"; 
+            setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : "");
+        }
         playing = !playing;
     };
 
