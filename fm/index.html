@@ -20,31 +20,22 @@
             background-image: url('./IMG_1148.webp'); 
             background-position: center 45%; 
             background-repeat: no-repeat;
-            background-size: contain; /* Unzoomed to show the full window context */
+            background-size: contain;
             position: relative;
             overflow: hidden;
-            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
         }
 
-        /* --- TOP NAV (Home & Clock) --- */
+        /* --- TOP NAV (Clock Only) --- */
         .top-nav-bar {
             position: absolute;
-            top: 65px; /* Lined up under the banner */
+            top: 65px;
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end; /* Pushed to the right */
             padding: 0 30px;
             box-sizing: border-box;
             z-index: 100;
         }
-        .home-glyph {
-            font-size: 32px;
-            color: #000;
-            text-decoration: none;
-            font-weight: bold;
-            transition: transform 0.2s ease;
-        }
-        .home-glyph:hover { transform: scale(1.1); }
         .date-time-display {
             text-align: right;
             font-weight: 900;
@@ -61,16 +52,15 @@
             display: flex; z-index: 60; 
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
-        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; }
+        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; align-items: center;}
+        
         .ticker-item {
             display: inline-flex;
             align-items: center;
-            /* Balanced spacing to keep art in the middle */
-            padding: 0 40px; 
         }
         .ticker-art {
             height: 40px; width: 40px;
-            margin: 0 25px; /* Pushes text away equally on both sides */
+            margin: 0 30px; /* Space between text and image */
             object-fit: cover;
             display: none;
         }
@@ -78,137 +68,121 @@
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- MAIN CLUSTER (WINDOW CONTENT) --- */
-        #main-content-window-cluster {
+        /* --- LOGO AREA (Inside Window) --- */
+        #logo-cluster {
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
-            text-align: center;
             position: absolute; 
-            top: 42%; left: 50%;
-            transform: translate(-50%, -50%) scale(1.2); /* Made bigger */
+            top: 36%; /* Moved higher up inside the window */
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.2);
             width: 100%;
-            pointer-events: auto;
+            pointer-events: none;
             z-index: 20;
         }
-        h1 { 
-            font-size: 8rem; font-weight: 950; text-transform: uppercase; 
-            letter-spacing: -8px; margin: 0; line-height: 0.8; 
-        }
+        h1 { font-size: 8rem; font-weight: 950; text-transform: uppercase; letter-spacing: -8px; margin: 0; line-height: 0.8; }
         .fm-text { font-size: 2.5rem; font-weight: 400; letter-spacing: -2px; }
         .live-status { 
             font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
-            margin: 20px 0; display: inline-flex; align-items: center; gap: 10px;
+            margin-top: 15px; display: inline-flex; align-items: center; gap: 10px;
         }
         .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
-        
+
+        /* --- CONTROLS (Under Window) --- */
+        #controls-area {
+            position: absolute;
+            top: 54%; /* Positioned right under the window ledge */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 30;
+        }
         #btn { 
             background-color: #000; color: #fff; border: 4px solid #000; 
-            padding: 15px 40px; font-size: 1.2rem; text-transform: uppercase; 
+            padding: 12px 35px; font-size: 1.1rem; text-transform: uppercase; 
             font-weight: 900; letter-spacing: 3px; cursor: pointer; 
-            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; 
+            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease;
+            margin-bottom: 20px;
         }
         #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        /* --- RECENTLY PLAYED (OUTSIDE CLUSTER) --- */
+        /* --- HISTORY --- */
         .history-wrapper { 
-            position: absolute;
-            bottom: 60px; /* Right above bottom banner */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            z-index: 50;
             display: flex;
-            flex-direction: column-reverse; /* List opens UPwards */
+            flex-direction: column-reverse;
+            width: 300px;
         }
         #history-toggle { 
-            background: rgba(255,255,255,0.8); border: 2px solid #000; 
-            padding: 10px; color: #000; font-size: 0.8rem; 
+            background: rgba(255,255,255,0.9); border: 2px solid #000; 
+            padding: 8px 20px; color: #000; font-size: 0.75rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; 
-            border-radius: 30px; margin: 0 auto; width: fit-content;
+            border-radius: 30px; margin: 0 auto;
         }
         #history-list { 
             list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-radius: 15px; transition: all 0.4s ease; margin-bottom: 10px;
-            border: 0 solid #000;
+            background: white; border-radius: 12px; transition: all 0.4s ease; 
+            margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        #history-list.open { max-height: 250px; opacity: 1; padding: 15px; border-width: 2px; }
-        .history-item { 
-            padding: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
-            border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; 
-        }
+        #history-list.open { max-height: 200px; opacity: 1; padding: 10px; border: 2px solid #000; }
+        .history-item { padding: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #eee; text-align: center; }
 
         @media (max-width: 600px) {
-            #main-content-window-cluster { transform: translate(-50%, -50%) scale(0.7); top: 40%; }
-            .top-nav-bar { top: 55px; padding: 0 15px; }
+            #logo-cluster { transform: translate(-50%, -50%) scale(0.7); top: 35%; }
+            #controls-area { top: 52%; }
             h1 { font-size: 5rem; }
+            .top-nav-bar { top: 50px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="page-transition-overlay"></div>
-
     <div id="app-container">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
+        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
         
         <div class="top-nav-bar">
-            <a href="https://cuceu.co.uk" class="home-glyph">⌂</a>
             <div class="date-time-display">
                 <div id="live-date">MONDAY, MAY 18</div>
                 <div id="live-clock">02:50 AM</div>
             </div>
         </div>
         
-        <div class="main-container">
-            <div id="main-content-window-cluster">
-                <div class="logo-group">
-                    <h1>CUCEU<span class="fm-text">.fm</span></h1>
-                </div>
-                <div class="live-status">
-                    <div class="pulse-dot" id="pulse-indicator"></div> 
-                    <span id="center-status">CHECKING...</span>
-                </div>
-                <button id="btn">▶ Listen</button>
+        <div id="logo-cluster">
+            <h1>CUCEU<span class="fm-text">.fm</span></h1>
+            <div class="live-status">
+                <div class="pulse-dot" id="pulse-indicator"></div> 
+                <span id="center-status">CHECKING...</span>
             </div>
         </div>
 
-        <div class="history-wrapper">
-            <div id="history-toggle">Recently Played ▼</div>
-            <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
+        <div id="controls-area">
+            <button id="btn">▶ Listen</button>
+            <div class="history-wrapper">
+                <div id="history-toggle">Recently Played ▼</div>
+                <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
+            </div>
         </div>
-
-        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
 
         <audio id="radioPlayer" preload="none"></audio>
     </div>
 
 <script>
-    // Simple Entrance
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            const overlay = document.getElementById('page-transition-overlay');
-            if(overlay) overlay.style.opacity = '0';
-        }, 100);
-    });
-
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
-    // Updated Date/Time Logic
+    // Clock
     function updateDateTime() {
         const now = new Date();
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         document.getElementById('live-date').innerText = now.toLocaleDateString('en-US', options).toUpperCase();
-        
         let h = now.getHours() % 12 || 12;
         let m = now.getMinutes().toString().padStart(2, '0');
         let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
         document.getElementById('live-clock').innerText = `${h}:${m} ${ampm}`;
     }
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
+    setInterval(updateDateTime, 1000); updateDateTime();
 
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
@@ -221,10 +195,10 @@
         try {
             const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now());
             const cleanUrl = (await res.text()).trim();
-            if (cleanUrl && cleanUrl.startsWith('http') && currentArtUrl !== cleanUrl) {
+            if (cleanUrl && cleanUrl.startsWith('http')) {
                 currentArtUrl = cleanUrl;
             }
-        } catch(e) {}
+        } catch(e) { currentArtUrl = ""; }
     }
 
     historyToggle.onclick = () => { 
@@ -237,9 +211,7 @@
     async function fetchGlobalHistory() { 
         try { 
             const data = await directFetch(`${STREAM_BASE}/history.json`); 
-            if (data) { 
-                historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); 
-            } 
+            if (data) historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); 
         } catch(e) {} 
     }
 
@@ -247,10 +219,11 @@
         if (currentTrackText === base && currentArtUrl) return; 
         currentTrackText = base;
         
-        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="art">` : `<div style="width:40px"></div>`;
-        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}<span class="song-display">${base}</span></div>`;
+        // This puts the art BETWEEN every text item
+        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:40px"></div>`;
+        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
         
-        const content = Array(8).fill(itemHtml).join('');
+        const content = Array(12).fill(itemHtml).join('');
         [topMarquee, bottomMarquee].forEach(m => { 
             m.innerHTML = content + content; 
             m.style.animationDuration = `${(base.length + 20) * 2}s`; 
