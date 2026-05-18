@@ -12,7 +12,16 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
         }
 
-        /* --- BACKGROUND --- */
+        /* --- SMOOTH PAGE TRANSITIONS --- */
+        #page-transition-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; z-index: 99999;
+            pointer-events: none; opacity: 1;
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #page-transition-overlay.loaded { opacity: 0; }
+
+        /* --- THE GENIE CONTAINER --- */
         #app-container {
             width: 100vw; height: 100dvh; 
             display: flex; flex-direction: column;
@@ -23,19 +32,34 @@
             background-size: contain;
             position: relative;
             overflow: hidden;
+            transform-origin: 50% 100%; /* Sucks down into the dock area */
+            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
         }
 
-        /* --- TOP NAV (Clock Only) --- */
+        .genie-state {
+            transform: scale(0.05) translateY(50vh) !important;
+            opacity: 0 !important;
+        }
+
+        /* --- TOP NAV --- */
         .top-nav-bar {
             position: absolute;
             top: 65px;
             width: 100%;
             display: flex;
-            justify-content: flex-end; /* Pushed to the right */
+            justify-content: space-between;
             padding: 0 30px;
             box-sizing: border-box;
             z-index: 100;
         }
+        .back-btn-top {
+            color: #000; text-decoration: none; font-weight: 800; 
+            text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
+            border: 2px solid #000; padding: 8px 16px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .back-btn-top:hover { background-color: #000; color: #fff; }
+
         .date-time-display {
             text-align: right;
             font-weight: 900;
@@ -54,31 +78,22 @@
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; align-items: center;}
         
-        .ticker-item {
-            display: inline-flex;
-            align-items: center;
-        }
+        .ticker-item { display: inline-flex; align-items: center; }
         .ticker-art {
-            height: 40px; width: 40px;
-            margin: 0 30px; /* Space between text and image */
-            object-fit: cover;
-            display: none;
+            height: 40px; width: 40px; margin: 0 30px;
+            object-fit: cover; display: none;
         }
         .ticker-art.has-art { display: block; }
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- LOGO AREA (Inside Window) --- */
+        /* --- LOGO AREA --- */
         #logo-cluster {
-            display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            position: absolute; 
-            top: 36%; /* Moved higher up inside the window */
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1.2);
-            width: 100%;
-            pointer-events: none;
-            z-index: 20;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: absolute; top: 34%; left: 50%;
+            transform: translate(-50%, -50%) scale(1.3);
+            width: 100%; pointer-events: none; z-index: 20;
+            animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards;
         }
         h1 { font-size: 8rem; font-weight: 950; text-transform: uppercase; letter-spacing: -8px; margin: 0; line-height: 0.8; }
         .fm-text { font-size: 2.5rem; font-weight: 400; letter-spacing: -2px; }
@@ -89,64 +104,61 @@
         .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
 
-        /* --- CONTROLS (Under Window) --- */
+        /* --- CONTROLS --- */
         #controls-area {
-            position: absolute;
-            top: 54%; /* Positioned right under the window ledge */
-            left: 50%;
+            position: absolute; top: 54%; left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 30;
+            display: flex; flex-direction: column; align-items: center; z-index: 30;
+            animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.1s forwards; opacity: 0;
         }
         #btn { 
             background-color: #000; color: #fff; border: 4px solid #000; 
             padding: 12px 35px; font-size: 1.1rem; text-transform: uppercase; 
             font-weight: 900; letter-spacing: 3px; cursor: pointer; 
-            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease;
-            margin-bottom: 20px;
+            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 25px;
         }
         #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        /* --- HISTORY --- */
-        .history-wrapper { 
-            display: flex;
-            flex-direction: column-reverse;
-            width: 300px;
-        }
+        /* --- HISTORY (SHARP GLASS) --- */
+        .history-wrapper { display: flex; flex-direction: column-reverse; width: 320px; }
         #history-toggle { 
-            background: rgba(255,255,255,0.9); border: 2px solid #000; 
-            padding: 8px 20px; color: #000; font-size: 0.75rem; 
-            font-weight: 900; text-transform: uppercase; cursor: pointer; 
-            border-radius: 30px; margin: 0 auto;
+            background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); 
+            border: 2px solid #000; padding: 10px 20px; color: #000; font-size: 0.75rem; 
+            font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
         #history-list { 
             list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
-            background: white; border-radius: 12px; transition: all 0.4s ease; 
-            margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            transition: all 0.4s ease; margin-bottom: 5px; border: 0px solid #000;
         }
-        #history-list.open { max-height: 200px; opacity: 1; padding: 10px; border: 2px solid #000; }
-        .history-item { padding: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #eee; text-align: center; }
+        #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border-width: 2px; }
+        .history-item { padding: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
+
+        @keyframes breatheUp { 0% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+        
+        body.is-exiting #logo-cluster, body.is-exiting #controls-area { opacity: 0; transition: opacity 0.3s ease; }
 
         @media (max-width: 600px) {
             #logo-cluster { transform: translate(-50%, -50%) scale(0.7); top: 35%; }
             #controls-area { top: 52%; }
             h1 { font-size: 5rem; }
-            .top-nav-bar { top: 50px; }
+            .top-nav-bar { top: 50px; padding: 0 15px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
+    <div id="page-transition-overlay"></div>
+
+    <div id="app-container" class="genie-state">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
         
         <div class="top-nav-bar">
+            <a href="/" class="back-btn-top internal-link">← Back</a>
             <div class="date-time-display">
-                <div id="live-date">MONDAY, MAY 18</div>
-                <div id="live-clock">02:50 AM</div>
+                <div id="live-date">...</div>
+                <div id="live-clock">00:00 AM</div>
             </div>
         </div>
         
@@ -170,6 +182,30 @@
     </div>
 
 <script>
+    // Genie Entrance & Exit Logic
+    document.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById('page-transition-overlay');
+        requestAnimationFrame(() => overlay.classList.add('loaded'));
+        
+        setTimeout(() => {
+            document.getElementById('app-container').classList.remove('genie-state');
+        }, 50);
+
+        document.querySelectorAll('.internal-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.classList.add('is-exiting'); 
+                
+                // Genie down into dock
+                setTimeout(() => {
+                    document.getElementById('app-container').classList.add('genie-state');
+                }, 300); 
+                
+                setTimeout(() => window.location.assign(link.href), 850); 
+            });
+        });
+    });
+
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
     // Clock
@@ -218,11 +254,8 @@
     function updateTicker(base) {
         if (currentTrackText === base && currentArtUrl) return; 
         currentTrackText = base;
-        
-        // This puts the art BETWEEN every text item
         const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:40px"></div>`;
         const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
-        
         const content = Array(12).fill(itemHtml).join('');
         [topMarquee, bottomMarquee].forEach(m => { 
             m.innerHTML = content + content; 
