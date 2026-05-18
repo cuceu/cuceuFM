@@ -92,7 +92,7 @@
         .ticker-art {
             height: 35px;
             width: 35px;
-            border-radius: 4px;
+            /* Removed border-radius so it stays fully square */
             margin-right: 15px;
             object-fit: cover;
             display: none; /* Hidden until artwork loads */
@@ -266,7 +266,9 @@
     async function fetchGlobalHistory() { try { const data = await directFetch(`${STREAM_BASE}/history.json`); if (data) { historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); } } catch(e) {} }
 
     function updateTicker(base) {
-        if (currentTrackText === base) return; currentTrackText = base;
+        // Prevent unnecessary refreshes if the text is exactly the same and art is already present
+        if (currentTrackText === base && document.querySelector('.ticker-art.has-art')) return; 
+        currentTrackText = base;
         
         // Build the HTML for each item (Image + Text)
         const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="art">` : `<img class="ticker-art" src="" alt="art">`;
@@ -292,9 +294,19 @@
             let s = data.icestats.source; if (!s) throw new Error();
             isOnline = true; let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
             if (!playing) setStatus("LIVE", "live");
-            if (t !== currentTitle) { currentTitle = t; fetchGlobalHistory(); fetchArtwork(); }
+            
+            // Wait for artwork to download before creating the ticker!
+            if (t !== currentTitle) { 
+                currentTitle = t; 
+                fetchGlobalHistory(); 
+                await fetchArtwork(); // Wait here to avoid the race condition
+            }
+            
             updateTicker(`NOW PLAYING: ${t}`);
-        } catch (e) { isOnline = false; if (!playing) { setStatus("OFFLINE", ""); updateTicker("STANDBY"); } }
+        } catch (e) { 
+            isOnline = false; 
+            if (!playing) { setStatus("OFFLINE", ""); updateTicker("STANDBY"); } 
+        }
     }
 
     btn.onclick = () => {
