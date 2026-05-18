@@ -24,10 +24,10 @@
         /* --- THE GENIE CONTAINER --- */
         #app-container {
             width: 100vw; 
-            height: 100dvh; /* THE FIX: Adapts to mobile toolbars! */
+            height: 100dvh; 
             display: flex; flex-direction: column;
             background-color: #ffffff;
-            transform-origin: 60% 100%; /* Sucks down into the 3rd dock slot */
+            transform-origin: 60% 100%; 
             transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
             transform: scale(1) translateY(0);
             opacity: 1;
@@ -35,11 +35,11 @@
             position: relative;
             overflow: hidden;
 
-            /* --- !!! NEW BACKGROUND !!! --- */
+            /* --- BACKGROUND --- */
             background-image: url('./IMG_1148.webp'); 
-            background-position: center 40%; /* Shifted to keep the window perfectly framed when zoomed */
+            background-position: center 40%; 
             background-repeat: no-repeat;
-            background-size: cover; /* CHANGED to cover to zoom in and fill wide desktop screens */
+            background-size: cover; 
         }
 
         .genie-state {
@@ -47,12 +47,6 @@
             opacity: 0 !important;
             border-radius: 100px !important;
         }
-
-        /* --- !!! HIDDEN ARTWORK !!! --- */
-        #bouncing-container { display: none !important; }
-
-        /* --- !!! HIDDEN PERIPHERALS !!! --- */
-        .back-btn-top, .status-area { display: none !important; }
 
         /* --- UI SEQUENCED ANIMATIONS --- */
         #main-content-window-cluster { animation: windowBreatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; opacity: 0;}
@@ -63,7 +57,6 @@
         body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting #main-content-window-cluster { animation: windowBreatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
 
-        /* Modified animations: Increased scale from 0.4 to 0.85 to make elements much bigger */
         @keyframes windowBreatheUp {
             0% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(0.85); }
             100% { opacity: 1; transform: translate(-50%, -50%) scale(0.85); }
@@ -78,7 +71,7 @@
         @keyframes slideBottomIn { 0% { transform: translateY(100%); } 100% { transform: translateY(0); } }
         @keyframes slideBottomOut { 0% { transform: translateY(0); } 100% { transform: translateY(100%); } }
 
-        /* --- TAPE STYLES (UNCHANGED) --- */
+        /* --- TAPE STYLES --- */
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
             padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000; 
@@ -89,23 +82,44 @@
             display: flex; white-space: nowrap; animation: marquee linear infinite; 
             width: fit-content; transition: opacity 0.5s ease-in-out; 
         }
-        .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding-right: 80px; }
+        
+        /* New Ticker Items (Flex layout to align image and text perfectly) */
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            padding-right: 80px; 
+        }
+        .ticker-art {
+            height: 35px;
+            width: 35px;
+            border-radius: 4px;
+            margin-right: 15px;
+            object-fit: cover;
+            display: none; /* Hidden until artwork loads */
+        }
+        .ticker-art.has-art {
+            display: block; 
+        }
+        .song-display { 
+            font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; 
+        }
+        
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- MAIN CONTAINER (NOW AN OVERLAY) --- */
+        /* --- MAIN CONTAINER --- */
         .main-container { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; 
             z-index: 10;
         }
 
-        /* --- !!! CLUSTER CONTAINER !!! --- */
+        /* --- CLUSTER CONTAINER --- */
         #main-content-window-cluster {
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
             text-align: center;
             position: absolute; 
-            top: 32%; /* CHANGED from 50% to move the entire cluster up inside the window */
+            top: 32%; 
             left: 50%;
             width: auto; max-width: 400px;
             pointer-events: auto; 
@@ -174,13 +188,14 @@
 
         /* --- MOBILE PHONE ADJUSTMENTS --- */
         @media (max-width: 600px) { 
-            /* On small screens, fallback to contain so the window doesn't get completely cropped out */
             #app-container {
                 background-size: contain; 
                 background-position: center 30%;
             }
             .ticker-tape { padding: 6px 0; border-top-width: 3px; border-bottom-width: 3px; }
-            .song-display { font-size: 1.2rem; letter-spacing: 2px; padding-right: 40px; }
+            .ticker-item { padding-right: 40px; }
+            .ticker-art { height: 25px; width: 25px; margin-right: 10px; }
+            .song-display { font-size: 1.2rem; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -189,15 +204,7 @@
     <div id="page-transition-overlay"></div>
 
     <div id="app-container" class="genie-state">
-        <div id="bouncing-container">
-            <img id="art-layer-1" class="art-layer" src="" alt="" draggable="false">
-            <img id="art-layer-2" class="art-layer" src="" alt="" draggable="false">
-        </div>
-
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
-        
-        <a href="/" class="back-btn-top internal-link">← Home</a>
-        <div class="status-area"><span id="mac-clock">00:00 AM</span></div>
         
         <div class="main-container">
             <div id="main-content-window-cluster">
@@ -223,79 +230,33 @@
     </div>
 
 <script>
-    // --- COMBINED GENIE & REVERSE EXIT ANIMATION LOGIC ---
+    // --- GENIE ANIMATION ---
     document.addEventListener("DOMContentLoaded", () => {
         const overlay = document.getElementById('page-transition-overlay');
         requestAnimationFrame(() => overlay.classList.add('loaded'));
-
-        // Trigger entrance genie immediately
-        setTimeout(() => {
-            document.getElementById('app-container').classList.remove('genie-state');
-        }, 50);
-
-        document.querySelectorAll('.internal-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                // Phase 1: Internal UI elements fade/slide out quickly
-                document.body.classList.add('is-exiting'); 
-                
-                // Phase 2: The entire container sucks down into the dock
-                setTimeout(() => {
-                    document.getElementById('app-container').classList.add('genie-state');
-                }, 350); 
-                
-                // Phase 3: Redirect to the desktop
-                setTimeout(() => window.location.assign('/'), 850); 
-            });
-        });
-    });
-
-    window.addEventListener('pageshow', (e) => { 
-        if (e.persisted) {
-            document.body.classList.remove('is-exiting');
-            document.getElementById('page-transition-overlay').classList.add('loaded');
-            document.getElementById('app-container').classList.remove('genie-state');
-        }
+        setTimeout(() => document.getElementById('app-container').classList.remove('genie-state'), 50);
     });
 
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
-    function updateClock() {
-        const now = new Date();
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-        let h = now.getHours() % 12 || 12; 
-        let m = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
-        document.getElementById('mac-clock').innerText = `${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][now.getDay()]} ${h}:${m} ${ampm}`;
-    }
-    updateClock();
-
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
           historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
-          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee"),
-          bouncingContainer = document.getElementById("bouncing-container");
+          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee");
 
-    let playing = false, isOnline = false, currentTrackText = "", currentTitle = ""; 
-    let artX = 50, artY = 150, artDX = 1.8, artDY = 1.8, isBouncing = false;
-    const baseSpeed = 1.8;
+    let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", currentArtUrl = ""; 
 
-    let currentArtUrl = "", currentLayer = 1;
     async function fetchArtwork() {
         try {
             const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now());
             const cleanUrl = (await res.text()).trim();
             if (cleanUrl && cleanUrl.startsWith('http') && currentArtUrl !== cleanUrl) {
                 currentArtUrl = cleanUrl;
-                const nextL = document.getElementById(`art-layer-${currentLayer === 1 ? 2 : 1}`);
-                const oldL = document.getElementById(`art-layer-${currentLayer}`);
-                
-                nextL.src = cleanUrl;
-                nextL.onload = () => { 
-                    nextL.style.zIndex = "2"; oldL.style.zIndex = "1";
-                    nextL.classList.add('active'); 
-                    setTimeout(() => { oldL.classList.remove('active'); }, 1500);
-                    currentLayer = currentLayer === 1 ? 2 : 1; 
-                };
+                // Live update the images inside the ticker
+                document.querySelectorAll('.ticker-art').forEach(img => {
+                    img.src = currentArtUrl;
+                    img.classList.add('has-art');
+                });
             }
         } catch(e) {}
     }
@@ -306,11 +267,19 @@
 
     function updateTicker(base) {
         if (currentTrackText === base) return; currentTrackText = base;
-        const content = Array(10).fill(`<span class="song-display">${base}</span>`).join('');
+        
+        // Build the HTML for each item (Image + Text)
+        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="art">` : `<img class="ticker-art" src="" alt="art">`;
+        const itemHtml = `<span class="ticker-item">${artHtml}<span class="song-display">${base}</span></span>`;
+        
+        const content = Array(10).fill(itemHtml).join('');
+        
         [topMarquee, bottomMarquee].forEach(m => { 
             m.style.opacity = 0; 
             setTimeout(() => { 
-                m.innerHTML = content + content; m.style.animationDuration = `${(base.length + 10) * 1.5}s`; m.style.opacity = 1; 
+                m.innerHTML = content + content; 
+                m.style.animationDuration = `${(base.length + 10) * 1.5}s`; 
+                m.style.opacity = 1; 
             }, 500); 
         });
     }
@@ -335,7 +304,13 @@
     };
 
     player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
-    fetchGlobalHistory(); fetchArtwork(); updateTicker("STANDBY"); fetchSongData(); setInterval(fetchSongData, 4000);
+    
+    // Initial fetches
+    fetchGlobalHistory(); 
+    fetchArtwork(); 
+    updateTicker("STANDBY"); 
+    fetchSongData(); 
+    setInterval(fetchSongData, 4000);
 </script>
 </body>
 </html>
