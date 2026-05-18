@@ -12,16 +12,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
         }
 
-        /* --- SMOOTH PAGE TRANSITIONS --- */
-        #page-transition-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #ffffff; z-index: 99999;
-            pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        #page-transition-overlay.loaded { opacity: 0; }
-
-        /* --- THE GENIE CONTAINER --- */
+        /* --- THE BACKGROUND CONTAINER --- */
         #app-container {
             width: 100vw; height: 100dvh; 
             display: flex; flex-direction: column;
@@ -32,16 +23,30 @@
             background-size: contain;
             position: relative;
             overflow: hidden;
-            transform-origin: 50% 100%;
-            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
+            
+            /* Entrance Animation */
+            transform-origin: center center;
+            animation: bgExpand 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
-        .genie-state { transform: scale(0.05) translateY(50vh) !important; opacity: 0 !important; }
+        /* Exit Animation for Background */
+        body.is-exiting #app-container {
+            animation: bgShrink 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
+        }
 
-        /* --- TOP NAV (Fixed Clipping) --- */
+        @keyframes bgExpand {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bgShrink {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0; filter: blur(5px); }
+        }
+
+        /* --- TOP NAV --- */
         .top-nav-bar {
             position: absolute;
-            top: 80px; /* Lowered to clear the top banner */
+            top: 80px; 
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -85,16 +90,48 @@
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
+        /* Ticker Animations */
+        .ticker-top { transform: translateY(-100%); animation: slideTopIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
+        .ticker-bottom { transform: translateY(100%); animation: slideBottomIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
+        
+        body.is-exiting .ticker-top { animation: slideTopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+        @keyframes slideTopIn { to { transform: translateY(0); } }
+        @keyframes slideBottomIn { to { transform: translateY(0); } }
+        @keyframes slideTopOut { to { transform: translateY(-100%); } }
+        @keyframes slideBottomOut { to { transform: translateY(100%); } }
+
         /* --- LOGO AREA (Inside Window) --- */
         #logo-cluster {
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             position: absolute; top: 34%; left: 50%;
-            transform: translate(-50%, -50%) scale(1.3);
             width: 100%; pointer-events: none; z-index: 20;
-            animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards;
+            
+            /* Entrance Jump */
+            opacity: 0;
+            animation: logoJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
         }
-        h1 { font-size: 8rem; font-weight: 950; text-transform: uppercase; letter-spacing: -8px; margin: 0; line-height: 0.8; }
-        .fm-text { font-size: 2.5rem; font-weight: 400; letter-spacing: -2px; }
+        
+        body.is-exiting #logo-cluster {
+            animation: logoJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
+        }
+
+        /* NEW IMAGE LOGO STYLES */
+        .logo-wrapper-img {
+            display: flex; align-items: flex-end; justify-content: center; gap: 5px;
+        }
+        .cuceu-logo-img {
+            height: clamp(4rem, 15vw, 7rem); /* Scales smoothly like the old text */
+            width: auto;
+            user-select: none; -webkit-user-drag: none;
+        }
+        .fm-text { 
+            font-size: clamp(1.5rem, 5vw, 2.5rem); 
+            font-weight: 400; letter-spacing: -2px; 
+            padding-bottom: 0.5rem; /* Lifts the .fm slightly to align with image text baseline */
+        }
+        
         .live-status { 
             font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
             margin-top: 15px; display: inline-flex; align-items: center; gap: 10px;
@@ -102,16 +139,40 @@
         .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
 
+        @keyframes logoJumpUp {
+            0% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.9); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+        }
+        @keyframes logoJumpDown {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.9); }
+        }
+
         /* --- CONTROLS AREA (Under Window) --- */
         #controls-area {
             position: absolute; 
-            top: 58%; /* Anchored under the window ledge */
-            left: 50%;
-            transform: translateX(-50%);
+            top: 58%; left: 50%;
             display: flex; flex-direction: column; align-items: center; 
             z-index: 30;
-            animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.1s forwards; opacity: 0;
+            
+            /* Entrance Jump */
+            opacity: 0;
+            animation: controlsJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
         }
+        
+        body.is-exiting #controls-area {
+            animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
+        }
+
+        @keyframes controlsJumpUp {
+            0% { opacity: 0; transform: translateX(-50%) translateY(60px) scale(0.9); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        @keyframes controlsJumpDown {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(60px) scale(0.9); }
+        }
+
         #btn { 
             background-color: #000; color: #fff; border: 4px solid #000; 
             padding: 12px 35px; font-size: 1.1rem; text-transform: uppercase; 
@@ -120,19 +181,18 @@
         }
         #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        /* --- HISTORY (No Border, Static Button) --- */
+        /* --- HISTORY --- */
         .history-wrapper { 
             display: flex; flex-direction: column; 
             width: 320px; position: relative; 
         }
         #history-toggle { 
-            background: none; border: none; /* Removed border */
+            background: none; border: none; 
             padding: 5px; color: #000; font-size: 0.85rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
         #history-list { 
-            position: absolute;
-            top: 100%; left: 0; width: 100%;
+            position: absolute; top: 100%; left: 0; width: 100%;
             list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             transition: all 0.4s ease; border: 0px solid #000;
@@ -141,23 +201,26 @@
         #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border: 2px solid #000; }
         .history-item { padding: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
 
-        @keyframes breatheUp { 0% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-        
-        body.is-exiting #logo-cluster, body.is-exiting #controls-area { opacity: 0; transition: opacity 0.3s ease; }
-
         @media (max-width: 600px) {
             #logo-cluster { transform: translate(-50%, -50%) scale(0.7); top: 35%; }
             #controls-area { top: 55%; }
-            h1 { font-size: 5rem; }
             .top-nav-bar { top: 60px; padding: 0 15px; }
+            
+            /* Ensure jump animations respect the mobile scaling */
+            @keyframes logoJumpUp {
+                0% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); }
+                100% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+            }
+            @keyframes logoJumpDown {
+                0% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+                100% { opacity: 0; transform: translate(-50%, calc(-50% + 60px)) scale(0.6); }
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="page-transition-overlay"></div>
-
-    <div id="app-container" class="genie-state">
+    <div id="app-container">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
         
@@ -169,7 +232,10 @@
         </div>
         
         <div id="logo-cluster">
-            <h1>CUCEU<span class="fm-text">.fm</span></h1>
+            <div class="logo-wrapper-img">
+                <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
+                <span class="fm-text">.fm</span>
+            </div>
             <div class="live-status">
                 <div class="pulse-dot" id="pulse-indicator"></div> 
                 <span id="center-status">CHECKING...</span>
@@ -188,18 +254,16 @@
     </div>
 
 <script>
-    // Genie Logic
+    // New Sequenced Exit Logic
     document.addEventListener("DOMContentLoaded", () => {
-        const overlay = document.getElementById('page-transition-overlay');
-        requestAnimationFrame(() => overlay.classList.add('loaded'));
-        setTimeout(() => document.getElementById('app-container').classList.remove('genie-state'), 50);
-
         document.querySelectorAll('.internal-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
+                // Add the class that triggers all the exit CSS animations
                 document.body.classList.add('is-exiting'); 
-                setTimeout(() => document.getElementById('app-container').classList.add('genie-state'), 300); 
-                setTimeout(() => window.location.assign(link.href), 850); 
+                
+                // Wait for the full animation sequence (1000ms) before redirecting
+                setTimeout(() => window.location.assign(link.href), 1000); 
             });
         });
     });
