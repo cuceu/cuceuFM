@@ -89,7 +89,6 @@
             margin-left: -7vw;
         }
 
-        /* -- CHANGED: Faster continuous scrolling speed for desktop (lowered from 12s to 8s) -- */
         .track-right { animation: scrollRight 8s linear infinite; }
         .track-left { animation: scrollLeft 8s linear infinite; }
 
@@ -175,7 +174,6 @@
             font-size: 1.4rem; font-weight: 900;
         }
 
-        /* Scaled Down Icons */
         .icon-ig { 
             background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; 
             border: none !important; backdrop-filter: none !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
@@ -199,7 +197,6 @@
         .dock-app:hover .app-tooltip { opacity: 1; }
         .dock-app:hover { transform: translateY(-10px); }
 
-        /* Status Badge */
         .app-badge {
             position: absolute; top: -4px; right: -8px; background: rgba(20, 20, 25, 0.9);
             backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
@@ -218,12 +215,10 @@
                 right: 20px;
             }
 
-            /* -- CHANGED: Slower rotation on mobile (increased from 18s to 35s) -- */
             .track-right, .track-left {
                 animation-duration: 35s;
             }
 
-            /* -- CHANGED: Hide the first and last marquee lines on mobile -- */
             .marquee-track:first-child,
             .marquee-track:last-child {
                 display: none;
@@ -344,20 +339,15 @@
                                 <stop offset="100%" stop-color="#aaaaaa"/>
                             </linearGradient>
                         </defs>
-
                         <path d="M 30 35 Q 25 15 45 10 T 65 20 Q 70 35 60 40 Z" fill="url(#paper2)" stroke="#999" stroke-width="0.5"/>
                         <path d="M 40 18 Q 50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M 45 40 Q 45 20 60 18 T 80 25 Q 85 40 70 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
                         <path d="M 55 25 Q 65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
                         <path d="M 20 40 Q 15 25 35 22 T 55 30 Q 50 45 35 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
                         <path d="M 28 30 Q 40 25 45 35" fill="none" stroke="#999" stroke-width="1" stroke-linecap="round"/>
-
                         <ellipse cx="50" cy="30" rx="34" ry="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-
                         <path d="M 16 30 L 26 86 C 26 94, 74 94, 74 86 L 84 30 Z" fill="url(#glass)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
-
                         <path d="M 22 36 L 30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
-
                         <path d="M 16 30 A 34 9 0 0 0 84 30" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
                         <path d="M 18 31 A 32 7 0 0 0 82 31" fill="none" stroke="rgba(150,150,150,0.5)" stroke-width="1"/>
                     </svg>
@@ -386,11 +376,29 @@
             });
         });
 
-        window.addEventListener('pageshow', (e) => { 
+        // ✅ FIXED: single pageshow handler — resets marquee animations on bfcache restore
+        // so they don't "catch up" and blast through at warp speed
+        window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
+                const overlay = document.getElementById('page-transition-overlay');
+
+                // Hide anything glitchy behind the overlay first
+                overlay.classList.remove('loaded');
+                overlay.classList.remove('leaving');
+
+                // Clean up exit state
                 document.body.classList.remove('is-exiting');
-                document.getElementById('page-transition-overlay').classList.add('loaded');
-                document.getElementById('page-transition-overlay').classList.remove('leaving');
+
+                // Reset all marquee tracks so animations restart from frame zero
+                document.querySelectorAll('.marquee-track').forEach(track => {
+                    const isRight = track.classList.contains('track-right');
+                    track.classList.remove('track-right', 'track-left');
+                    void track.offsetWidth; // force reflow to flush the animation
+                    track.classList.add(isRight ? 'track-right' : 'track-left');
+                });
+
+                // Fade overlay back out
+                requestAnimationFrame(() => overlay.classList.add('loaded'));
             }
         });
 
@@ -421,12 +429,5 @@
         }
         checkStreamStatus(); setInterval(checkStreamStatus, 15000);
     </script>
-    <script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) { window.location.reload(); }
-});
-</script>
-</body>
-</html>
 </body>
 </html>
