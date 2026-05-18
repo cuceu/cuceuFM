@@ -32,19 +32,16 @@
             background-size: contain;
             position: relative;
             overflow: hidden;
-            transform-origin: 50% 100%; /* Sucks down into the dock area */
+            transform-origin: 50% 100%;
             transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
         }
 
-        .genie-state {
-            transform: scale(0.05) translateY(50vh) !important;
-            opacity: 0 !important;
-        }
+        .genie-state { transform: scale(0.05) translateY(50vh) !important; opacity: 0 !important; }
 
-        /* --- TOP NAV --- */
+        /* --- TOP NAV (Fixed Clipping) --- */
         .top-nav-bar {
             position: absolute;
-            top: 65px;
+            top: 80px; /* Lowered to clear the top banner */
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -57,6 +54,7 @@
             text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
             border: 2px solid #000; padding: 8px 16px;
             transition: background-color 0.2s ease, color 0.2s ease;
+            background: white;
         }
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
@@ -64,9 +62,9 @@
             text-align: right;
             font-weight: 900;
             text-transform: uppercase;
-            font-size: 14px;
+            font-size: 15px;
             letter-spacing: 1px;
-            line-height: 1.2;
+            white-space: nowrap;
         }
 
         /* --- TICKER TAPE --- */
@@ -87,7 +85,7 @@
         .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- LOGO AREA --- */
+        /* --- LOGO AREA (Inside Window) --- */
         #logo-cluster {
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             position: absolute; top: 34%; left: 50%;
@@ -104,34 +102,43 @@
         .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
 
-        /* --- CONTROLS --- */
+        /* --- CONTROLS AREA (Under Window) --- */
         #controls-area {
-            position: absolute; top: 54%; left: 50%;
+            position: absolute; 
+            top: 58%; /* Anchored under the window ledge */
+            left: 50%;
             transform: translateX(-50%);
-            display: flex; flex-direction: column; align-items: center; z-index: 30;
+            display: flex; flex-direction: column; align-items: center; 
+            z-index: 30;
             animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.1s forwards; opacity: 0;
         }
         #btn { 
             background-color: #000; color: #fff; border: 4px solid #000; 
             padding: 12px 35px; font-size: 1.1rem; text-transform: uppercase; 
             font-weight: 900; letter-spacing: 3px; cursor: pointer; 
-            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 25px;
+            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; margin-bottom: 20px;
         }
         #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        /* --- HISTORY (SHARP GLASS) --- */
-        .history-wrapper { display: flex; flex-direction: column-reverse; width: 320px; }
+        /* --- HISTORY (No Border, Static Button) --- */
+        .history-wrapper { 
+            display: flex; flex-direction: column; 
+            width: 320px; position: relative; 
+        }
         #history-toggle { 
-            background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); 
-            border: 2px solid #000; padding: 10px 20px; color: #000; font-size: 0.75rem; 
+            background: none; border: none; /* Removed border */
+            padding: 5px; color: #000; font-size: 0.85rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
         #history-list { 
+            position: absolute;
+            top: 100%; left: 0; width: 100%;
             list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
-            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            transition: all 0.4s ease; margin-bottom: 5px; border: 0px solid #000;
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: all 0.4s ease; border: 0px solid #000;
+            z-index: 50;
         }
-        #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border-width: 2px; }
+        #history-list.open { max-height: 220px; opacity: 1; padding: 10px; border: 2px solid #000; }
         .history-item { padding: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
 
         @keyframes breatheUp { 0% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
@@ -140,9 +147,9 @@
 
         @media (max-width: 600px) {
             #logo-cluster { transform: translate(-50%, -50%) scale(0.7); top: 35%; }
-            #controls-area { top: 52%; }
+            #controls-area { top: 55%; }
             h1 { font-size: 5rem; }
-            .top-nav-bar { top: 50px; padding: 0 15px; }
+            .top-nav-bar { top: 60px; padding: 0 15px; }
         }
     </style>
 </head>
@@ -157,8 +164,7 @@
         <div class="top-nav-bar">
             <a href="/" class="back-btn-top internal-link">← Back</a>
             <div class="date-time-display">
-                <div id="live-date">...</div>
-                <div id="live-clock">00:00 AM</div>
+                <span id="live-single-line">MONDAY | 00:00 AM</span>
             </div>
         </div>
         
@@ -182,25 +188,17 @@
     </div>
 
 <script>
-    // Genie Entrance & Exit Logic
+    // Genie Logic
     document.addEventListener("DOMContentLoaded", () => {
         const overlay = document.getElementById('page-transition-overlay');
         requestAnimationFrame(() => overlay.classList.add('loaded'));
-        
-        setTimeout(() => {
-            document.getElementById('app-container').classList.remove('genie-state');
-        }, 50);
+        setTimeout(() => document.getElementById('app-container').classList.remove('genie-state'), 50);
 
         document.querySelectorAll('.internal-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.body.classList.add('is-exiting'); 
-                
-                // Genie down into dock
-                setTimeout(() => {
-                    document.getElementById('app-container').classList.add('genie-state');
-                }, 300); 
-                
+                setTimeout(() => document.getElementById('app-container').classList.add('genie-state'), 300); 
                 setTimeout(() => window.location.assign(link.href), 850); 
             });
         });
@@ -208,15 +206,14 @@
 
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
-    // Clock
+    // Single Line Clock Logic
     function updateDateTime() {
         const now = new Date();
-        const options = { weekday: 'long', month: 'long', day: 'numeric' };
-        document.getElementById('live-date').innerText = now.toLocaleDateString('en-US', options).toUpperCase();
+        const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
         let h = now.getHours() % 12 || 12;
         let m = now.getMinutes().toString().padStart(2, '0');
         let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-        document.getElementById('live-clock').innerText = `${h}:${m} ${ampm}`;
+        document.getElementById('live-single-line').innerText = `${day} | ${h}:${m} ${ampm}`;
     }
     setInterval(updateDateTime, 1000); updateDateTime();
 
@@ -231,9 +228,7 @@
         try {
             const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now());
             const cleanUrl = (await res.text()).trim();
-            if (cleanUrl && cleanUrl.startsWith('http')) {
-                currentArtUrl = cleanUrl;
-            }
+            if (cleanUrl && cleanUrl.startsWith('http')) currentArtUrl = cleanUrl;
         } catch(e) { currentArtUrl = ""; }
     }
 
@@ -269,15 +264,8 @@
             let s = data.icestats.source; if (!s) throw new Error();
             isOnline = true; 
             let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
-            if (!playing) {
-                centerStatus.innerText = "LIVE";
-                pulseIndicator.className = "pulse-dot live";
-            }
-            if (t !== currentTitle) { 
-                currentTitle = t; 
-                fetchGlobalHistory(); 
-                await fetchArtwork(); 
-            }
+            if (!playing) { centerStatus.innerText = "LIVE"; pulseIndicator.className = "pulse-dot live"; }
+            if (t !== currentTitle) { currentTitle = t; fetchGlobalHistory(); await fetchArtwork(); }
             updateTicker(`NOW PLAYING: ${t}`);
         } catch (e) { 
             isOnline = false; 
@@ -286,15 +274,8 @@
     }
 
     btn.onclick = () => {
-        if (!playing) { 
-            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; 
-            player.play(); 
-            btn.innerText = "⏸ Disconnect"; 
-        } else { 
-            player.pause(); 
-            player.src = ""; 
-            btn.innerText = "▶ Listen"; 
-        }
+        if (!playing) { player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play(); btn.innerText = "⏸ Disconnect"; } 
+        else { player.pause(); player.src = ""; btn.innerText = "▶ Listen"; }
         playing = !playing;
     };
 
