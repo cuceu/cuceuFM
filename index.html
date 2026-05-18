@@ -376,30 +376,35 @@
             });
         });
 
-        // ✅ FIXED: single pageshow handler — resets marquee animations on bfcache restore
-        // so they don't "catch up" and blast through at warp speed
+        // ✅ FIXED: reset marquee animations any time the page becomes visible
+        // (covers both bfcache restore AND fresh navigations from sub-pages)
+        function resetMarqueeAnimations() {
+            document.querySelectorAll('.marquee-track').forEach(track => {
+                track.style.animation = 'none'; // inline override kills the running animation
+            });
+            // Give the browser a real frame to clear it before restoring
+            setTimeout(() => {
+                document.querySelectorAll('.marquee-track').forEach(track => {
+                    track.style.animation = ''; // remove override — CSS class takes over fresh from frame 0
+                });
+            }, 20);
+        }
+
+        // Catches browser back-button (bfcache) restores
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
                 const overlay = document.getElementById('page-transition-overlay');
-
-                // Hide anything glitchy behind the overlay first
                 overlay.classList.remove('loaded');
                 overlay.classList.remove('leaving');
-
-                // Clean up exit state
                 document.body.classList.remove('is-exiting');
-
-                // Reset all marquee tracks so animations restart from frame zero
-                document.querySelectorAll('.marquee-track').forEach(track => {
-                    const isRight = track.classList.contains('track-right');
-                    track.classList.remove('track-right', 'track-left');
-                    void track.offsetWidth; // force reflow to flush the animation
-                    track.classList.add(isRight ? 'track-right' : 'track-left');
-                });
-
-                // Fade overlay back out
+                resetMarqueeAnimations();
                 requestAnimationFrame(() => overlay.classList.add('loaded'));
             }
+        });
+
+        // Catches tab switching / page regaining focus (belt AND braces)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) resetMarqueeAnimations();
         });
 
         function updateClock() {
