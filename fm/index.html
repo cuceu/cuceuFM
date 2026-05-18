@@ -12,216 +12,172 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
         }
 
-        /* --- SMOOTH PAGE TRANSITIONS --- */
-        #page-transition-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #ffffff; z-index: 99999;
-            pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        #page-transition-overlay.loaded { opacity: 0; }
-
-        /* --- THE GENIE CONTAINER --- */
+        /* --- BACKGROUND --- */
         #app-container {
-            width: 100vw; 
-            height: 100dvh; 
+            width: 100vw; height: 100dvh; 
             display: flex; flex-direction: column;
             background-color: #ffffff;
-            transform-origin: 60% 100%; 
-            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
-            transform: scale(1) translateY(0);
-            opacity: 1;
-            border-radius: 0;
+            background-image: url('./IMG_1148.webp'); 
+            background-position: center 45%; 
+            background-repeat: no-repeat;
+            background-size: contain; /* Unzoomed to show the full window context */
             position: relative;
             overflow: hidden;
-
-            /* --- BACKGROUND --- */
-            background-image: url('./IMG_1148.webp'); 
-            background-position: center 40%; 
-            background-repeat: no-repeat;
-            background-size: cover; 
+            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
         }
 
-        .genie-state {
-            transform: scale(0.05) translateY(50vh) !important;
-            opacity: 0 !important;
-            border-radius: 100px !important;
+        /* --- TOP NAV (Home & Clock) --- */
+        .top-nav-bar {
+            position: absolute;
+            top: 65px; /* Lined up under the banner */
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+        .home-glyph {
+            font-size: 32px;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+        .home-glyph:hover { transform: scale(1.1); }
+        .date-time-display {
+            text-align: right;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+            line-height: 1.2;
         }
 
-        /* --- UI SEQUENCED ANIMATIONS --- */
-        #main-content-window-cluster { animation: windowBreatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; opacity: 0;}
-        .ticker-top { animation: slideTopIn 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; transform: translateY(-100%); }
-        .ticker-bottom { animation: slideBottomIn 0.6s cubic-bezier(0.25,1,0.5,1) 0.4s forwards; transform: translateY(100%); }
-
-        body.is-exiting .ticker-top { animation: slideTopOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting #main-content-window-cluster { animation: windowBreatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-
-        @keyframes windowBreatheUp {
-            0% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(0.85); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(0.85); }
-        }
-        @keyframes windowBreatheDown {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.85); }
-            100% { opacity: 0; transform: translate(-50%, calc(-50% + 40px)) scale(0.85); }
-        }
-        
-        @keyframes slideTopIn { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
-        @keyframes slideTopOut { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
-        @keyframes slideBottomIn { 0% { transform: translateY(100%); } 100% { transform: translateY(0); } }
-        @keyframes slideBottomOut { 0% { transform: translateY(0); } 100% { transform: translateY(100%); } }
-
-        /* --- TAPE STYLES --- */
+        /* --- TICKER TAPE --- */
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
             padding: 12px 0; border-top: 4px solid #000; border-bottom: 4px solid #000; 
             display: flex; z-index: 60; 
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
-        .marquee-wrapper { 
-            display: flex; white-space: nowrap; animation: marquee linear infinite; 
-            width: fit-content; transition: opacity 0.5s ease-in-out; 
-        }
-        
-        /* New Ticker Items (Flex layout to align image and text perfectly) */
+        .marquee-wrapper { display: flex; white-space: nowrap; animation: marquee linear infinite; width: fit-content; }
         .ticker-item {
             display: inline-flex;
             align-items: center;
-            padding-right: 80px; 
+            /* Balanced spacing to keep art in the middle */
+            padding: 0 40px; 
         }
         .ticker-art {
-            height: 35px;
-            width: 35px;
-            /* Removed border-radius so it stays fully square */
-            margin-right: 15px;
+            height: 40px; width: 40px;
+            margin: 0 25px; /* Pushes text away equally on both sides */
             object-fit: cover;
-            display: none; /* Hidden until artwork loads */
+            display: none;
         }
-        .ticker-art.has-art {
-            display: block; 
-        }
-        .song-display { 
-            font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; 
-        }
-        
+        .ticker-art.has-art { display: block; }
+        .song-display { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- MAIN CONTAINER --- */
-        .main-container { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; 
-            z-index: 10;
-        }
-
-        /* --- CLUSTER CONTAINER --- */
+        /* --- MAIN CLUSTER (WINDOW CONTENT) --- */
         #main-content-window-cluster {
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
             text-align: center;
             position: absolute; 
-            top: 32%; 
-            left: 50%;
-            width: auto; max-width: 400px;
-            pointer-events: auto; 
-        }
-
-        /* --- LOGO GROUP & TEXT STYLES --- */
-        .logo-group { 
-            display: flex; align-items: flex-end; justify-content: center; 
-            margin-bottom: 5px; pointer-events: none;
+            top: 42%; left: 50%;
+            transform: translate(-50%, -50%) scale(1.2); /* Made bigger */
+            width: 100%;
+            pointer-events: auto;
+            z-index: 20;
         }
         h1 { 
-            font-size: clamp(3rem, 15vw, 6rem); 
-            font-weight: 950; text-transform: uppercase; 
-            letter-spacing: -6px; margin: 0; color: #000; line-height: 0.8; 
-            text-shadow: 0 0 10px rgba(255,255,255,1); 
+            font-size: 8rem; font-weight: 950; text-transform: uppercase; 
+            letter-spacing: -8px; margin: 0; line-height: 0.8; 
         }
-        .fm-text { 
-            font-size: clamp(1rem, 5vw, 1.8rem); 
-            font-weight: 400; text-transform: lowercase; 
-            margin-left: 3px; color: #000; letter-spacing: -1px;
-            text-shadow: 0 0 10px rgba(255,255,255,1); 
-        }
+        .fm-text { font-size: 2.5rem; font-weight: 400; letter-spacing: -2px; }
         .live-status { 
-            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; 
-            margin-top: 15px; margin-bottom: 20px; 
-            display: inline-flex; align-items: center; gap: 8px; position: relative; z-index: 40; 
-            text-shadow: 0 0 10px rgba(255,255,255,1); 
+            font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
+            margin: 20px 0; display: inline-flex; align-items: center; gap: 10px;
         }
-        .pulse-dot { height: 8px; width: 8px; background-color: #777; border-radius: 50%; box-shadow: 0 0 8px rgba(255,255,255,1); }
-        .pulse-dot.live { background-color: #34c759; }
-        .pulse-dot.on-air { background-color: #ff3b30; animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { transform: scale(0.9); opacity: 0.7; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.7; } }
+        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
+        .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
         
-        /* --- BUTTON --- */
         #btn { 
-            background-color: #000; color: #fff; border: 3px solid #000; 
-            padding: 10px 20px; font-size: 0.9rem; text-transform: uppercase; 
-            font-weight: 800; letter-spacing: 2px; cursor: pointer; 
-            box-shadow: 4px 4px 0 #d3d3d3; transition: all 0.2s ease; 
-            position: relative; z-index: 40; pointer-events: auto;
+            background-color: #000; color: #fff; border: 4px solid #000; 
+            padding: 15px 40px; font-size: 1.2rem; text-transform: uppercase; 
+            font-weight: 900; letter-spacing: 3px; cursor: pointer; 
+            box-shadow: 6px 6px 0 #d3d3d3; transition: all 0.2s ease; 
         }
+        #btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #d3d3d3; }
 
-        /* --- HISTORY STYLES --- */
+        /* --- RECENTLY PLAYED (OUTSIDE CLUSTER) --- */
         .history-wrapper { 
-            width: 100%; max-width: 250px; 
-            margin: 15px auto 0; 
-            position: relative; z-index: 40; 
+            position: absolute;
+            bottom: 60px; /* Right above bottom banner */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column-reverse; /* List opens UPwards */
         }
         #history-toggle { 
-            background: none; border: none; color: #000; font-size: 0.7rem; 
+            background: rgba(255,255,255,0.8); border: 2px solid #000; 
+            padding: 10px; color: #000; font-size: 0.8rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; 
-            display: flex; justify-content: center; align-items: center; gap: 4px; width: 100%; 
-            text-shadow: 0 0 10px rgba(255,255,255,1); 
+            border-radius: 30px; margin: 0 auto; width: fit-content;
         }
         #history-list { 
-            width: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); 
-            margin: 6px 0 0 0; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
-            border-radius: 8px; transition: all 0.5s ease; box-sizing: border-box;
+            list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-radius: 15px; transition: all 0.4s ease; margin-bottom: 10px;
+            border: 0 solid #000;
         }
-        #history-list.open { max-height: 200px; opacity: 1; padding: 6px; border: 1px solid rgba(0,0,0,0.05); }
+        #history-list.open { max-height: 250px; opacity: 1; padding: 15px; border-width: 2px; }
         .history-item { 
-            padding: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; 
-            border-bottom: 1px solid rgba(0,0,0,0.03); 
-            text-align: center; 
+            padding: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
+            border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; 
         }
 
-        /* --- MOBILE PHONE ADJUSTMENTS --- */
-        @media (max-width: 600px) { 
-            #app-container {
-                background-size: contain; 
-                background-position: center 30%;
-            }
-            .ticker-tape { padding: 6px 0; border-top-width: 3px; border-bottom-width: 3px; }
-            .ticker-item { padding-right: 40px; }
-            .ticker-art { height: 25px; width: 25px; margin-right: 10px; }
-            .song-display { font-size: 1.2rem; letter-spacing: 2px; }
+        @media (max-width: 600px) {
+            #main-content-window-cluster { transform: translate(-50%, -50%) scale(0.7); top: 40%; }
+            .top-nav-bar { top: 55px; padding: 0 15px; }
+            h1 { font-size: 5rem; }
         }
     </style>
 </head>
 <body>
-    
+
     <div id="page-transition-overlay"></div>
 
-    <div id="app-container" class="genie-state">
+    <div id="app-container">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
+        
+        <div class="top-nav-bar">
+            <a href="https://cuceu.co.uk" class="home-glyph">⌂</a>
+            <div class="date-time-display">
+                <div id="live-date">MONDAY, MAY 18</div>
+                <div id="live-clock">02:50 AM</div>
+            </div>
+        </div>
         
         <div class="main-container">
             <div id="main-content-window-cluster">
                 <div class="logo-group">
-                    <h1>CUCEU</h1>
-                    <span class="fm-text">.fm</span>
+                    <h1>CUCEU<span class="fm-text">.fm</span></h1>
                 </div>
                 <div class="live-status">
                     <div class="pulse-dot" id="pulse-indicator"></div> 
                     <span id="center-status">CHECKING...</span>
                 </div>
                 <button id="btn">▶ Listen</button>
-                <div class="history-wrapper">
-                    <div id="history-toggle">Recently Played <span id="arrow">▼</span></div>
-                    <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
-                </div>
             </div>
+        </div>
+
+        <div class="history-wrapper">
+            <div id="history-toggle">Recently Played ▼</div>
+            <ul id="history-list"><li class="history-item" style="border:none;">Loading...</li></ul>
         </div>
 
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
@@ -230,15 +186,30 @@
     </div>
 
 <script>
-    // --- GENIE ANIMATION ---
+    // Simple Entrance
     document.addEventListener("DOMContentLoaded", () => {
-        const overlay = document.getElementById('page-transition-overlay');
-        requestAnimationFrame(() => overlay.classList.add('loaded'));
-        setTimeout(() => document.getElementById('app-container').classList.remove('genie-state'), 50);
+        setTimeout(() => {
+            const overlay = document.getElementById('page-transition-overlay');
+            if(overlay) overlay.style.opacity = '0';
+        }, 100);
     });
 
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
+    // Updated Date/Time Logic
+    function updateDateTime() {
+        const now = new Date();
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        document.getElementById('live-date').innerText = now.toLocaleDateString('en-US', options).toUpperCase();
+        
+        let h = now.getHours() % 12 || 12;
+        let m = now.getMinutes().toString().padStart(2, '0');
+        let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+        document.getElementById('live-clock').innerText = `${h}:${m} ${ampm}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
           historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
@@ -252,77 +223,77 @@
             const cleanUrl = (await res.text()).trim();
             if (cleanUrl && cleanUrl.startsWith('http') && currentArtUrl !== cleanUrl) {
                 currentArtUrl = cleanUrl;
-                // Live update the images inside the ticker
-                document.querySelectorAll('.ticker-art').forEach(img => {
-                    img.src = currentArtUrl;
-                    img.classList.add('has-art');
-                });
             }
         } catch(e) {}
     }
 
-    historyToggle.onclick = () => { historyList.classList.toggle("open"); document.getElementById("arrow").innerText = historyList.classList.contains("open") ? "▲" : "▼"; };
-    async function directFetch(url) { const res = await fetch(url + "?t=" + Date.now()); return await res.json(); }
-    async function fetchGlobalHistory() { try { const data = await directFetch(`${STREAM_BASE}/history.json`); if (data) { historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); } } catch(e) {} }
+    historyToggle.onclick = () => { 
+        historyList.classList.toggle("open"); 
+        historyToggle.innerText = historyList.classList.contains("open") ? "Recently Played ▲" : "Recently Played ▼"; 
+    };
 
-    function updateTicker(base) {
-        // Prevent unnecessary refreshes if the text is exactly the same and art is already present
-        if (currentTrackText === base && document.querySelector('.ticker-art.has-art')) return; 
-        currentTrackText = base;
-        
-        // Build the HTML for each item (Image + Text)
-        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="art">` : `<img class="ticker-art" src="" alt="art">`;
-        const itemHtml = `<span class="ticker-item">${artHtml}<span class="song-display">${base}</span></span>`;
-        
-        const content = Array(10).fill(itemHtml).join('');
-        
-        [topMarquee, bottomMarquee].forEach(m => { 
-            m.style.opacity = 0; 
-            setTimeout(() => { 
-                m.innerHTML = content + content; 
-                m.style.animationDuration = `${(base.length + 10) * 1.5}s`; 
-                m.style.opacity = 1; 
-            }, 500); 
-        });
+    async function directFetch(url) { const res = await fetch(url + "?t=" + Date.now()); return await res.json(); }
+    
+    async function fetchGlobalHistory() { 
+        try { 
+            const data = await directFetch(`${STREAM_BASE}/history.json`); 
+            if (data) { 
+                historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); 
+            } 
+        } catch(e) {} 
     }
 
-    function setStatus(text, dot) { centerStatus.innerText = text; pulseIndicator.className = "pulse-dot " + dot; }
+    function updateTicker(base) {
+        if (currentTrackText === base && currentArtUrl) return; 
+        currentTrackText = base;
+        
+        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="art">` : `<div style="width:40px"></div>`;
+        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}<span class="song-display">${base}</span></div>`;
+        
+        const content = Array(8).fill(itemHtml).join('');
+        [topMarquee, bottomMarquee].forEach(m => { 
+            m.innerHTML = content + content; 
+            m.style.animationDuration = `${(base.length + 20) * 2}s`; 
+        });
+    }
 
     async function fetchSongData() {
         try {
             const data = await directFetch(`${STREAM_BASE}/status-json.xsl`);
             let s = data.icestats.source; if (!s) throw new Error();
-            isOnline = true; let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
-            if (!playing) setStatus("LIVE", "live");
-            
-            // Wait for artwork to download before creating the ticker!
+            isOnline = true; 
+            let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
+            if (!playing) {
+                centerStatus.innerText = "LIVE";
+                pulseIndicator.className = "pulse-dot live";
+            }
             if (t !== currentTitle) { 
                 currentTitle = t; 
                 fetchGlobalHistory(); 
-                await fetchArtwork(); // Wait here to avoid the race condition
+                await fetchArtwork(); 
             }
-            
             updateTicker(`NOW PLAYING: ${t}`);
         } catch (e) { 
             isOnline = false; 
-            if (!playing) { setStatus("OFFLINE", ""); updateTicker("STANDBY"); } 
+            if (!playing) { centerStatus.innerText = "OFFLINE"; pulseIndicator.className = "pulse-dot"; updateTicker("STANDBY"); } 
         }
     }
 
     btn.onclick = () => {
-        if (!playing) { player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; player.play(); btn.innerText = "⏸ Disconnect"; setStatus("CONNECTING...", ""); }
-        else { player.pause(); player.src = ""; btn.innerText = "▶ Listen"; setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : ""); }
+        if (!playing) { 
+            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; 
+            player.play(); 
+            btn.innerText = "⏸ Disconnect"; 
+        } else { 
+            player.pause(); 
+            player.src = ""; 
+            btn.innerText = "▶ Listen"; 
+        }
         playing = !playing;
     };
 
-    player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
-    
-    // Initial fetches
-    fetchGlobalHistory(); 
-    fetchArtwork(); 
-    updateTicker("STANDBY"); 
-    fetchSongData(); 
     setInterval(fetchSongData, 4000);
+    fetchGlobalHistory(); fetchArtwork(); updateTicker("STANDBY"); fetchSongData();
 </script>
 </body>
 </html>
