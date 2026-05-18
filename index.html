@@ -27,6 +27,7 @@
         #page-transition-overlay.loaded { opacity: 0; }
         #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
 
+        /* --- DATE & TIME STATUS AREA --- */
         .status-area {
             position: absolute; top: 25px; right: 30px; display: flex; align-items: center;
             font-size: 17.5px; 
@@ -34,22 +35,31 @@
             color: #000000; z-index: 100;
             letter-spacing: 0.5px;
             text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,1), 0 0 45px rgba(255,255,255,0.9);
+            
+            /* -- ADDED: Hidden initially for entrance animation -- */
+            opacity: 0;
+            transform: translateX(15px);
+            animation: clockEntrance 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+        }
+        
+        /* -- ADDED: Exit animation for clock -- */
+        body.is-exiting .status-area { animation: clockExit 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+        /* Clock Animation Keyframes */
+        @keyframes clockEntrance {
+            0% { opacity: 0; transform: translateX(15px); filter: blur(3px); }
+            100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+        }
+        @keyframes clockExit {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(15px); filter: blur(3px); }
         }
 
         .main-content {
             flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;
         }
 
-        /* --- THE IMAGE BACKGROUND & GLITCH --- */
-        
-        @keyframes subtle-glitch {
-            0%, 95% { transform: translate(0, 0) skew(0deg); filter: none; }
-            96% { transform: translate(-4px, 2px) skew(-1deg); filter: drop-shadow(4px 0 0 rgba(255,0,0,0.6)); }
-            97% { transform: translate(3px, -2px) skew(1deg); filter: drop-shadow(-4px 0 0 rgba(0,0,255,0.6)); }
-            98% { transform: translate(0, 0) skew(0deg); filter: none; }
-            100% { transform: translate(0, 0) skew(0deg); filter: none; }
-        }
-
+        /* --- THE IMAGE BACKGROUND (Glitch Removed) --- */
         #logo-wrapper {
             position: absolute;
             top: 50px;
@@ -60,7 +70,7 @@
             justify-content: center;
             overflow: hidden; 
             pointer-events: none;
-            animation: subtle-glitch 8s infinite 2s;
+            /* -- CHANGED: continuous glitch animation removed -- */
         }
         
         body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -72,7 +82,7 @@
             flex-wrap: nowrap; 
             width: max-content;
             will-change: transform;
-            margin-top: -0.8vw; 
+            margin-top: -0.8vw; /* General negative margin for tight look on desktop */
         }
         .marquee-track:first-child {
             margin-top: 0; 
@@ -92,10 +102,10 @@
             flex-shrink: 0; 
             user-select: none;
             -webkit-user-drag: none; 
-            opacity: 0; 
+            opacity: 0; /* Hidden initially for entrance drop-in */
         }
 
-        /* --- THE MECHANICAL DROP-IN ANIMATIONS --- */
+        /* --- THE MECHANICAL DROP-IN ANIMATIONS (UNCHANGED) --- */
         @keyframes dropInOdd {
             0% { opacity: 0; transform: translateY(-50px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -105,7 +115,7 @@
             100% { opacity: 1; transform: translateY(0) rotate(180deg); }
         }
 
-        /* Faster, sharper easing for a mechanical feel */
+        /* Apply the animations with 'both' to keep them hidden during the delay, and rotated properly */
         .marquee-track:nth-child(odd) img.cuceu-img {
             animation: dropInOdd 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) both;
         }
@@ -125,7 +135,7 @@
         .marquee-track:nth-child(9) img.cuceu-img { animation-delay: 0.9s; }
         .marquee-track:nth-child(10) img.cuceu-img { animation-delay: 1.0s; }
 
-        /* --- THE DOCK --- */
+        /* --- THE DOCK (UNCHANGED) --- */
         .mac-dock-container {
             position: absolute; bottom: 30px; width: 100%;
             display: flex; justify-content: center; z-index: 10;
@@ -136,7 +146,7 @@
             padding: 8px 16px; display: flex; gap: 12px; align-items: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             opacity: 0;
-            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s forwards; 
+            animation: dockSlideUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s forwards; /* Delayed slightly so logos appear first */
         }
         
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -199,9 +209,18 @@
         .recording-dot { width: 5px; height: 5px; background-color: #ff3b30; border-radius: 50%; animation: subtle-pulse 2s infinite ease-in-out; }
         @keyframes subtle-pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
 
+        /* --- MOBILE MEDIA QUERY (UPDATED) --- */
         @media (max-width: 600px) {
-            img.cuceu-img { height: 4rem; margin-right: 4vw; margin-top: -3vw;} 
-            .marquee-track { margin-top: -3vw; }
+            img.cuceu-img { 
+                height: 4rem; 
+                margin-right: 4vw; 
+                /* -- CHANGED: Negative margin-top removed for better spacing -- */
+                margin-top: 0; 
+            } 
+            .marquee-track { 
+                /* -- CHANGED: Negative margin crushed lines, changed to positive margin for lil space -- */
+                margin-top: 1.5vw; 
+            }
             .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
