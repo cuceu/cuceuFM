@@ -66,7 +66,7 @@
         /* --- TICKER TAPE --- */
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
-            height: 38px; /* Fixed identical height for both banners */
+            height: 38px; 
             padding: 0; 
             border-top: 2px solid #000; border-bottom: 2px solid #000; 
             display: flex; align-items: center; z-index: 60; 
@@ -82,7 +82,6 @@
             opacity: 1; filter: blur(0px);
         }
         
-        /* Top is scrolling, Bottom is centered static */
         #top-marquee { animation: marquee linear infinite; width: fit-content; }
         #bottom-marquee { width: 100%; justify-content: center; animation: none; }
 
@@ -98,9 +97,9 @@
         
         .song-display { 
             font-size: 1.15rem; 
-            line-height: 1; /* Removes empty space around the text */
+            line-height: 1;
             font-weight: 900; text-transform: uppercase; letter-spacing: 2px; 
-            display: inline-block; transform: translateY(1px); /* Optical center adjustment */
+            display: inline-block; transform: translateY(1px); 
         }
         
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -160,7 +159,7 @@
 
         /* --- CONTROLS AREA --- */
         #controls-area {
-            position: absolute; top: 60%; left: 50%; /* Adjusted slightly for dropdown room */
+            position: absolute; top: 60%; left: 50%;
             display: flex; flex-direction: column; align-items: center; z-index: 30;
             transform: translateX(-50%) translateY(0) scale(1);
             opacity: 0; 
@@ -194,17 +193,27 @@
             background: none; border: none; padding: 5px; color: #000; font-size: 0.85rem; 
             font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
         }
+        
         #history-list { 
-            position: absolute; top: 100%; left: 0; width: 100%; list-style: none; padding: 0; max-height: 0; opacity: 0; overflow: hidden; 
+            position: absolute; top: 100%; left: 0; width: 100%; list-style: none; 
+            padding: 0 10px; /* Lock horizontal padding so width doesn't shift */
+            max-height: 0; opacity: 0; overflow: hidden; 
+            box-sizing: border-box; transform-origin: top center;
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            transition: all 0.4s ease; border: none; z-index: 50; margin-top: 10px; border-radius: 8px;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, padding 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+            border: none; z-index: 50; margin-top: 10px; border-radius: 8px;
         }
-        #history-list.open { max-height: 220px; opacity: 1; padding: 5px 10px; overflow-y: auto; }
+        #history-list.open { 
+            max-height: 220px; opacity: 1; 
+            padding: 5px 10px; /* Only animate vertical padding */
+            overflow-y: auto; 
+        }
+        
         .history-item { 
             padding: 12px 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
             border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; color: #111;
         }
-        .history-item:last-child { border-bottom: none; } /* Removes line from the last item */
+        .history-item:last-child { border-bottom: none; } 
 
         /* --- MOBILE LAYOUT OPTIMIZATIONS --- */
         @media (max-width: 600px) {
@@ -220,7 +229,6 @@
             .live-status { font-size: 1.2rem; letter-spacing: 2px; }
             #controls-area { top: 62%; }
             
-            /* Mobile Banners */
             .ticker-tape { height: 32px; }
             .ticker-art { height: 18px; width: 18px; margin: 0 10px; }
             .song-display { font-size: 0.95rem; letter-spacing: 1px; }
@@ -336,28 +344,21 @@
         lastTickerState = tickerState;
         currentTrackText = base;
         
-        // Setup Scrolling Content for Top
         const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
         const contentTop = Array(12).fill(itemHtml).join('');
-        
-        // Setup Centered Content for Bottom
         const itemHtmlBottom = `<div class="ticker-item"><span class="song-display">${base}</span></div>`;
         
         [topMarquee, bottomMarquee].forEach(m => m.classList.add('refreshing'));
         
         setTimeout(() => {
-            // Apply Top Marquee
             topMarquee.innerHTML = contentTop + contentTop;
             topMarquee.style.animationDuration = `${(base.length + 20) * 2}s`;
-            
-            // Apply Bottom Static Centered
             bottomMarquee.innerHTML = itemHtmlBottom;
 
             [topMarquee, bottomMarquee].forEach(m => m.classList.remove('refreshing'));
         }, 300);
     }
 
-    // Dynamic Status Control
     function setStatus(text, dotClass) { 
         centerStatus.innerText = text; 
         pulseIndicator.className = "pulse-dot " + dotClass; 
