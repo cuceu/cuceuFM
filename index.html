@@ -24,15 +24,31 @@
         #page-transition-overlay.loaded  { opacity: 0; }
         #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
 
-        /* ── NOW PLAYING BANNER (Dropdown redesign matching .fm) ─────────────── */
+        /* ── TOP NAV BAR (Standardized) ──────────────────────────────── */
+        .top-nav-bar {
+            position: absolute; top: 30px; left: 30px; right: 30px;
+            display: flex; justify-content: flex-end; align-items: center;
+            z-index: 100;
+        }
+        .date-time-display {
+            font-size: clamp(11px, 1.3vw, 15px); font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1.5px; color: #000;
+            text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px rgba(255,255,255,0.9);
+            opacity: 0; transform: translateX(15px);
+            animation: clockIn 0.8s cubic-bezier(0.25,1,0.5,1) 0.5s forwards;
+        }
+        body.is-exiting .date-time-display { animation: clockOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes clockIn  { 0%{opacity:0;transform:translateX(15px);filter:blur(3px)} 100%{opacity:1;transform:none;filter:none} }
+        @keyframes clockOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(15px);filter:blur(3px)} }
+
+        /* ── NOW PLAYING BANNER (Floating Box Aesthetic) ─────────────── */
         #now-playing-banner {
-            position: absolute; top: 25px; left: 50%; 
+            position: absolute; top: 20px; left: 50%;
+            width: calc(100% - 40px); max-width: 450px; height: auto;
+            background: #fff; border: 3px solid #000;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+            z-index: 120; padding: 10px 14px;
             transform: translate(-50%, -150%);
-            width: 90%; max-width: 420px;
-            height: 60px; background: #fff;
-            border: 2px solid #000; border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            z-index: 120;
             transition: transform 0.55s cubic-bezier(0.25,1,0.5,1);
         }
         #now-playing-banner.visible { transform: translate(-50%, 0); }
@@ -41,11 +57,10 @@
             transform: translate(-50%, -150%);
         }
         .banner-inner {
-            display: flex; align-items: center;
-            height: 100%; padding: 0 16px; gap: 12px;
+            display: flex; align-items: center; gap: 14px; width: 100%;
         }
         .banner-live-dot {
-            width: 10px; height: 10px; flex-shrink: 0;
+            width: 8px; height: 8px; flex-shrink: 0;
             background: #ff3b30; border-radius: 50%;
             box-shadow: 0 0 8px rgba(255,59,48,0.85);
             animation: pulse-dot 1.2s ease-in-out infinite;
@@ -55,38 +70,29 @@
             50%      { transform: scale(1.3); opacity: 1; }
         }
         #banner-art {
-            width: 36px; height: 36px; border-radius: 4px;
-            border: 1.5px solid #000; object-fit: cover; flex-shrink: 0;
-            opacity: 0; transition: opacity 0.35s ease;
+            width: 40px; height: 40px; border-radius: 0;
+            border: 2px solid #000; object-fit: cover; flex-shrink: 0;
+            opacity: 0; transition: opacity 0.35s ease; display: none;
         }
-        #banner-art.has-art { opacity: 1; }
-        .banner-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;}
+        #banner-art.has-art { opacity: 1; display: block; }
+        .banner-info { flex: 1; min-width: 0; }
         .banner-label {
             display: block; font-size: 8px; font-weight: 900;
-            letter-spacing: 2px; color: #ff3b30; text-transform: uppercase; line-height: 1; margin-bottom: 2px;
+            letter-spacing: 2.5px; color: #ff3b30; text-transform: uppercase;
         }
         #banner-track {
             display: block; font-size: 13px; font-weight: 800;
-            color: #000; text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1;
+            color: #000; text-transform: uppercase; letter-spacing: 0.8px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .banner-btn {
             flex-shrink: 0; background: #000; color: #fff;
-            font-size: 10px; font-weight: 900; letter-spacing: 1px;
-            text-transform: uppercase; text-decoration: none; border-radius: 6px;
-            padding: 8px 14px; border: 2px solid #000; white-space: nowrap;
-            transition: all 0.2s ease;
+            font-size: 10px; font-weight: 900; letter-spacing: 1.5px;
+            text-transform: uppercase; text-decoration: none;
+            padding: 9px 18px; border: 2px solid #000; white-space: nowrap;
+            transition: background 0.2s, color 0.2s;
         }
-        .banner-btn:hover { background: #fff; color: #000; }
-
-        /* ── GLOBAL CLOCK UI ─────────────────────────────────────────────────── */
-        .global-clock {
-            position: absolute; top: 25px; right: 30px;
-            font-size: 14px; font-weight: 900; letter-spacing: 1px;
-            text-transform: uppercase; color: #000; white-space: nowrap;
-            z-index: 9000; transition: opacity 0.3s ease;
-        }
-        body.is-exiting .global-clock { opacity: 0; }
+        .banner-btn:hover { background: #333; }
 
         /* ── MARQUEE BACKGROUND ──────────────────────────────────────── */
         .main-content { flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative; }
@@ -108,8 +114,9 @@
         .marquee-track:first-child { margin-top: 0; }
         .marquee-track:nth-child(even) { margin-left: -7vw; }
 
-        .track-right { animation: scrollRight 12s linear infinite; }
-        .track-left  { animation: scrollLeft  12s linear infinite; }
+        /* Pure CSS looping handles standard speed dynamically */
+        .track-right { animation: scrollRight 8s linear infinite; }
+        .track-left  { animation: scrollLeft  8s linear infinite; }
 
         @keyframes scrollRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} }
         @keyframes scrollLeft  { 0%{transform:translateX(0%)}   100%{transform:translateX(-50%)} }
@@ -139,6 +146,7 @@
             position: absolute; bottom: 30px; width: 100%;
             display: flex; justify-content: center; z-index: 10;
         }
+
         .mac-dock {
             background: linear-gradient(170deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.20) 100%);
             backdrop-filter: blur(55px) saturate(200%) brightness(1.08); -webkit-backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
@@ -147,11 +155,13 @@
             box-shadow: 0 12px 48px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(255,255,255,0.18), inset 1px 0 0 rgba(255,255,255,0.25), inset -1px 0 0 rgba(255,255,255,0.25);
             opacity: 0; animation: dockSlideUp 0.8s cubic-bezier(0.25,1,0.5,1) 1.2s forwards; position: relative;
         }
+
         .mac-dock::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
             background: linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 65%, transparent 100%);
             border-radius: 30px 30px 50% 50% / 28px 28px 18px 18px; pointer-events: none; z-index: 0;
         }
+
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes dockSlideUp   { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
         @keyframes dockSlideDown { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
@@ -174,23 +184,16 @@
             color: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center;
             font-size: 1.4rem; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 6px rgba(0,0,0,0.06);
         }
-        .icon-ig {
-            background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888) !important;
-            border: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
-        }
+        .icon-ig { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888) !important; border: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important; }
         .icon-ig svg { width: 34px; height: 34px; }
-        .icon-td {
-            background: linear-gradient(180deg,#f4f4f4,#e0e0e0) !important; border: 1px solid rgba(0,0,0,0.10) !important;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,0,0,0.08) !important;
-        }
+        .icon-td { background: linear-gradient(180deg,#f4f4f4,#e0e0e0) !important; border: 1px solid rgba(0,0,0,0.10) !important; box-shadow: inset 0 1px 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,0,0,0.08) !important; }
         .icon-td svg { width: 36px; height: 36px; border-radius: 2px; }
         .icon-trash svg { width: 38px; height: 38px; margin-top: 2px; }
 
         .app-tooltip {
             position: absolute; top: -35px; background: rgba(20,20,25,0.88); backdrop-filter: blur(12px);
-            padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700;
-            opacity: 0; pointer-events: none; transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
+            padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
         }
         .dock-app:hover .app-tooltip { opacity: 1; }
 
@@ -200,14 +203,12 @@
             font-size: 8px; font-weight: 800; color: #fff; opacity: 0; z-index: 20;
         }
         .app-badge.visible { opacity: 1; }
-        .recording-dot {
-            width: 5px; height: 5px; background: #ff3b30; border-radius: 50%;
-            animation: pulse-dot 2s ease-in-out infinite;
-        }
+        .recording-dot { width: 5px; height: 5px; background: #ff3b30; border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
 
         /* ── MOBILE ──────────────────────────────────────────────────── */
         @media (max-width: 600px) {
-            .global-clock { font-size: 11px; top: 20px; right: 20px; letter-spacing: 0.8px; }
+            .top-nav-bar { top: 20px; left: 20px; right: 20px; }
+            .date-time-display { font-size: 11px; letter-spacing: 0.8px; }
             .track-right, .track-left { animation-duration: 35s; }
             .marquee-track:first-child, .marquee-track:last-child { display: none; }
             img.cuceu-img { height: 4rem; margin-right: 4vw; }
@@ -215,7 +216,8 @@
             .mac-dock { gap: 10px; padding: 8px 14px; border-radius: 26px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
-            #now-playing-banner { top: 20px; max-width: 340px; height: 54px; }
+            .banner-btn { padding: 7px 12px; font-size: 9px; }
+            #banner-track { font-size: 11px; }
         }
     </style>
 </head>
@@ -223,7 +225,12 @@
 
     <div id="page-transition-overlay"></div>
 
-    <!-- NOW PLAYING BANNER -->
+    <div class="top-nav-bar">
+        <div class="date-time-display">
+            <span id="mac-clock">MONDAY | 12:00 AM</span>
+        </div>
+    </div>
+
     <div id="now-playing-banner">
         <div class="banner-inner">
             <span class="banner-live-dot"></span>
@@ -236,26 +243,37 @@
         </div>
     </div>
 
-    <!-- GLOBAL TIME & DATE -->
-    <div class="global-clock" id="mac-clock">MONDAY | 12:00 AM</div>
-
     <div class="main-content">
         <div id="logo-wrapper">
-            <!-- 8 tracks exactly as provided -->
-            <div class="marquee-track track-right"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-left"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-right"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-left"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-right"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-left"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-right"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
-            <div class="marquee-track track-left"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"></div>
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+             <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+             <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
         </div>
     </div>
 
     <div class="mac-dock-container">
         <div class="mac-dock">
-
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div>
                 <div class="app-icon icon-ig">
@@ -310,7 +328,6 @@
                     </svg>
                 </div>
             </a>
-
         </div>
     </div>
 
@@ -329,13 +346,16 @@
             });
         });
 
-        // ── BFI CACHE GLITCH FIX (Reset Marquee animations on pageshow) ──
-        window.addEventListener('pagehide', () => {
-            document.querySelectorAll('.marquee-track').forEach(t => t.style.animation = 'none');
-        });
+        // ── MARQUEE FIX (Strict CSS & Reflow for bfcache) ────────────────
         window.addEventListener('pageshow', e => {
-            document.querySelectorAll('.marquee-track').forEach(t => t.style.animation = '');
             if (e.persisted) {
+                const tracks = document.querySelectorAll('.marquee-track');
+                tracks.forEach(t => {
+                    t.style.animation = 'none';
+                    void t.offsetWidth; // Force reflow
+                    t.style.animation = '';
+                });
+                
                 const ov = document.getElementById('page-transition-overlay');
                 ov.classList.remove('loaded','leaving');
                 document.body.classList.remove('is-exiting');
@@ -343,7 +363,7 @@
             }
         });
 
-        // ── GLOBAL UI CLOCK ──────────────────────────────────────────────
+        // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────────
         const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
         function updateClock() {
             const n = new Date();
@@ -358,8 +378,7 @@
         let bannerShown = false;
 
         async function checkStream() {
-            const proxy = "https://api.allorigins.win/raw?url=" +
-                encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
+            const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
             try {
                 const data = await fetch(proxy, { cache: "no-store" }).then(r => r.json());
                 const src  = data.icestats.source;
