@@ -12,218 +12,169 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
         }
 
-        /* --- THE BACKGROUND CONTAINER --- */
+        /* ── THE BACKGROUND CONTAINER ────────────────────────────────────────── */
         #app-container {
             width: 100vw; height: 100dvh; 
             display: flex; flex-direction: column;
             background-color: #ffffff;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
             transform-origin: center center;
             animation: bgExpand 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
+        body.is-exiting #app-container { animation: bgShrink 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards; }
 
-        body.is-exiting #app-container {
-            animation: bgShrink 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards;
-        }
+        @keyframes bgExpand { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes bgShrink { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; filter: blur(5px); } }
 
-        @keyframes bgExpand {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes bgShrink {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0; filter: blur(5px); }
-        }
-
-        /* --- TOP NAV & GLOBAL CLOCK --- */
+        /* ── TOP NAV BAR (Standardized) ──────────────────────────────────────── */
         .top-nav-bar {
-            position: absolute; 
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 100;
+            position: absolute; top: 30px; left: 30px; right: 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
         }
         .back-btn-top {
-            position: absolute; top: 25px; left: 30px;
             color: #000; text-decoration: none; font-weight: 800; 
-            text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
-            border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
-            transition: background-color 0.2s ease, color 0.2s ease; background: white; pointer-events: auto;
+            text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
+            border: 2px solid #000; padding: 6px 14px; background: #fff;
+            transition: all 0.2s ease;
         }
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
-        .global-clock {
-            position: absolute; top: 25px; right: 30px;
-            font-size: 14px; font-weight: 900; letter-spacing: 1px;
-            text-transform: uppercase; color: #000; white-space: nowrap;
+        .date-time-display {
+            font-size: clamp(11px, 1.3vw, 15px); font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1.5px; color: #000;
         }
 
-        /* --- TICKER TAPE OVERHAUL --- */
+        /* ── MARQUEE TICKER TAPE (CSS Looping) ───────────────────────────────── */
         .ticker-tape { 
             position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
-            height: 50px; /* Increased Size */
-            padding: 0; 
-            border-top: 2px solid #000; border-bottom: 2px solid #000; 
+            height: 52px; /* Increased size */
             display: flex; align-items: center; z-index: 60; 
+            border-top: 3px solid #000; border-bottom: 3px solid #000;
         }
         .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
         
         .marquee-wrapper { 
-            display: flex; 
-            white-space: nowrap; 
-            align-items: center; 
-            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease; 
-            will-change: opacity, transform, filter; 
-            opacity: 1; filter: blur(0px);
+            display: flex; white-space: nowrap; align-items: center; 
+            will-change: transform;
         }
         
-        #top-marquee { animation: marquee 20s linear infinite; width: fit-content; }
-        #bottom-marquee { animation: marquee 25s linear infinite; width: fit-content; } /* Offset timing */
+        .ticker-top .marquee-wrapper { animation: scrollMarquee 15s linear infinite; }
+        .ticker-bottom .marquee-wrapper { animation: scrollMarquee 15s linear infinite reverse; animation-delay: -7.5s; } /* Out of sync offset */
 
-        .marquee-wrapper.refreshing { 
-            opacity: 0; transform: scale(0.98); filter: blur(4px);
-        }
-        
-        .ticker-item { display: inline-flex; align-items: center; }
-        .ticker-art { height: 26px; width: 26px; margin: 0 15px; object-fit: cover; display: none; border-radius: 4px; }
+        .ticker-item { display: inline-flex; align-items: center; margin-right: 30px; }
+        .ticker-art { height: 26px; width: 26px; margin: 0 15px; object-fit: cover; display: none; border-radius: 0; border: 1.5px solid #fff; }
         .ticker-art.has-art { display: block; }
         
         .song-display { 
-            font-size: 1.4rem; /* Increased Typography */
-            line-height: 1;
+            font-size: 1.3rem; line-height: 1;
             font-weight: 900; text-transform: uppercase; letter-spacing: 2px; 
             display: inline-block; transform: translateY(1px); 
         }
         
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         .ticker-top { transform: translateY(-100%); animation: slideTopIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
         .ticker-bottom { transform: translateY(100%); animation: slideBottomIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
-        
         body.is-exiting .ticker-top { animation: slideTopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards; }
         body.is-exiting .ticker-bottom { animation: slideBottomOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards; }
 
-        @keyframes slideTopIn { to { transform: translateY(0); } }
-        @keyframes slideBottomIn { to { transform: translateY(0); } }
-        @keyframes slideTopOut { to { transform: translateY(-100%); } }
-        @keyframes slideBottomOut { to { transform: translateY(100%); } }
+        @keyframes slideTopIn { to { transform: translateY(0); } } @keyframes slideBottomIn { to { transform: translateY(0); } }
+        @keyframes slideTopOut { to { transform: translateY(-100%); } } @keyframes slideBottomOut { to { transform: translateY(100%); } }
 
-        /* --- THE CENTER CONTAINER (WINDOW CONCEPT) --- */
-        .center-group {
-            position: absolute; top: 50%; left: 50%;
-            display: flex; flex-direction: column; align-items: center;
-            transform: translate(-50%, -50%);
-            z-index: 20; width: 100%;
+        /* ── WINDOW CONCEPT & CENTER LAYOUT ──────────────────────────────────── */
+        #center-block {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            width: 100%; flex: 1; z-index: 20; padding: 20px; box-sizing: border-box;
+            opacity: 0; animation: contentJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
         }
+        body.is-exiting #center-block { animation: contentJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
+        
+        @keyframes contentJumpUp { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes contentJumpDown { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(40px) scale(0.95); } }
 
-        .window-container {
-            width: 90vw; max-width: 500px;
-            height: 55vh; min-height: 380px;
-            background-image: url('./IMG_1148.webp'); 
-            background-size: cover; background-position: center;
-            border: 2px solid #000; border-radius: 16px;
+        #window-container {
+            width: 100%; max-width: 700px; aspect-ratio: 16 / 7;
+            background-image: url('./IMG_1148.webp'); background-size: cover; background-position: center;
+            border: 3px solid #000; box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            position: relative; margin-bottom: 25px;
-            
-            opacity: 0; transform: scale(1.1);
-            animation: windowPopIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
-            will-change: transform, opacity;
+            margin-bottom: 25px; position: relative;
         }
 
-        body.is-exiting .window-container { animation: windowPopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s forwards; }
-
-        @keyframes windowPopIn {
-            0% { opacity: 0; transform: scale(1.1) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes windowPopOut {
-            0% { opacity: 1; transform: scale(1) translateY(0); }
-            100% { opacity: 0; transform: scale(1.1) translateY(20px); }
-        }
-
-        .logo-wrapper-img { display: flex; align-items: flex-end; justify-content: center; gap: 0; }
-        .cuceu-logo-img { height: clamp(4rem, 15vw, 6.5rem); width: auto; user-select: none; -webkit-user-drag: none; }
+        .logo-wrapper-img { display: flex; align-items: flex-end; justify-content: center; gap: 0; z-index: 2;}
+        .cuceu-logo-img { height: clamp(3.5rem, 12vw, 6.5rem); width: auto; user-select: none; -webkit-user-drag: none; }
         .fm-text { 
-            font-size: clamp(1.5rem, 5vw, 2.5rem); 
+            font-size: clamp(1.3rem, 4vw, 2.2rem); 
             font-weight: 900; letter-spacing: -2px; 
-            padding-bottom: 0.5rem; margin-left: -5px; 
+            padding-bottom: 0.3rem; margin-left: -5px; 
+            color: #000;
         }
         
         .live-status { 
-            font-size: 1.5rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
-            margin-bottom: 15px; display: inline-flex; align-items: center; gap: 10px;
+            font-size: 1.3rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
+            margin-bottom: 5px; display: inline-flex; align-items: center; gap: 10px; color: #000;
+            z-index: 2; text-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
         
-        .pulse-dot { height: 14px; width: 14px; background-color: #777; border-radius: 50%; }
+        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
         .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
         .pulse-dot.buffering { background-color: #ffcc00; box-shadow: 0 0 12px #ffcc00; animation: pulse-yellow 1s infinite; }
         .pulse-dot.on-air { background-color: #ff3b30; box-shadow: 0 0 12px #ff3b30; animation: pulse-red 1.2s infinite; }
         
-        @keyframes pulse-yellow { 0%,100% { transform: scale(0.85); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
-        @keyframes pulse-red { 0%,100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } }
+        @keyframes pulse-yellow { 0%, 100% { transform: scale(0.85); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
+        @keyframes pulse-red { 0%, 100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } }
 
-        /* --- CONTROLS AREA --- */
-        #controls-area {
-            display: flex; flex-direction: column; align-items: center; z-index: 30; width: 100%;
-            opacity: 0; transform: translateY(20px);
-            animation: controlsJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
-        }
-        body.is-exiting #controls-area { animation: controlsJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
-
-        @keyframes controlsJumpUp { to { opacity: 1; transform: translateY(0); } }
-        @keyframes controlsJumpDown { to { opacity: 0; transform: translateY(20px); } }
-
+        /* ── BUTTON & HISTORY AREA ───────────────────────────────────────────── */
         #btn { 
-            background-color: #000; color: #fff; border: 2px solid #000; border-radius: 8px;
-            width: 170px; height: 56px; display: inline-flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; text-transform: uppercase; 
-            font-weight: 900; letter-spacing: 2px; cursor: pointer; 
-            transition: all 0.2s ease; margin-bottom: 20px; padding: 0;
+            background-color: #000; color: #fff; border: 2px solid #000;
+            width: 180px; height: 56px; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; 
+            cursor: pointer; transition: all 0.2s ease; margin-bottom: 25px; padding: 0;
         }
-        #btn:hover { background-color: #fff; color: #000; }
+        #btn:hover { background-color: #333; }
+        #btn:active { transform: scale(0.96); }
 
-        /* --- HISTORY DROPDOWN OVERHAUL --- */
         .history-wrapper { display: flex; flex-direction: column; width: 320px; position: relative; }
         #history-toggle { 
-            background: none; border: none; padding: 5px; color: #000; font-size: 0.85rem; 
-            font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto;
+            background: none; border: none; padding: 5px; color: #000; font-size: 0.9rem; 
+            font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto; letter-spacing: 1px;
         }
         
         #history-list { 
-            position: absolute; top: 100%; left: 0; width: 100%; list-style: none; margin: 10px 0 0 0;
-            padding: 0; overflow: hidden; box-sizing: border-box; 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 2px solid #000; border-radius: 12px; z-index: 50; 
-            display: grid; grid-template-rows: 0fr; opacity: 0;
-            transition: grid-template-rows 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, border-color 0.4s;
-            border-color: transparent;
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 100%;
+            list-style: none; padding: 0; margin-top: 15px; border-radius: 0;
+            max-height: 0; opacity: 0; overflow: hidden; box-sizing: border-box; 
+            transform-origin: top center; background: #fff;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.4s ease; 
+            z-index: 50; text-align: center;
         }
         #history-list.open { 
-            grid-template-rows: 1fr; opacity: 1; border-color: #000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .history-inner {
-            overflow-y: auto; max-height: 220px;
+            max-height: 250px; opacity: 1; padding: 10px 0; overflow-y: auto; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #000;
         }
         
+        /* Overhauled Clean List Items */
         .history-item { 
-            padding: 12px 15px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; 
-            text-align: center; color: #111;
+            padding: 8px 10px; font-size: 0.8rem; font-weight: 800; 
+            text-transform: uppercase; border-bottom: none; 
+            color: #333; opacity: 0.85; transition: opacity 0.2s;
         }
-        /* Borders removed per instruction for a cleaner look */
+        .history-item:hover { opacity: 1; color: #000; }
 
-        /* --- MOBILE LAYOUT OPTIMIZATIONS --- */
+        /* ── MOBILE LAYOUT OPTIMIZATIONS ─────────────────────────────────────── */
         @media (max-width: 600px) {
-            .back-btn-top { top: 15px; left: 20px; padding: 6px 12px; font-size: 11px; border-width: 1.5px; }
-            .global-clock { font-size: 11px; top: 20px; right: 20px; letter-spacing: 0.8px; }
-            .live-status { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
-            .window-container { min-height: 320px; margin-bottom: 20px; }
-            .ticker-tape { height: 40px; }
+            .top-nav-bar { top: 20px; left: 20px; right: 20px; }
+            .back-btn-top { padding: 5px 10px; font-size: 11px; }
+            .date-time-display { font-size: 11px; letter-spacing: 0.8px; }
+            .live-status { font-size: 1.1rem; letter-spacing: 2px; }
+            
+            #window-container { width: 95%; aspect-ratio: 16/10; margin-bottom: 20px; }
+            .ticker-tape { height: 42px; }
             .ticker-art { height: 20px; width: 20px; margin: 0 10px; }
-            .song-display { font-size: 1.1rem; letter-spacing: 1px; }
+            .song-display { font-size: 1rem; letter-spacing: 1px; }
+            
             #btn { width: 160px; height: 50px; font-size: 1rem; }
             .history-wrapper { width: min(85vw, 290px); }
-            .history-inner { max-height: 180px; }
         }
     </style>
 </head>
@@ -233,12 +184,14 @@
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
         
         <div class="top-nav-bar">
-            <a href="/" class="back-btn-top internal-link">← Back</a>
-            <div class="global-clock" id="mac-clock">MONDAY | 00:00 AM</div>
+            <a href="/" class="back-btn-top internal-link">← BACK</a>
+            <div class="date-time-display">
+                <span id="live-single-line">MONDAY | 12:00 AM</span>
+            </div>
         </div>
         
-        <div class="center-group">
-            <div class="window-container">
+        <div id="center-block">
+            <div id="window-container">
                 <div class="live-status">
                     <div class="pulse-dot" id="pulse-indicator"></div> 
                     <span id="center-status">CHECKING...</span>
@@ -249,12 +202,10 @@
                 </div>
             </div>
 
-            <div id="controls-area">
-                <button id="btn">LISTEN NOW</button>
-                <div class="history-wrapper">
-                    <div id="history-toggle">Recently Played ▼</div>
-                    <div id="history-list"><div class="history-inner" id="history-inner-content"><div class="history-item">Loading...</div></div></div>
-                </div>
+            <button id="btn">LISTEN NOW</button>
+            <div class="history-wrapper">
+                <button id="history-toggle">Recently Played ▼</button>
+                <ul id="history-list"><li class="history-item">Loading...</li></ul>
             </div>
         </div>
 
@@ -277,20 +228,21 @@
 
     const STREAM_BASE = "https://stream.cuceu.co.uk";
     
-    // Global Clock logic
+    // Single Line Clock
     function updateDateTime() {
         const now = new Date();
         const days = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+        const day = days[now.getDay()];
         let h = now.getHours() % 12 || 12;
         let m = now.getMinutes().toString().padStart(2, '0');
         let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-        document.getElementById('mac-clock').innerText = `${days[now.getDay()]} | ${h}:${m} ${ampm}`;
+        document.getElementById('live-single-line').innerText = `${day} | ${h}:${m} ${ampm}`;
     }
     setInterval(updateDateTime, 1000); updateDateTime();
 
     const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
           centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
-          historyList = document.getElementById("history-list"), historyInner = document.getElementById("history-inner-content"), historyToggle = document.getElementById("history-toggle"),
+          historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
           topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee");
 
     let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", currentArtUrl = "", lastTickerState = ""; 
@@ -313,33 +265,23 @@
     async function fetchGlobalHistory() { 
         try { 
             const data = await directFetch(`${STREAM_BASE}/history.json`); 
-            if (data) historyInner.innerHTML = data.filter(t => t).map(track => `<div class="history-item">${track}</div>`).join(''); 
+            if (data) historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); 
         } catch(e) {} 
     }
 
+    // Pure CSS Marquee population
     function updateTicker(base) {
-        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:26px"></div>`;
+        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:26px; height:26px; margin:0 15px;"></div>`;
         const tickerState = `${base}|${currentArtUrl || ""}`;
         if (tickerState === lastTickerState) return;
         lastTickerState = tickerState;
-        currentTrackText = base;
         
         const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
-        const contentTop = Array(12).fill(itemHtml).join('');
-        // Bottom loop matches top visually but animation duration CSS handles the offset
-        const contentBottom = Array(12).fill(itemHtml).join('');
+        // Load enough to easily overflow screen width times two for infinite CSS scroll trick
+        const content = Array(20).fill(itemHtml).join(''); 
         
-        [topMarquee, bottomMarquee].forEach(m => m.classList.add('refreshing'));
-        
-        setTimeout(() => {
-            topMarquee.innerHTML = contentTop + contentTop;
-            bottomMarquee.innerHTML = contentBottom + contentBottom;
-            
-            topMarquee.style.animationDuration = `${(base.length + 20) * 1.5}s`;
-            bottomMarquee.style.animationDuration = `${(base.length + 20) * 2.1}s`;
-
-            [topMarquee, bottomMarquee].forEach(m => m.classList.remove('refreshing'));
-        }, 300);
+        topMarquee.innerHTML = content + content;
+        bottomMarquee.innerHTML = content + content;
     }
 
     function setStatus(text, dotClass) { 
