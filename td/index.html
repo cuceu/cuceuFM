@@ -6,10 +6,7 @@
     <title>cuceu.td</title>
     <link rel="icon" href="data:image/svg+xml,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><rect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><path d=%22M 50 0 L 50 100 M 0 50 L 100 50%22 stroke=%22%23111%22 stroke-width=%225%22/><path d=%22M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50%22 stroke=%22%23111%22 stroke-width=%225%22/><rect x=%2212%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2212%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><circle cx=%2250%22 cy=%2250%22 r=%2223%22 fill=%22%23ffffff%22 stroke=%22%23111%22 stroke-width=%225%22 /><rect x=%2243%22 y=%2243%22 width=%2214%22 height=%2214%22 fill=%22%23111%22 /></svg>">
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
+        * { box-sizing: border-box; user-select: none; }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
@@ -18,7 +15,7 @@
             overflow: hidden; 
         }
 
-        /* --- SMOOTH PAGE TRANSITIONS --- */
+        /* ── SMOOTH PAGE TRANSITIONS ───────────────────────────────────── */
         #page-transition-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #ffffff; z-index: 99999;
@@ -27,15 +24,13 @@
         }
         #page-transition-overlay.loaded { opacity: 0; }
 
-        /* --- THE GENIE CONTAINER --- */
+        /* ── THE GENIE CONTAINER ───────────────────────────────────────── */
         #app-container {
-            width: 100vw; height: 100vh;
-            display: flex; flex-direction: column;
-            background-color: #ffffff;
-            transform-origin: 40% 100%; /* Sucks down into the 2nd dock slot */
+            width: 100vw; height: 100vh; display: flex; flex-direction: column;
+            background-color: #ffffff; transform-origin: 40% 100%;
             transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
-            transform: scale(1) translateY(0);
-            opacity: 1; border-radius: 0; position: relative; overflow: hidden;
+            transform: scale(1) translateY(0); opacity: 1; border-radius: 0;
+            position: relative; overflow: hidden;
         }
 
         .genie-state {
@@ -43,63 +38,63 @@
             opacity: 0 !important; border-radius: 100px !important;
         }
 
-        /* --- UI SEQUENCED ANIMATIONS --- */
+        /* ── TOP NAV BAR (Standardized) ──────────────────────────────── */
+        .top-nav-bar {
+            position: absolute; top: 30px; left: 30px; right: 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        .back-btn-top {
+            color: #000; text-decoration: none; font-weight: 800; 
+            text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
+            border: 2px solid #000; padding: 6px 14px; background: #fff;
+            transition: all 0.2s ease;
+            animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity: 0; transform: translateY(-20px);
+        }
+        .back-btn-top:hover { background-color: #000; color: #fff; }
+
+        .date-time-display {
+            font-size: clamp(11px, 1.3vw, 15px); font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1.5px; color: #000;
+            animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity: 0; transform: translateY(-20px);
+        }
+
+        body.is-exiting .back-btn-top, body.is-exiting .date-time-display { 
+            animation: slideUpToTop 0.3s cubic-bezier(0.25,1,0.5,1) forwards; 
+        }
+
+        /* ── UI SEQUENCED ANIMATIONS ─────────────────────────────────── */
         .logo-group { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
         .td-window { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; opacity: 0; transform: translateY(40px); }
-        .back-btn-top { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity: 0; transform: translateY(-20px); }
-
-        body.is-exiting .back-btn-top { animation: slideUpToTop 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .td-window { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .logo-group { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .global-clock { opacity: 0; }
+        
+        body.is-exiting .td-window, body.is-exiting .logo-group { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
 
         @keyframes breatheUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes breatheDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
         @keyframes slideDownFromTop { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes slideUpToTop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
 
-
-        /* --- HEADER SECTION --- */
+        /* ── HEADER SECTION ──────────────────────────────────────────── */
         .brand-header {
-            background-color: #ffffff; padding: 30px 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; flex-shrink: 0; height: 160px;
+            background-color: #ffffff; padding: 60px 20px 20px; /* Space for absolute nav */
+            display: flex; flex-direction: column; align-items: center;
+            position: relative; flex-shrink: 0;
         }
 
-        .back-btn-top {
-            position: absolute; left: 30px; top: 25px;
-            color: #000; text-decoration: none; font-weight: 800; 
-            text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
-            border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-        .back-btn-top:hover { background-color: #000; color: #fff; }
-
-        .global-clock {
-            position: absolute; top: 25px; right: 30px;
-            font-size: 14px; font-weight: 900; letter-spacing: 1px;
-            text-transform: uppercase; color: #000; white-space: nowrap;
-            transition: opacity 0.3s ease;
-        }
-
-        .logo-group { display: flex; align-items: flex-end; justify-content: center; }
-        
-        .header-cuceu-img {
-            height: clamp(3rem, 10vw, 7rem); width: auto; object-fit: contain; z-index: 2;
-        }
-
+        /* Image logo + tight text binding */
+        .logo-group { display: flex; align-items: flex-end; justify-content: center; margin-top: 10px; }
+        .cuceu-logo-img { height: clamp(4rem, 15vw, 7rem); width: auto; user-select: none; -webkit-user-drag: none; }
         .td-text { 
-            font-size: clamp(1.5rem, 5vw, 4rem); font-weight: 400; 
-            text-transform: lowercase; color: #000; letter-spacing: -2px; 
-            margin-left: -10px; /* Pulls closely against image */
-            line-height: 1; margin-bottom: 5px; z-index: 1;
+            font-size: clamp(2rem, 6vw, 4.5rem); font-weight: 500; 
+            text-transform: lowercase; color: #000; letter-spacing: -3px; 
+            margin-left: -18px; /* Tightly pulling to png */
+            padding-bottom: 2px;
         }
 
-        /* --- TOUCHDESIGNER WINDOW --- */
+        /* ── TOUCHDESIGNER WINDOW ────────────────────────────────────── */
         .td-window {
-            flex-grow: 1; margin: 0 30px 30px 30px;
-            border-radius: 12px; background-color: #1a1a1a; color: #d0d0d0;
-            display: flex; flex-direction: column; overflow: hidden;
+            flex-grow: 1; margin: 0 30px 30px 30px; border-radius: 12px; 
+            background-color: #1a1a1a; color: #d0d0d0; display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333; position: relative;
         }
 
@@ -115,95 +110,65 @@
             padding: 0 15px; font-size: 12px; border-bottom: 1px solid #111; color: #aaa; z-index: 20;
         }
 
-        /* The Grid Editor Background */
         .network-editor {
             flex-grow: 1; position: relative; background-color: #222222;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-            background-size: 40px 40px; cursor: crosshair;
-            overflow: hidden; touch-action: none;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px; cursor: crosshair; overflow: hidden; touch-action: none;
         }
 
-        #network-canvas {
-            position: absolute; top: 0; left: 0; width: 0; height: 0;
-            transform-origin: 0 0; 
-        }
+        #network-canvas { position: absolute; top: 0; left: 0; width: 0; height: 0; transform-origin: 0 0; }
+        #wire-layer { position: absolute; top: 0; left: 0; width: 2000px; height: 2000px; pointer-events: none; z-index: 1; overflow: visible; }
 
-        #wire-layer {
-            position: absolute; top: 0; left: 0; width: 2000px; height: 2000px;
-            pointer-events: none; z-index: 1; overflow: visible;
-        }
-
-        /* --- ON-SCREEN NAV CONTROLS --- */
+        /* ── ON-SCREEN NAV CONTROLS ──────────────────────────────────── */
         .nav-controls {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; flex-direction: column; gap: 5px;
-            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(5px);
-            padding: 10px; border-radius: 8px; border: 1px solid #333;
+            position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 5px;
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(5px); padding: 10px; border-radius: 8px; border: 1px solid #333;
             z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
         .nav-row { display: flex; justify-content: center; gap: 5px; }
         .nav-btn {
-            width: 32px; height: 32px; background: #333; color: #aaa;
-            border: 1px solid #444; border-radius: 4px;
-            cursor: pointer; font-size: 14px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.1s;
+            width: 32px; height: 32px; background: #333; color: #aaa; border: 1px solid #444; border-radius: 4px;
+            cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.1s;
         }
         .nav-btn:hover { background: #555; color: #fff; }
         .nav-btn:active { background: #111; transform: scale(0.95); }
         .nav-divider { width: 100%; height: 1px; background: #444; margin: 4px 0; }
 
-        /* --- THE NODES --- */
+        /* ── THE NODES ───────────────────────────────────────────────── */
         .td-node {
             position: absolute; background-color: #1e1e1e; border: 1px solid #000;
-            border-radius: 2px; box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-            cursor: pointer; z-index: 5;
+            border-radius: 2px; box-shadow: 2px 2px 6px rgba(0,0,0,0.4); cursor: pointer; z-index: 5;
         }
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
         #project-node { width: 270px; left: calc(50vw - 280px); top: calc(50vh - 220px); }
         #download-node { width: 140px; left: calc(50vw + 70px); top: calc(50vh - 120px); }
-        
         #project-node-2 { width: 270px; left: calc(50vw - 150px); top: calc(50vh + 60px); }
         #download-node-2 { width: 140px; left: calc(50vw + 200px); top: calc(50vh + 140px); }
 
         .node-header-top { background-color: #7b4b8a; color: white; padding: 3px 6px; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
         .node-header-comp { background-color: #555555; color: white; padding: 3px 6px; font-size: 10px; font-weight: 600; display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap;}
 
-        /* --- HOVER FULL NAME TOOLTIP --- */
         .node-fullname-tooltip {
             position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85); color: #fff; border: 1px solid #444;
             padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
             white-space: nowrap; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease; z-index: 100;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .td-node:hover .node-fullname-tooltip { opacity: 1; transform: translateX(-50%) translateY(-5px); }
 
-        /* Node Image Viewer */
-        .node-viewer { 
-            background-color: #000; background-size: cover; background-position: center;
-            position: relative; overflow: hidden; 
-        }
-        
+        .node-viewer { background-color: #000; background-size: cover; background-position: center; position: relative; overflow: hidden; }
         #project-node .node-viewer, #project-node-2 .node-viewer { height: 135px; }
         #download-node .node-viewer, #download-node-2 .node-viewer { height: 70px; }
 
-        /* Thumb Overlay Elements */
         .play-overlay, .dl-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
-            color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-            transition: background 0.2s ease;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); transition: background 0.2s ease;
         }
         .dl-overlay { flex-direction: column; gap: 0px; }
-        
         .td-node:hover .play-overlay, .td-node:hover .dl-overlay { background: rgba(0,0,0,0.1); }
-
         .play-overlay span { font-size: 24px; }
         .dl-overlay span:first-child { font-size: 20px; }
         .dl-overlay span:last-child { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
@@ -227,31 +192,23 @@
             background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center;
             z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-
         .video-modal.active { opacity: 1; pointer-events: auto; }
-
-        .video-container { 
-            position: relative; height: 92vh; aspect-ratio: 9/16; width: auto; max-width: 95vw;
-        }
-        
+        .video-container { position: relative; height: 92vh; aspect-ratio: 9/16; width: auto; max-width: 95vw; }
         .close-hint { position: absolute; top: -30px; width: 100%; text-align: center; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
         a { text-decoration: none; color: inherit; }
 
         @media (max-width: 768px) {
-            .global-clock { font-size: 11px; top: 20px; right: 20px; letter-spacing: 0.8px; }
-            .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
+            .top-nav-bar { top: 20px; left: 20px; right: 20px; }
+            .back-btn-top { padding: 5px 10px; font-size: 11px; }
+            .date-time-display { font-size: 11px; letter-spacing: 0.8px; }
             
-            .brand-header { height: 120px; }
             .td-window { margin: 0 10px 10px 10px; }
             
-            /* Responsive Scaling for Mobile! */
             #project-node { left: calc(50vw - 180px); top: calc(50vh - 260px); width: 210px; }
             #download-node { left: calc(50vw + 50px); top: calc(50vh - 190px); width: 110px; }
-            
             #project-node-2 { left: calc(50vw - 150px); top: calc(50vh - 40px); width: 210px; }
             #download-node-2 { left: calc(50vw + 80px); top: calc(50vh + 30px); width: 110px; }
-            
             #project-node .node-viewer, #project-node-2 .node-viewer { height: 105px; }
         }
     </style>
@@ -261,11 +218,17 @@
     <div id="page-transition-overlay"></div>
 
     <div id="app-container" class="genie-state">
-        <div class="brand-header">
+        
+        <div class="top-nav-bar">
             <a href="/" class="back-btn-top internal-link">← Home</a>
-            <div class="global-clock" id="mac-clock">MONDAY | 00:00 AM</div>
+            <div class="date-time-display">
+                <span id="mac-clock">MONDAY | 12:00 AM</span>
+            </div>
+        </div>
+
+        <div class="brand-header">
             <div class="logo-group">
-                <img src="cuceugrta.png" alt="CUCEU" class="header-cuceu-img">
+                <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
                 <span class="td-text">.td</span>
             </div>
         </div>
@@ -276,12 +239,9 @@
                     <span>File</span><span>Edit</span><span>Dialogs</span><span>View</span><span>Window</span><span>Help</span>
                 </div>
             </div>
-            <div class="path-bar">
-                CUCEU/Projects/TouchDesigner
-            </div>
+            <div class="path-bar">CUCEU/Projects/TouchDesigner</div>
 
             <div class="network-editor" id="network-editor">
-                
                 <div class="nav-controls" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
                     <div class="nav-row"><button class="nav-btn" onclick="panView(0, 50)">▲</button></div>
                     <div class="nav-row">
@@ -297,7 +257,6 @@
                 </div>
 
                 <div id="network-canvas">
-                    
                     <svg id="wire-layer">
                         <path id="wire-path-1" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
                         <path id="wire-path-2" stroke="#a0a0a0" stroke-width="2" fill="none" opacity="0.6"/>
@@ -306,14 +265,8 @@
                     <div class="td-node video-node" id="project-node" data-video-src="https://player.vimeo.com/video/1192984118?title=0&byline=0&portrait=0&autoplay=1">
                         <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser</div>
                         <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Sully-Model Collapse...</span><span>✖</span></div>
-                        
-                        <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');">
-                            <div class="play-overlay"><span>▶</span></div>
-                        </div>
-                        
-                        <div class="node-footer">
-                            1080 x 1920<br><span class="format-text">MOV / H.264</span>
-                        </div>
+                        <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');"><div class="play-overlay"><span>▶</span></div></div>
+                        <div class="node-footer">1080 x 1920<br><span class="format-text">MOV / H.264</span></div>
                         <div class="plug plug-out" id="plug-out-1"></div>
                     </div>
 
@@ -321,33 +274,17 @@
                         <div class="td-node" id="download-node" title="Click to download .toe file">
                             <div class="node-fullname-tooltip">Sully - Model Collapse Visualiser.toe</div>
                             <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Sully -Model Collapse...</span><span>↓</span></div>
-                            
-                            <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');">
-                                <div class="dl-overlay">
-                                    <span>⬇</span>
-                                    <span>.TOE</span>
-                                </div>
-                            </div>
-
-                            <div class="node-footer" style="font-size: 8px;">
-                                Download<br><span class="format-text">.TOE FILE</span>
-                            </div>
+                            <div class="node-viewer" style="background-image: url('sullyjpeg.jpg');"><div class="dl-overlay"><span>⬇</span><span>.TOE</span></div></div>
+                            <div class="node-footer" style="font-size: 8px;">Download<br><span class="format-text">.TOE FILE</span></div>
                             <div class="plug plug-in" id="plug-in-1"></div>
                         </div>
                     </a>
 
-
                     <div class="td-node video-node" id="project-node-2" data-video-src="https://player.vimeo.com/video/1193012409?title=0&byline=0&portrait=0&autoplay=1">
                         <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video</div>
                         <div class="node-header-top"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>✖</span></div>
-                        
-                        <div class="node-viewer" style="background-image: url('poatejpeg.jpg');">
-                            <div class="play-overlay"><span>▶</span></div>
-                        </div>
-                        
-                        <div class="node-footer">
-                            1080 x 1920<br><span class="format-text">MOV / H.264</span>
-                        </div>
+                        <div class="node-viewer" style="background-image: url('poatejpeg.jpg');"><div class="play-overlay"><span>▶</span></div></div>
+                        <div class="node-footer">1080 x 1920<br><span class="format-text">MOV / H.264</span></div>
                         <div class="plug plug-out" id="plug-out-2"></div>
                     </div>
 
@@ -355,24 +292,13 @@
                         <div class="td-node" id="download-node-2" title="Click to download .toe file">
                             <div class="node-fullname-tooltip">Printesa De Aur - Poate Lyric Music Video.toe</div>
                             <div class="node-header-comp"><span style="text-overflow: ellipsis; overflow: hidden;">Printesa De Aur...</span><span>↓</span></div>
-                            
-                            <div class="node-viewer" style="background-image: url('poatejpeg.jpg');">
-                                <div class="dl-overlay">
-                                    <span>⬇</span>
-                                    <span>.TOE</span>
-                                </div>
-                            </div>
-
-                            <div class="node-footer" style="font-size: 8px;">
-                                Download<br><span class="format-text">.TOE FILE</span>
-                            </div>
+                            <div class="node-viewer" style="background-image: url('poatejpeg.jpg');"><div class="dl-overlay"><span>⬇</span><span>.TOE</span></div></div>
+                            <div class="node-footer" style="font-size: 8px;">Download<br><span class="format-text">.TOE FILE</span></div>
                             <div class="plug plug-in" id="plug-in-2"></div>
                         </div>
                     </a>
-
                 </div>
             </div>
-
             <div class="timeline">
                 <span>Start: 1</span><span>End: 600</span><span class="play-btn">▶</span>
                 <span>FPS: 60</span><span style="color: #4a90e2;">00:00:00:00</span>
@@ -388,23 +314,10 @@
     </div>
 
     <script>
-        // --- GLOBAL CLOCK LOGIC ---
-        function updateDateTime() {
-            const now = new Date();
-            const days = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-            let h = now.getHours() % 12 || 12;
-            let m = now.getMinutes().toString().padStart(2, '0');
-            let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} | ${h}:${m} ${ampm}`;
-        }
-        setInterval(updateDateTime, 1000); updateDateTime();
-
-        // --- COMBINED GENIE & REVERSE EXIT ANIMATION LOGIC ---
         document.addEventListener("DOMContentLoaded", () => {
             const overlay = document.getElementById('page-transition-overlay');
             requestAnimationFrame(() => overlay.classList.add('loaded'));
 
-            // Trigger entrance genie immediately
             setTimeout(() => {
                 document.getElementById('app-container').classList.remove('genie-state');
             }, 50);
@@ -412,16 +325,8 @@
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    
-                    // Phase 1: Internal elements fade out
                     document.body.classList.add('is-exiting'); 
-                    
-                    // Phase 2: The entire container sucks down into the dock
-                    setTimeout(() => {
-                        document.getElementById('app-container').classList.add('genie-state');
-                    }, 300); 
-
-                    // Phase 3: Redirect to the desktop
+                    setTimeout(() => { document.getElementById('app-container').classList.add('genie-state'); }, 300); 
                     setTimeout(() => window.location.assign('/'), 850); 
                 });
             });
@@ -435,7 +340,17 @@
             }
         });
 
-        // --- Video Player Logic ---
+        // TIME & DATE CLOCK (To match site standard)
+        const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+        function updateClock() {
+            const n = new Date();
+            const h = n.getHours() % 12 || 12;
+            const m = n.getMinutes().toString().padStart(2,'0');
+            const ap = n.getHours() >= 12 ? 'PM' : 'AM';
+            document.getElementById('mac-clock').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
+        }
+        updateClock(); setInterval(updateClock, 1000);
+
         const videoNodes = document.querySelectorAll('.video-node');
         const overlay = document.getElementById('video-overlay');
         const iframe = document.getElementById('vimeo-iframe');
@@ -454,12 +369,8 @@
             iframe.src = ""; 
         });
 
-        // --- Network Panning & Zooming Logic ---
-        const editor = document.getElementById('network-editor');
-        const canvas = document.getElementById('network-canvas');
-        
-        let panX = 0, panY = 0, scale = 1;
-        let isDragging = false, startX, startY;
+        const editor = document.getElementById('network-editor'), canvas = document.getElementById('network-canvas');
+        let panX = 0, panY = 0, scale = 1, isDragging = false, startX, startY;
 
         function updateTransform() {
             canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
@@ -467,98 +378,43 @@
             editor.style.backgroundSize = `${40 * scale}px ${40 * scale}px`;
         }
 
-        // Exposed navigation functions for the buttons
-        window.panView = function(dx, dy) {
-            panX += dx; panY += dy; updateTransform();
-        };
-
-        window.zoomView = function(delta) {
-            let newScale = scale + delta;
-            newScale = Math.max(0.3, Math.min(newScale, 3)); 
-            scale = newScale; updateTransform();
+        window.panView = function(dx, dy) { panX += dx; panY += dy; updateTransform(); };
+        window.zoomView = function(delta) { 
+            let newScale = scale + delta; newScale = Math.max(0.3, Math.min(newScale, 3)); 
+            scale = newScale; updateTransform(); 
         };
 
         editor.addEventListener('mousedown', (e) => {
             if(e.target.closest('.td-node')) return; 
-            isDragging = true;
-            startX = e.clientX - panX;
-            startY = e.clientY - panY;
-            editor.style.cursor = 'grabbing';
+            isDragging = true; startX = e.clientX - panX; startY = e.clientY - panY; editor.style.cursor = 'grabbing';
         });
-
-        window.addEventListener('mousemove', (e) => {
-            if(!isDragging) return;
-            panX = e.clientX - startX;
-            panY = e.clientY - startY;
-            updateTransform();
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-            editor.style.cursor = 'crosshair';
-        });
-
+        window.addEventListener('mousemove', (e) => { if(isDragging) { panX = e.clientX - startX; panY = e.clientY - startY; updateTransform(); }});
+        window.addEventListener('mouseup', () => { isDragging = false; editor.style.cursor = 'crosshair'; });
         editor.addEventListener('touchstart', (e) => {
             if(e.target.closest('.td-node')) return;
-            if(e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].clientX - panX;
-                startY = e.touches[0].clientY - panY;
-            }
+            if(e.touches.length === 1) { isDragging = true; startX = e.touches[0].clientX - panX; startY = e.touches[0].clientY - panY; }
         });
-
-        window.addEventListener('touchmove', (e) => {
-            if(isDragging && e.touches.length === 1) {
-                panX = e.touches[0].clientX - startX;
-                panY = e.touches[0].clientY - startY;
-                updateTransform();
-            }
-        });
-
+        window.addEventListener('touchmove', (e) => { if(isDragging && e.touches.length === 1) { panX = e.touches[0].clientX - startX; panY = e.touches[0].clientY - startY; updateTransform(); }});
         window.addEventListener('touchend', () => { isDragging = false; });
-
         editor.addEventListener('wheel', (e) => {
-            e.preventDefault(); 
-            const zoomSensitivity = -0.002;
-            const delta = e.deltaY * zoomSensitivity;
-            
-            let newScale = scale * Math.exp(delta);
-            newScale = Math.max(0.3, Math.min(newScale, 3)); 
-            
-            scale = newScale;
-            updateTransform();
+            e.preventDefault(); const zoomSensitivity = -0.002; const delta = e.deltaY * zoomSensitivity;
+            let newScale = scale * Math.exp(delta); newScale = Math.max(0.3, Math.min(newScale, 3)); 
+            scale = newScale; updateTransform();
         }, {passive: false});
 
-        // --- ORGANIC WIRE LOGIC ---
         function drawWires() {
             const connections = [
                 { outId: 'project-node', inId: 'download-node', pathId: 'wire-path-1', droop: 40, stiff: 70 },
                 { outId: 'project-node-2', inId: 'download-node-2', pathId: 'wire-path-2', droop: 10, stiff: 40 }
             ];
-
             connections.forEach(conn => {
-                const outNode = document.getElementById(conn.outId);
-                const inNode = document.getElementById(conn.inId);
-                const wirePath = document.getElementById(conn.pathId);
-
-                const startX = outNode.offsetLeft + outNode.offsetWidth;
-                const startY = outNode.offsetTop + (outNode.offsetHeight / 2);
-                
-                const endX = inNode.offsetLeft;
-                const endY = inNode.offsetTop + (inNode.offsetHeight / 2);
-
-                const cp1X = startX + conn.stiff;
-                const cp1Y = startY + conn.droop;
-                const cp2X = endX - conn.stiff;
-                const cp2Y = endY + conn.droop;
-
-                wirePath.setAttribute('d', `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`);
+                const outNode = document.getElementById(conn.outId), inNode = document.getElementById(conn.inId), wirePath = document.getElementById(conn.pathId);
+                const startX = outNode.offsetLeft + outNode.offsetWidth, startY = outNode.offsetTop + (outNode.offsetHeight / 2);
+                const endX = inNode.offsetLeft, endY = inNode.offsetTop + (inNode.offsetHeight / 2);
+                wirePath.setAttribute('d', `M ${startX} ${startY} C ${startX + conn.stiff} ${startY + conn.droop}, ${endX - conn.stiff} ${endY + conn.droop}, ${endX} ${endY}`);
             });
         }
-
-        drawWires();
-        window.addEventListener('resize', drawWires);
-
+        drawWires(); window.addEventListener('resize', drawWires);
     </script>
 </body>
 </html>
