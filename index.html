@@ -9,102 +9,118 @@
         html, body {
             margin: 0; padding: 0;
             height: 100vh; height: 100dvh;
-            background: #fff;
+            background-color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             display: flex; flex-direction: column; overflow: hidden;
-            color: #000;
+            color: #000000;
         }
 
-        /* ── PAGE TRANSITION ─────────────────────────────────────────── */
+        /* --- SMOOTH PAGE TRANSITIONS --- */
         #page-transition-overlay {
-            position: fixed; inset: 0; background: #fff;
-            z-index: 99999; pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; z-index: 99999;
+            pointer-events: none; opacity: 1;
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        #page-transition-overlay.loaded  { opacity: 0; }
+        #page-transition-overlay.loaded { opacity: 0; }
         #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
 
-        /* ── TOP NAV BAR (Standardized) ──────────────────────────────── */
-        .top-nav-bar {
-            position: absolute; top: 30px; left: 30px; right: 30px;
-            display: flex; justify-content: flex-end; align-items: center;
-            z-index: 100;
-        }
-        .date-time-display {
-            font-size: clamp(11px, 1.3vw, 15px); font-weight: 900;
-            text-transform: uppercase; letter-spacing: 1.5px; color: #000;
-            text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px rgba(255,255,255,0.9);
-            opacity: 0; transform: translateX(15px);
-            animation: clockIn 0.8s cubic-bezier(0.25,1,0.5,1) 0.5s forwards;
-        }
-        body.is-exiting .date-time-display { animation: clockOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes clockIn  { 0%{opacity:0;transform:translateX(15px);filter:blur(3px)} 100%{opacity:1;transform:none;filter:none} }
-        @keyframes clockOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(15px);filter:blur(3px)} }
-
-        /* ── NOW PLAYING BANNER (Floating Box Aesthetic) ─────────────── */
+        /* --- NOW PLAYING BANNER --- */
         #now-playing-banner {
-            position: absolute; top: 20px; left: 50%;
-            width: calc(100% - 40px); max-width: 450px; height: auto;
-            background: #fff; border: 3px solid #000;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
-            z-index: 120; padding: 10px 14px;
-            transform: translate(-50%, -150%);
-            transition: transform 0.55s cubic-bezier(0.25,1,0.5,1);
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 120;
+            transform: translateY(-100%);
+            transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        #now-playing-banner.visible { transform: translate(-50%, 0); }
+        #now-playing-banner.visible { transform: translateY(0); }
         body.is-exiting #now-playing-banner {
-            transition: transform 0.30s cubic-bezier(0.25,1,0.5,1);
-            transform: translate(-50%, -150%);
+            transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: translateY(-100%);
         }
+
         .banner-inner {
-            display: flex; align-items: center; gap: 14px; width: 100%;
+            display: flex; align-items: center;
+            height: 100%; padding: 0 22px; gap: 12px;
         }
         .banner-live-dot {
             width: 8px; height: 8px; flex-shrink: 0;
             background: #ff3b30; border-radius: 50%;
-            box-shadow: 0 0 8px rgba(255,59,48,0.85);
-            animation: pulse-dot 1.2s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%,100% { transform: scale(0.8); opacity: 0.7; }
-            50%      { transform: scale(1.3); opacity: 1; }
+            box-shadow: 0 0 8px rgba(255,59,48,0.9);
+            animation: subtle-pulse 1.2s infinite ease-in-out;
         }
         #banner-art {
-            width: 40px; height: 40px; border-radius: 0;
-            border: 2px solid #000; object-fit: cover; flex-shrink: 0;
-            opacity: 0; transition: opacity 0.35s ease; display: none;
+            width: 38px; height: 38px; border-radius: 5px;
+            object-fit: cover; flex-shrink: 0;
+            opacity: 0; transition: opacity 0.4s ease;
         }
-        #banner-art.has-art { opacity: 1; display: block; }
-        .banner-info { flex: 1; min-width: 0; }
+        #banner-art.has-art { opacity: 1; }
+        .banner-info {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column; gap: 2px;
+        }
         .banner-label {
-            display: block; font-size: 8px; font-weight: 900;
+            font-size: 9px; font-weight: 900;
             letter-spacing: 2.5px; color: #ff3b30; text-transform: uppercase;
         }
         #banner-track {
-            display: block; font-size: 13px; font-weight: 800;
-            color: #000; text-transform: uppercase; letter-spacing: 0.8px;
+            font-size: 13px; font-weight: 700; color: #fff;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .banner-btn {
-            flex-shrink: 0; background: #000; color: #fff;
-            font-size: 10px; font-weight: 900; letter-spacing: 1.5px;
+            flex-shrink: 0; background: #fff; color: #000;
+            font-size: 11px; font-weight: 900; letter-spacing: 1px;
             text-transform: uppercase; text-decoration: none;
-            padding: 9px 18px; border: 2px solid #000; white-space: nowrap;
-            transition: background 0.2s, color 0.2s;
+            padding: 7px 16px; border-radius: 20px; white-space: nowrap;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
         }
-        .banner-btn:hover { background: #333; }
+        .banner-btn:hover { background: #ff3b30; color: #fff; transform: scale(1.04); }
 
-        /* ── MARQUEE BACKGROUND ──────────────────────────────────────── */
-        .main-content { flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative; }
+        /* --- DATE & TIME STATUS AREA --- */
+        .status-area {
+            position: absolute; top: 25px; right: 30px;
+            display: flex; align-items: center;
+            font-size: 22px; font-weight: 800; color: #000000;
+            z-index: 100; letter-spacing: 0.5px;
+            text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,1), 0 0 45px rgba(255,255,255,0.9);
+            opacity: 0; transform: translateX(15px);
+            animation: clockEntrance 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+            /* Smooth push when banner arrives */
+            transition: top 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        body.banner-active .status-area { top: 72px; }
+        body.is-exiting .status-area { animation: clockExit 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
+        @keyframes clockEntrance {
+            0% { opacity: 0; transform: translateX(15px); filter: blur(3px); }
+            100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+        }
+        @keyframes clockExit {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(15px); filter: blur(3px); }
+        }
+
+        .main-content {
+            flex-grow: 1; display: flex; align-items: center;
+            justify-content: center; position: relative;
+        }
+
+        /* --- MARQUEE BACKGROUND --- */
         #logo-wrapper {
             position: absolute; top: 50px; left: 0;
             width: 100vw; height: calc(100dvh - 160px);
-            display: flex; flex-direction: column; justify-content: center;
-            overflow: hidden; pointer-events: none;
+            display: flex; flex-direction: column;
+            justify-content: center; overflow: hidden; pointer-events: none;
         }
-        body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); } }
+        body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes glideOut {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(30px) scale(0.95); }
+        }
 
         .marquee-track {
             display: flex; flex-wrap: nowrap;
@@ -114,110 +130,128 @@
         .marquee-track:first-child { margin-top: 0; }
         .marquee-track:nth-child(even) { margin-left: -7vw; }
 
-        /* Pure CSS looping handles standard speed dynamically */
         .track-right { animation: scrollRight 8s linear infinite; }
         .track-left  { animation: scrollLeft  8s linear infinite; }
 
-        @keyframes scrollRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} }
-        @keyframes scrollLeft  { 0%{transform:translateX(0%)}   100%{transform:translateX(-50%)} }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
+        @keyframes scrollLeft  { 0% { transform: translateX(0%); }   100% { transform: translateX(-50%); } }
 
         img.cuceu-img {
-            height: clamp(3rem,4.5vw,6rem); width: auto;
+            height: clamp(3rem, 4.5vw, 6rem); width: auto;
             margin-right: 1vw; flex-shrink: 0;
             user-select: none; -webkit-user-drag: none; opacity: 0;
         }
 
-        @keyframes dropInOdd  { 0%{opacity:0;transform:translateY(-50px)}           100%{opacity:1;transform:none} }
-        @keyframes dropInEven { 0%{opacity:0;transform:translateY(-50px) rotate(180deg)} 100%{opacity:1;transform:rotate(180deg)} }
+        @keyframes dropInOdd  { 0% { opacity:0; transform: translateY(-50px); }           100% { opacity:1; transform: translateY(0); } }
+        @keyframes dropInEven { 0% { opacity:0; transform: translateY(-50px) rotate(180deg); } 100% { opacity:1; transform: translateY(0) rotate(180deg); } }
 
         .marquee-track:nth-child(odd)  img.cuceu-img { animation: dropInOdd  0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
         .marquee-track:nth-child(even) img.cuceu-img { animation: dropInEven 0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
-        .marquee-track:nth-child(1) img.cuceu-img { animation-delay:.1s }
-        .marquee-track:nth-child(2) img.cuceu-img { animation-delay:.2s }
-        .marquee-track:nth-child(3) img.cuceu-img { animation-delay:.3s }
-        .marquee-track:nth-child(4) img.cuceu-img { animation-delay:.4s }
-        .marquee-track:nth-child(5) img.cuceu-img { animation-delay:.5s }
-        .marquee-track:nth-child(6) img.cuceu-img { animation-delay:.6s }
-        .marquee-track:nth-child(7) img.cuceu-img { animation-delay:.7s }
-        .marquee-track:nth-child(8) img.cuceu-img { animation-delay:.8s }
 
-        /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
+        .marquee-track:nth-child(1) img.cuceu-img { animation-delay: 0.1s; }
+        .marquee-track:nth-child(2) img.cuceu-img { animation-delay: 0.2s; }
+        .marquee-track:nth-child(3) img.cuceu-img { animation-delay: 0.3s; }
+        .marquee-track:nth-child(4) img.cuceu-img { animation-delay: 0.4s; }
+        .marquee-track:nth-child(5) img.cuceu-img { animation-delay: 0.5s; }
+        .marquee-track:nth-child(6) img.cuceu-img { animation-delay: 0.6s; }
+        .marquee-track:nth-child(7) img.cuceu-img { animation-delay: 0.7s; }
+        .marquee-track:nth-child(8) img.cuceu-img { animation-delay: 0.8s; }
+        .marquee-track:nth-child(9) img.cuceu-img { animation-delay: 0.9s; }
+        .marquee-track:nth-child(10) img.cuceu-img { animation-delay: 1.0s; }
+
+        /* --- THE DOCK --- */
         .mac-dock-container {
             position: absolute; bottom: 30px; width: 100%;
             display: flex; justify-content: center; z-index: 10;
         }
-
         .mac-dock {
-            background: linear-gradient(170deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.20) 100%);
-            backdrop-filter: blur(55px) saturate(200%) brightness(1.08); -webkit-backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
-            border: 1px solid rgba(255,255,255,0.60); border-top-color: rgba(255,255,255,0.85); border-bottom-color: rgba(255,255,255,0.30);
-            border-radius: 30px; padding: 10px 18px; display: flex; gap: 14px; align-items: center;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(255,255,255,0.18), inset 1px 0 0 rgba(255,255,255,0.25), inset -1px 0 0 rgba(255,255,255,0.25);
-            opacity: 0; animation: dockSlideUp 0.8s cubic-bezier(0.25,1,0.5,1) 1.2s forwards; position: relative;
+            background: rgba(30,30,35,0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 28px;
+            padding: 8px 16px; display: flex; gap: 12px; align-items: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            opacity: 0;
+            animation: dockSlideUp 0.8s cubic-bezier(0.25,1,0.5,1) 1.2s forwards;
         }
-
-        .mac-dock::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 65%, transparent 100%);
-            border-radius: 30px 30px 50% 50% / 28px 28px 18px 18px; pointer-events: none; z-index: 0;
-        }
-
         body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes dockSlideUp   { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
-        @keyframes dockSlideDown { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
+        @keyframes dockSlideUp   { 0% { opacity:0; transform: translateY(40px); } 100% { opacity:1; transform: translateY(0); } }
+        @keyframes dockSlideDown { 0% { opacity:1; transform: translateY(0); }    100% { opacity:0; transform: translateY(40px); } }
 
         .dock-app {
-            text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #fff;
-            transition: transform 0.3s cubic-bezier(0.25,1,0.5,1); position: relative; height: 70px; justify-content: center; z-index: 1;
+            text-decoration: none; display: flex; flex-direction: column;
+            align-items: center; color: #fff;
+            transition: all 0.3s cubic-bezier(0.25,1,0.5,1);
+            position: relative; height: 70px; justify-content: center;
         }
         .dock-app.is-open::after {
-            content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px;
-            background: rgba(255,255,255,0.95); border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background-color: rgba(255,255,255,0.9);
+            border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.3);
         }
-        .dock-app:hover { transform: translateY(-10px); }
-
         .app-icon {
-            width: 52px; height: 52px;
-            background: linear-gradient(145deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.08) 100%);
-            backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
-            border: 1px solid rgba(255,255,255,0.42); border-top-color: rgba(255,255,255,0.70);
-            color: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 6px rgba(0,0,0,0.06);
+            width: 52px; height: 52px; background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.3);
+            color: #ffffff; border-radius: 14px; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 900;
         }
-        .icon-ig { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888) !important; border: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important; }
+        .icon-ig {
+            background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888) !important;
+            border: none !important; backdrop-filter: none !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
         .icon-ig svg { width: 34px; height: 34px; }
-        .icon-td { background: linear-gradient(180deg,#f4f4f4,#e0e0e0) !important; border: 1px solid rgba(0,0,0,0.10) !important; box-shadow: inset 0 1px 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,0,0,0.08) !important; }
+        .icon-td {
+            background: linear-gradient(180deg,#f4f4f4,#e2e2e2) !important;
+            border: 1px solid rgba(0,0,0,0.1) !important;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
         .icon-td svg { width: 36px; height: 36px; border-radius: 2px; }
+        .icon-trash { background: rgba(255,255,255,0.1); }
         .icon-trash svg { width: 38px; height: 38px; margin-top: 2px; }
 
         .app-tooltip {
-            position: absolute; top: -35px; background: rgba(20,20,25,0.88); backdrop-filter: blur(12px);
-            padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
+            position: absolute; top: -35px;
+            background: rgba(30,30,35,0.85); backdrop-filter: blur(10px);
+            padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+            white-space: nowrap; text-transform: uppercase;
         }
         .dock-app:hover .app-tooltip { opacity: 1; }
+        .dock-app:hover { transform: translateY(-10px); }
 
         .app-badge {
-            position: absolute; top: -4px; right: -8px; background: rgba(20,20,25,0.92); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 3px 7px; display: flex; align-items: center; gap: 4px;
-            font-size: 8px; font-weight: 800; color: #fff; opacity: 0; z-index: 20;
+            position: absolute; top: -4px; right: -8px;
+            background: rgba(20,20,25,0.9); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+            padding: 3px 7px; display: flex; align-items: center; gap: 4px;
+            font-size: 8px; font-weight: 800; color: #ffffff; opacity: 0; z-index: 20;
         }
         .app-badge.visible { opacity: 1; }
-        .recording-dot { width: 5px; height: 5px; background: #ff3b30; border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+        .recording-dot {
+            width: 5px; height: 5px; background-color: #ff3b30; border-radius: 50%;
+            animation: subtle-pulse 2s infinite ease-in-out;
+        }
+        @keyframes subtle-pulse {
+            0%   { transform: scale(0.8); opacity: 0.6; }
+            50%  { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.6; }
+        }
 
-        /* ── MOBILE ──────────────────────────────────────────────────── */
+        /* --- MOBILE --- */
         @media (max-width: 600px) {
-            .top-nav-bar { top: 20px; left: 20px; right: 20px; }
-            .date-time-display { font-size: 11px; letter-spacing: 0.8px; }
+            .status-area { font-size: 14px; top: 20px; right: 20px; }
+            body.banner-active .status-area { top: 65px; }
             .track-right, .track-left { animation-duration: 35s; }
             .marquee-track:first-child, .marquee-track:last-child { display: none; }
-            img.cuceu-img { height: 4rem; margin-right: 4vw; }
+            img.cuceu-img { height: 4rem; margin-right: 4vw; margin-top: 0; }
             .marquee-track { margin-top: -1vw; }
-            .mac-dock { gap: 10px; padding: 8px 14px; border-radius: 26px; }
+            .mac-dock { gap: 10px; padding: 8px 15px; }
             .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
             .icon-td svg { width: 30px; height: 30px; }
-            .banner-btn { padding: 7px 12px; font-size: 9px; }
-            #banner-track { font-size: 11px; }
+            .dock-app.is-open::after { bottom: 2px; width: 4px; height: 4px; }
+            #now-playing-banner { height: 52px; }
+            .banner-btn { padding: 6px 12px; font-size: 10px; }
+            #banner-track { font-size: 12px; }
         }
     </style>
 </head>
@@ -225,12 +259,7 @@
 
     <div id="page-transition-overlay"></div>
 
-    <div class="top-nav-bar">
-        <div class="date-time-display">
-            <span id="mac-clock">MONDAY | 12:00 AM</span>
-        </div>
-    </div>
-
+    <!-- NOW PLAYING BANNER -->
     <div id="now-playing-banner">
         <div class="banner-inner">
             <span class="banner-live-dot"></span>
@@ -243,37 +272,42 @@
         </div>
     </div>
 
+    <div class="status-area">
+        <span id="mac-clock">00:00 AM</span>
+    </div>
+
     <div class="main-content">
         <div id="logo-wrapper">
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
         </div>
     </div>
 
     <div class="mac-dock-container">
         <div class="mac-dock">
+
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div>
                 <div class="app-icon icon-ig">
@@ -286,13 +320,13 @@
                 <div class="app-icon icon-td">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0" y="0" width="100" height="100" fill="#919c7d" stroke="#111" stroke-width="4"/>
-                        <path d="M50 0L50 100M0 50L100 50" stroke="#111" stroke-width="5"/>
-                        <path d="M20 20L50 50M80 20L50 50M20 80L50 50M80 80L50 50" stroke="#111" stroke-width="5"/>
+                        <path d="M 50 0 L 50 100 M 0 50 L 100 50" stroke="#111" stroke-width="5"/>
+                        <path d="M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50" stroke="#111" stroke-width="5"/>
                         <rect x="12" y="12" width="20" height="20" fill="#111"/>
                         <rect x="68" y="12" width="20" height="20" fill="#111"/>
                         <rect x="12" y="68" width="20" height="20" fill="#111"/>
                         <rect x="68" y="68" width="20" height="20" fill="#111"/>
-                        <circle cx="50" cy="50" r="23" fill="#fff" stroke="#111" stroke-width="5"/>
+                        <circle cx="50" cy="50" r="23" fill="#ffffff" stroke="#111" stroke-width="5"/>
                         <rect x="43" y="43" width="14" height="14" fill="#111"/>
                     </svg>
                 </div>
@@ -312,107 +346,162 @@
                 <div class="app-icon icon-trash">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.7)"/><stop offset="20%" stop-color="rgba(255,255,255,0.2)"/><stop offset="80%" stop-color="rgba(255,255,255,0.2)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient>
-                            <linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#ddd"/></linearGradient>
-                            <linearGradient id="p2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f0f0f0"/><stop offset="100%" stop-color="#aaa"/></linearGradient>
+                            <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%"   stop-color="rgba(255,255,255,0.7)"/>
+                                <stop offset="20%"  stop-color="rgba(255,255,255,0.2)"/>
+                                <stop offset="80%"  stop-color="rgba(255,255,255,0.2)"/>
+                                <stop offset="100%" stop-color="rgba(255,255,255,0.6)"/>
+                            </linearGradient>
+                            <linearGradient id="paper1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%"   stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#dddddd"/>
+                            </linearGradient>
+                            <linearGradient id="paper2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%"   stop-color="#f0f0f0"/>
+                                <stop offset="100%" stop-color="#aaaaaa"/>
+                            </linearGradient>
                         </defs>
-                        <path d="M30 35Q25 15 45 10T65 20Q70 35 60 40Z" fill="url(#p2)" stroke="#999" stroke-width="0.5"/>
-                        <path d="M40 18Q50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                        <path d="M45 40Q45 20 60 18T80 25Q85 40 70 45Z" fill="url(#p1)" stroke="#aaa" stroke-width="0.5"/>
-                        <path d="M55 25Q65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                        <path d="M20 40Q15 25 35 22T55 30Q50 45 35 45Z" fill="url(#p1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M 30 35 Q 25 15 45 10 T 65 20 Q 70 35 60 40 Z" fill="url(#paper2)" stroke="#999" stroke-width="0.5"/>
+                        <path d="M 40 18 Q 50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M 45 40 Q 45 20 60 18 T 80 25 Q 85 40 70 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M 55 25 Q 65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M 20 40 Q 15 25 35 22 T 55 30 Q 50 45 35 45 Z" fill="url(#paper1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M 28 30 Q 40 25 45 35" fill="none" stroke="#999" stroke-width="1" stroke-linecap="round"/>
                         <ellipse cx="50" cy="30" rx="34" ry="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-                        <path d="M16 30L26 86C26 94,74 94,74 86L84 30Z" fill="url(#g)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
-                        <path d="M22 36L30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M16 30A34 9 0 0 0 84 30" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+                        <path d="M 16 30 L 26 86 C 26 94, 74 94, 74 86 L 84 30 Z" fill="url(#glass)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+                        <path d="M 22 36 L 30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M 16 30 A 34 9 0 0 0 84 30" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+                        <path d="M 18 31 A 32 7 0 0 0 82 31" fill="none" stroke="rgba(150,150,150,0.5)" stroke-width="1"/>
                     </svg>
                 </div>
             </a>
+
         </div>
     </div>
 
     <script>
-        // ── PAGE TRANSITIONS ─────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
+        // ─── PAGE TRANSITIONS ────────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", () => {
             const overlay = document.getElementById('page-transition-overlay');
             requestAnimationFrame(() => overlay.classList.add('loaded'));
+
             document.querySelectorAll('.internal-link').forEach(link => {
-                link.addEventListener('click', e => {
+                link.addEventListener('click', (e) => {
                     e.preventDefault();
                     document.body.classList.add('is-exiting');
-                    setTimeout(() => { overlay.classList.remove('loaded'); overlay.classList.add('leaving'); }, 500);
+                    setTimeout(() => {
+                        overlay.classList.remove('loaded');
+                        overlay.classList.add('leaving');
+                    }, 500);
                     setTimeout(() => window.location.href = link.href, 900);
                 });
             });
         });
 
-        // ── MARQUEE FIX (Strict CSS & Reflow for bfcache) ────────────────
-        window.addEventListener('pageshow', e => {
-            if (e.persisted) {
-                const tracks = document.querySelectorAll('.marquee-track');
-                tracks.forEach(t => {
-                    t.style.animation = 'none';
-                    void t.offsetWidth; // Force reflow
-                    t.style.animation = '';
+        // ─── MARQUEE FIX: pause when hidden, restart when visible ────────
+        // This stops the animation timer accumulating while the page is in
+        // the background / bfcache, so it never "catches up" at warp speed.
+        function restartMarquees() {
+            const tracks = document.querySelectorAll('.marquee-track');
+            tracks.forEach(t => { t.style.animation = 'none'; });
+            // Double-rAF guarantees a full paint cycle before restoring
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                tracks.forEach(t => { t.style.animation = ''; });
+            }));
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Pause immediately so time doesn't drift while hidden
+                document.querySelectorAll('.marquee-track').forEach(t => {
+                    t.style.animationPlayState = 'paused';
                 });
-                
-                const ov = document.getElementById('page-transition-overlay');
-                ov.classList.remove('loaded','leaving');
-                document.body.classList.remove('is-exiting');
-                requestAnimationFrame(() => ov.classList.add('loaded'));
+            } else {
+                // Full restart on return so there's zero catching-up
+                restartMarquees();
             }
         });
 
-        // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────────
-        const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+        // Belt-and-braces for bfcache browser-back restores
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                const overlay = document.getElementById('page-transition-overlay');
+                overlay.classList.remove('loaded', 'leaving');
+                document.body.classList.remove('is-exiting');
+                restartMarquees();
+                requestAnimationFrame(() => overlay.classList.add('loaded'));
+            }
+        });
+
+        // ─── CLOCK ───────────────────────────────────────────────────────
         function updateClock() {
-            const n = new Date();
-            const h = n.getHours() % 12 || 12;
-            const m = n.getMinutes().toString().padStart(2,'0');
-            const ap = n.getHours() >= 12 ? 'PM' : 'AM';
-            document.getElementById('mac-clock').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
+            const now = new Date();
+            const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            const h = now.getHours() % 12 || 12;
+            const m = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} ${h}:${m} ${ampm}`;
         }
         updateClock(); setInterval(updateClock, 1000);
 
-        // ── STREAM STATUS + NOW PLAYING BANNER ───────────────────────────
+        // ─── STREAM STATUS + NOW PLAYING BANNER ──────────────────────────
         let bannerShown = false;
 
         async function checkStream() {
-            const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
+            const proxyUrl = "https://api.allorigins.win/raw?url=" +
+                encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
             try {
-                const data = await fetch(proxy, { cache: "no-store" }).then(r => r.json());
+                const res  = await fetch(proxyUrl, { cache: "no-store" });
+                const data = await res.json();
                 const src  = data.icestats.source;
+
                 if (src) {
-                    const title = Array.isArray(src) ? (src[0].title||"ON AIR") : (src.title||"ON AIR");
+                    // ── Stream is live ──
+                    const title = Array.isArray(src)
+                        ? (src[0].title || "ON AIR")
+                        : (src.title   || "ON AIR");
+
                     document.getElementById('fm-badge-text').innerText = "ON AIR";
                     document.getElementById('fm-badge').classList.add('visible');
                     document.getElementById('banner-track').textContent = title;
+
                     if (!bannerShown) {
                         bannerShown = true;
+
+                        // Fetch album art (direct — CORS is open on this endpoint)
                         try {
-                            const artUrl = (await fetch('https://stream.cuceu.co.uk/artwork.txt?t=' + Date.now()).then(r => r.text())).trim();
-                            if (artUrl.startsWith('http')) {
+                            const artRes = await fetch('https://stream.cuceu.co.uk/artwork.txt?t=' + Date.now());
+                            const artUrl = (await artRes.text()).trim();
+                            if (artUrl && artUrl.startsWith('http')) {
                                 const img = document.getElementById('banner-art');
                                 img.onload = () => img.classList.add('has-art');
                                 img.src = artUrl;
                             }
-                        } catch(_) {}
+                        } catch (_) {}
+
+                        // Slide banner in after 2.5 s
                         setTimeout(() => {
                             document.getElementById('now-playing-banner').classList.add('visible');
+                            document.body.classList.add('banner-active');
                         }, 2500);
                     }
+
                 } else {
+                    // ── Stream offline — hide banner ──
                     bannerShown = false;
                     document.getElementById('now-playing-banner').classList.remove('visible');
+                    document.body.classList.remove('banner-active');
                     document.getElementById('fm-badge-text').innerText = "OFFLINE";
                     document.getElementById('fm-badge').classList.add('visible');
                 }
-            } catch(_) {
+            } catch (_) {
                 document.getElementById('fm-badge-text').innerText = "OFFLINE";
                 document.getElementById('fm-badge').classList.add('visible');
             }
         }
-        checkStream(); setInterval(checkStream, 15000);
+
+        checkStream();
+        setInterval(checkStream, 15000);
     </script>
 </body>
 </html>
