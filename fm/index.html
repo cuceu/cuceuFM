@@ -6,334 +6,433 @@
     <title>cuceu.fm</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2255%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22 letter-spacing=%22-2%22>.fm</text></svg>">
     <style>
-        html, body { 
-            margin: 0; padding: 0; height: 100%; overflow: hidden; 
-            background-color: #ffffff; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0; padding: 0;
+            height: 100dvh; overflow: hidden;
+            background: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
         }
 
-        /* ── THE BACKGROUND CONTAINER ────────────────────────────────────────── */
+        /* ── PAGE TRANSITION ─────────────────────────────── */
+        #page-transition-overlay {
+            position: fixed; inset: 0; background: #fff;
+            z-index: 99999; pointer-events: none; opacity: 1;
+            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
+        }
+        #page-transition-overlay.loaded { opacity: 0; }
+
+        /* ── APP SHELL ───────────────────────────────────── */
         #app-container {
-            width: 100vw; height: 100dvh; 
+            width: 100vw; height: 100dvh;
             display: flex; flex-direction: column;
-            background-color: #ffffff;
-            position: relative; overflow: hidden;
-            transform-origin: center center;
-            animation: bgExpand 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            background: #fff; overflow: hidden;
+            animation: appIn 0.65s cubic-bezier(0.25,1,0.5,1) forwards;
         }
-        body.is-exiting #app-container { animation: bgShrink 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.4s forwards; }
+        body.is-exiting #app-container {
+            animation: appOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards;
+        }
+        @keyframes appIn  { 0%{opacity:0;transform:scale(0.97)} 100%{opacity:1;transform:none} }
+        @keyframes appOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(0.97);filter:blur(4px)} }
 
-        @keyframes bgExpand { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes bgShrink { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; filter: blur(5px); } }
+        /* ── TICKERS ─────────────────────────────────────── */
+        .ticker-tape {
+            flex-shrink: 0; height: 58px;
+            background: #000; color: #fff;
+            overflow: hidden; display: flex; align-items: center;
+        }
+        .ticker-top    { border-bottom: 3px solid #000; }
+        .ticker-bottom { border-top:    3px solid #000; }
 
-        /* ── TOP NAV BAR (Standardized) ──────────────────────────────────────── */
+        /* Entrance / exit */
+        .ticker-top    { transform: translateY(-100%); animation: slideTopIn    0.55s cubic-bezier(0.25,1,0.5,1) 0.25s forwards; }
+        .ticker-bottom { transform: translateY( 100%); animation: slideBottomIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.25s forwards; }
+        body.is-exiting .ticker-top    { animation: slideTopOut    0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes slideTopIn     { to { transform: translateY(0); } }
+        @keyframes slideBottomIn  { to { transform: translateY(0); } }
+        @keyframes slideTopOut    { to { transform: translateY(-100%); } }
+        @keyframes slideBottomOut { to { transform: translateY( 100%); } }
+
+        .marquee-wrapper {
+            display: flex; white-space: nowrap; align-items: center;
+            width: fit-content;
+            /* duration set by JS */
+            animation: tickerScroll linear infinite;
+        }
+        @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+        .ticker-item  { display: inline-flex; align-items: center; }
+        .ticker-sep   { display: inline-block; width: 40px; opacity: 0.35; font-size: 1.4rem; text-align: center; }
+        .ticker-art   { height: 44px; width: 44px; object-fit: cover; margin: 0 20px; border-radius: 3px; opacity: 0; transition: opacity 0.3s; }
+        .ticker-art.has-art { opacity: 1; }
+        .song-display {
+            font-size: 1.65rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 4px;
+            padding: 0 8px;
+        }
+
+        /* ── NAV BAR ─────────────────────────────────────── */
         .top-nav-bar {
-            position: absolute; top: 30px; left: 30px; right: 30px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100;
+            flex-shrink: 0; height: 66px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; background: #fff;
+            animation: navIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s both;
         }
+        body.is-exiting .top-nav-bar { animation: navOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes navIn  { 0%{opacity:0;transform:translateY(-10px)} 100%{opacity:1;transform:none} }
+        @keyframes navOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(-10px)} }
+
+        /* SQUARE back button — matches fm aesthetic */
         .back-btn-top {
-            color: #000; text-decoration: none; font-weight: 800; 
-            text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
-            border: 2px solid #000; padding: 6px 14px; background: #fff;
-            transition: all 0.2s ease;
+            color: #000; text-decoration: none;
+            font-weight: 900; text-transform: uppercase;
+            font-size: 12px; letter-spacing: 1.5px;
+            border: 2.5px solid #000; padding: 8px 16px;
+            transition: background 0.2s, color 0.2s;
         }
-        .back-btn-top:hover { background-color: #000; color: #fff; }
+        .back-btn-top:hover { background: #000; color: #fff; }
 
         .date-time-display {
-            font-size: clamp(11px, 1.3vw, 15px); font-weight: 900;
-            text-transform: uppercase; letter-spacing: 1.5px; color: #000;
+            font-size: clamp(11px,1.3vw,14px); font-weight: 900;
+            letter-spacing: 1.5px; text-transform: uppercase; color: #000;
         }
 
-        /* ── MARQUEE TICKER TAPE (CSS Looping) ───────────────────────────────── */
-        .ticker-tape { 
-            position: absolute; width: 100%; background: #000; color: #fff; overflow: hidden; 
-            height: 52px; /* Increased size */
-            display: flex; align-items: center; z-index: 60; 
-            border-top: 3px solid #000; border-bottom: 3px solid #000;
+        /* ── WINDOW FRAME (main image area) ─────────────── */
+        #window-frame {
+            flex: 1; position: relative; overflow: hidden;
+            background-image: url('./IMG_1148.webp');
+            background-size: cover; background-position: center 42%;
+            display: flex; align-items: center; justify-content: center;
+            animation: windowOpen 0.75s cubic-bezier(0.25,1,0.5,1) 0.1s both;
         }
-        .ticker-top { top: 0; } .ticker-bottom { bottom: 0; }
-        
-        .marquee-wrapper { 
-            display: flex; white-space: nowrap; align-items: center; 
-            will-change: transform;
+        body.is-exiting #window-frame { animation: windowClose 0.4s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes windowOpen  { 0%{opacity:0;transform:scale(0.97)} 100%{opacity:1;transform:none} }
+        @keyframes windowClose { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(1.03)} }
+
+        /* Logo cluster inside the window */
+        #logo-cluster {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 12px; z-index: 5;
+            animation: logoIn 0.85s cubic-bezier(0.34,1.35,0.64,1) 0.4s both;
         }
-        
-        .ticker-top .marquee-wrapper { animation: scrollMarquee 15s linear infinite; }
-        .ticker-bottom .marquee-wrapper { animation: scrollMarquee 15s linear infinite reverse; animation-delay: -7.5s; } /* Out of sync offset */
+        body.is-exiting #logo-cluster { animation: logoOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes logoIn  { 0%{opacity:0;transform:scale(0.82) translateY(24px)} 100%{opacity:1;transform:none} }
+        @keyframes logoOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(0.9) translateY(10px)} }
 
-        .ticker-item { display: inline-flex; align-items: center; margin-right: 30px; }
-        .ticker-art { height: 26px; width: 26px; margin: 0 15px; object-fit: cover; display: none; border-radius: 0; border: 1.5px solid #fff; }
-        .ticker-art.has-art { display: block; }
-        
-        .song-display { 
-            font-size: 1.3rem; line-height: 1;
-            font-weight: 900; text-transform: uppercase; letter-spacing: 2px; 
-            display: inline-block; transform: translateY(1px); 
+        .logo-row {
+            display: flex; align-items: flex-end; gap: 0;
         }
-        
-        @keyframes scrollMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        .ticker-top { transform: translateY(-100%); animation: slideTopIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
-        .ticker-bottom { transform: translateY(100%); animation: slideBottomIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.6s forwards; }
-        body.is-exiting .ticker-top { animation: slideTopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards; }
-        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards; }
-
-        @keyframes slideTopIn { to { transform: translateY(0); } } @keyframes slideBottomIn { to { transform: translateY(0); } }
-        @keyframes slideTopOut { to { transform: translateY(-100%); } } @keyframes slideBottomOut { to { transform: translateY(100%); } }
-
-        /* ── WINDOW CONCEPT & CENTER LAYOUT ──────────────────────────────────── */
-        #center-block {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            width: 100%; flex: 1; z-index: 20; padding: 20px; box-sizing: border-box;
-            opacity: 0; animation: contentJumpUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+        .cuceu-logo-img {
+            height: clamp(3.5rem,13vw,6.5rem); width: auto;
+            user-select: none; -webkit-user-drag: none;
+            filter: drop-shadow(0 2px 14px rgba(0,0,0,0.45));
         }
-        body.is-exiting #center-block { animation: contentJumpDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0s forwards; }
-        
-        @keyframes contentJumpUp { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes contentJumpDown { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(40px) scale(0.95); } }
-
-        #window-container {
-            width: 100%; max-width: 700px; aspect-ratio: 16 / 7;
-            background-image: url('./IMG_1148.webp'); background-size: cover; background-position: center;
-            border: 3px solid #000; box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin-bottom: 25px; position: relative;
+        .fm-text {
+            font-size: clamp(1.3rem,4.5vw,2.4rem);
+            font-weight: 900; letter-spacing: -2px; color: #111;
+            padding-bottom: clamp(0.25rem,0.8vw,0.55rem);
+            /* Pull close — compensates for PNG transparent right edge */
+            margin-left: -14px;
+            text-shadow: 0 0 16px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6);
         }
 
-        .logo-wrapper-img { display: flex; align-items: flex-end; justify-content: center; gap: 0; z-index: 2;}
-        .cuceu-logo-img { height: clamp(3.5rem, 12vw, 6.5rem); width: auto; user-select: none; -webkit-user-drag: none; }
-        .fm-text { 
-            font-size: clamp(1.3rem, 4vw, 2.2rem); 
-            font-weight: 900; letter-spacing: -2px; 
-            padding-bottom: 0.3rem; margin-left: -5px; 
-            color: #000;
+        .live-status {
+            display: inline-flex; align-items: center; gap: 10px;
+            font-size: 1rem; font-weight: 900;
+            letter-spacing: 5px; text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.5);
         }
-        
-        .live-status { 
-            font-size: 1.3rem; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; 
-            margin-bottom: 5px; display: inline-flex; align-items: center; gap: 10px; color: #000;
-            z-index: 2; text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        .pulse-dot {
+            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+            background: #777;
         }
-        
-        .pulse-dot { height: 12px; width: 12px; background-color: #777; border-radius: 50%; }
-        .pulse-dot.live { background-color: #34c759; box-shadow: 0 0 10px #34c759; }
-        .pulse-dot.buffering { background-color: #ffcc00; box-shadow: 0 0 12px #ffcc00; animation: pulse-yellow 1s infinite; }
-        .pulse-dot.on-air { background-color: #ff3b30; box-shadow: 0 0 12px #ff3b30; animation: pulse-red 1.2s infinite; }
-        
-        @keyframes pulse-yellow { 0%, 100% { transform: scale(0.85); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
-        @keyframes pulse-red { 0%, 100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } }
+        .pulse-dot.live      { background: #34c759; box-shadow: 0 0 12px #34c759; }
+        .pulse-dot.buffering { background: #ffcc00; box-shadow: 0 0 14px #ffcc00; animation: pDot 1s infinite ease-in-out; }
+        .pulse-dot.on-air    { background: #ff3b30; box-shadow: 0 0 14px #ff3b30; animation: pDot 1.2s infinite ease-in-out; }
+        @keyframes pDot {
+            0%,100% { transform: scale(0.8); opacity: 0.7; }
+            50%     { transform: scale(1.3); opacity: 1; }
+        }
 
-        /* ── BUTTON & HISTORY AREA ───────────────────────────────────────────── */
-        #btn { 
-            background-color: #000; color: #fff; border: 2px solid #000;
-            width: 180px; height: 56px; display: inline-flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; 
-            cursor: pointer; transition: all 0.2s ease; margin-bottom: 25px; padding: 0;
+        /* ── CONTROLS (falls from above the window) ──────── */
+        #controls-area {
+            flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 24px 14px; background: #fff; gap: 0;
+            animation: controlsDown 0.8s cubic-bezier(0.25,1,0.5,1) 0.45s both;
         }
-        #btn:hover { background-color: #333; }
-        #btn:active { transform: scale(0.96); }
+        body.is-exiting #controls-area { animation: controlsUp 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes controlsDown {
+            /* Originates from center/window edge and falls into place */
+            0%   { opacity: 0; transform: translateY(-55px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes controlsUp {
+            0%   { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-30px); }
+        }
 
-        .history-wrapper { display: flex; flex-direction: column; width: 320px; position: relative; }
-        #history-toggle { 
-            background: none; border: none; padding: 5px; color: #000; font-size: 0.9rem; 
-            font-weight: 900; text-transform: uppercase; cursor: pointer; margin: 0 auto; letter-spacing: 1px;
+        /* Clean button — NO offset shadow */
+        #btn {
+            background: #000; color: #fff;
+            border: 3px solid #000; padding: 16px 0;
+            width: 100%; max-width: 340px;
+            font-size: 1.05rem; font-weight: 900;
+            letter-spacing: 3px; text-transform: uppercase;
+            cursor: pointer; margin-bottom: 14px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
         }
-        
-        #history-list { 
-            position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 100%;
-            list-style: none; padding: 0; margin-top: 15px; border-radius: 0;
-            max-height: 0; opacity: 0; overflow: hidden; box-sizing: border-box; 
-            transform-origin: top center; background: #fff;
-            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.4s ease; 
-            z-index: 50; text-align: center;
-        }
-        #history-list.open { 
-            max-height: 250px; opacity: 1; padding: 10px 0; overflow-y: auto; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #000;
-        }
-        
-        /* Overhauled Clean List Items */
-        .history-item { 
-            padding: 8px 10px; font-size: 0.8rem; font-weight: 800; 
-            text-transform: uppercase; border-bottom: none; 
-            color: #333; opacity: 0.85; transition: opacity 0.2s;
-        }
-        .history-item:hover { opacity: 1; color: #000; }
+        #btn:hover  { background: #fff; color: #000; }
+        #btn:active { transform: scale(0.98); }
 
-        /* ── MOBILE LAYOUT OPTIMIZATIONS ─────────────────────────────────────── */
+        /* ── RECENTLY PLAYED — no dividers ───────────────── */
+        .history-wrapper { width: 100%; max-width: 340px; }
+
+        #history-toggle {
+            background: none; border: none; padding: 8px 0;
+            color: #000; font-size: 0.78rem; font-weight: 900;
+            letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer; width: 100%; text-align: center;
+            transition: opacity 0.2s;
+        }
+        #history-toggle:hover { opacity: 0.55; }
+
+        #history-list {
+            list-style: none; padding: 0; margin: 0; overflow: hidden;
+            max-height: 0; opacity: 0;
+            /* Smooth spring-like reveal */
+            transition:
+                max-height 0.55s cubic-bezier(0.25,1,0.5,1),
+                opacity    0.4s  ease;
+        }
+        #history-list.open { max-height: 280px; opacity: 1; }
+
+        /* Items fade in staggered via slight delay variation — no borders */
+        .history-item {
+            padding: 9px 14px;
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            text-align: center; color: #000;
+            background: rgba(0,0,0,0.03); margin-bottom: 3px;
+            border-radius: 2px;
+            /* No border-bottom, no dividers */
+        }
+        .history-item:last-child { margin-bottom: 0; }
+
+        /* ── MOBILE ──────────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar { top: 20px; left: 20px; right: 20px; }
-            .back-btn-top { padding: 5px 10px; font-size: 11px; }
-            .date-time-display { font-size: 11px; letter-spacing: 0.8px; }
-            .live-status { font-size: 1.1rem; letter-spacing: 2px; }
-            
-            #window-container { width: 95%; aspect-ratio: 16/10; margin-bottom: 20px; }
-            .ticker-tape { height: 42px; }
-            .ticker-art { height: 20px; width: 20px; margin: 0 10px; }
-            .song-display { font-size: 1rem; letter-spacing: 1px; }
-            
-            #btn { width: 160px; height: 50px; font-size: 1rem; }
-            .history-wrapper { width: min(85vw, 290px); }
+            .top-nav-bar    { height: 58px; padding: 0 16px; }
+            .back-btn-top   { font-size: 11px; padding: 7px 12px; border-width: 2px; }
+            .date-time-display { font-size: 11px; }
+            .ticker-tape    { height: 50px; }
+            .song-display   { font-size: 1.3rem; letter-spacing: 3px; }
+            .ticker-art     { height: 38px; width: 38px; }
+            #controls-area  { padding: 16px 16px 10px; }
+            #btn            { font-size: 0.95rem; padding: 14px 0; }
+            .fm-text        { margin-left: -16px; } /* more pull on mobile */
         }
     </style>
 </head>
 <body>
 
+    <div id="page-transition-overlay"></div>
+
     <div id="app-container">
-        <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
-        
+
+        <!-- TOP TICKER -->
+        <div class="ticker-tape ticker-top">
+            <div class="marquee-wrapper" id="top-marquee"></div>
+        </div>
+
+        <!-- NAV -->
         <div class="top-nav-bar">
-            <a href="/" class="back-btn-top internal-link">← BACK</a>
+            <a href="/" class="back-btn-top internal-link">← Back</a>
             <div class="date-time-display">
-                <span id="live-single-line">MONDAY | 12:00 AM</span>
+                <span id="live-single-line">MONDAY | 00:00 AM</span>
             </div>
         </div>
-        
-        <div id="center-block">
-            <div id="window-container">
-                <div class="live-status">
-                    <div class="pulse-dot" id="pulse-indicator"></div> 
-                    <span id="center-status">CHECKING...</span>
-                </div>
-                <div class="logo-wrapper-img">
+
+        <!-- WINDOW FRAME — bg photo + logo overlay -->
+        <div id="window-frame">
+            <div id="logo-cluster">
+                <div class="logo-row">
                     <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
                     <span class="fm-text">.fm</span>
                 </div>
-            </div>
-
-            <button id="btn">LISTEN NOW</button>
-            <div class="history-wrapper">
-                <button id="history-toggle">Recently Played ▼</button>
-                <ul id="history-list"><li class="history-item">Loading...</li></ul>
+                <div class="live-status">
+                    <div class="pulse-dot" id="pulse-indicator"></div>
+                    <span id="center-status">CHECKING...</span>
+                </div>
             </div>
         </div>
 
-        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
-        
+        <!-- CONTROLS — falls from window edge downward -->
+        <div id="controls-area">
+            <button id="btn">▶ Listen</button>
+            <div class="history-wrapper">
+                <button id="history-toggle">Recently Played ▼</button>
+                <ul id="history-list">
+                    <li class="history-item" style="border:none;">Loading...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- BOTTOM TICKER -->
+        <div class="ticker-tape ticker-bottom">
+            <div class="marquee-wrapper" id="bottom-marquee"></div>
+        </div>
+
         <audio id="radioPlayer" preload="none"></audio>
     </div>
 
 <script>
-    // Sequenced Exit Logic
-    document.addEventListener("DOMContentLoaded", () => {
+    // ── PAGE TRANSITIONS ────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        const overlay = document.getElementById('page-transition-overlay');
+        requestAnimationFrame(() => overlay.classList.add('loaded'));
         document.querySelectorAll('.internal-link').forEach(link => {
-            link.addEventListener('click', (e) => {
+            link.addEventListener('click', e => {
                 e.preventDefault();
-                document.body.classList.add('is-exiting'); 
-                setTimeout(() => window.location.assign(link.href), 750); 
+                document.body.classList.add('is-exiting');
+                setTimeout(() => window.location.assign(link.href), 800);
             });
         });
     });
 
-    const STREAM_BASE = "https://stream.cuceu.co.uk";
-    
-    // Single Line Clock
+    window.addEventListener('pageshow', e => {
+        if (e.persisted) {
+            document.body.classList.remove('is-exiting');
+            const ov = document.getElementById('page-transition-overlay');
+            ov.classList.remove('loaded');
+            requestAnimationFrame(() => ov.classList.add('loaded'));
+        }
+    });
+
+    // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────
+    const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
     function updateDateTime() {
-        const now = new Date();
-        const days = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-        const day = days[now.getDay()];
-        let h = now.getHours() % 12 || 12;
-        let m = now.getMinutes().toString().padStart(2, '0');
-        let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
-        document.getElementById('live-single-line').innerText = `${day} | ${h}:${m} ${ampm}`;
+        const n = new Date();
+        const h = n.getHours() % 12 || 12;
+        const m = n.getMinutes().toString().padStart(2,'0');
+        const ap = n.getHours() >= 12 ? 'PM' : 'AM';
+        document.getElementById('live-single-line').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
     }
-    setInterval(updateDateTime, 1000); updateDateTime();
+    updateDateTime(); setInterval(updateDateTime, 1000);
 
-    const btn = document.getElementById("btn"), player = document.getElementById("radioPlayer"),
-          centerStatus = document.getElementById("center-status"), pulseIndicator = document.getElementById("pulse-indicator"),
-          historyList = document.getElementById("history-list"), historyToggle = document.getElementById("history-toggle"),
-          topMarquee = document.getElementById("top-marquee"), bottomMarquee = document.getElementById("bottom-marquee");
+    // ── STREAM ─────────────────────────────────────────────────────
+    const STREAM_BASE = "https://stream.cuceu.co.uk";
 
-    let playing = false, isOnline = false, currentTrackText = "", currentTitle = "", currentArtUrl = "", lastTickerState = ""; 
+    const btn            = document.getElementById('btn');
+    const player         = document.getElementById('radioPlayer');
+    const centerStatus   = document.getElementById('center-status');
+    const pulseIndicator = document.getElementById('pulse-indicator');
+    const historyList    = document.getElementById('history-list');
+    const historyToggle  = document.getElementById('history-toggle');
+    const topMarquee     = document.getElementById('top-marquee');
+    const bottomMarquee  = document.getElementById('bottom-marquee');
+
+    let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '';
+
+    // ── TICKER ─────────────────────────────────────────────────────
+    function updateTicker(base) {
+        const artHtml = currentArtUrl
+            ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="">`
+            : `<span class="ticker-sep">·</span>`;
+        const item = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
+        const content = Array(14).fill(item).join('');
+
+        // Speed: ~70px/char minimum, nice and slow
+        const dur = Math.max(22, base.length * 1.6);
+
+        topMarquee.innerHTML = content + content;
+        topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+
+        bottomMarquee.innerHTML = content + content;
+        bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+        // Offset bottom ~44% so they're never in sync with each other
+        bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
+    }
+
+    // ── RECENTLY PLAYED ────────────────────────────────────────────
+    historyToggle.onclick = () => {
+        historyList.classList.toggle('open');
+        historyToggle.innerText = historyList.classList.contains('open')
+            ? 'Recently Played ▲'
+            : 'Recently Played ▼';
+    };
+
+    async function fetchGlobalHistory() {
+        try {
+            const data = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
+            if (data) {
+                historyList.innerHTML = data
+                    .filter(Boolean)
+                    .map(t => `<li class="history-item">${t}</li>`)
+                    .join('');
+            }
+        } catch(_) {}
+    }
 
     async function fetchArtwork() {
         try {
-            const res = await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now());
-            const cleanUrl = (await res.text()).trim();
-            if (cleanUrl && cleanUrl.startsWith('http')) currentArtUrl = cleanUrl;
-        } catch(e) { currentArtUrl = ""; }
+            const url = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
+            if (url && url.startsWith('http')) currentArtUrl = url;
+        } catch(_) { currentArtUrl = ''; }
     }
 
-    historyToggle.onclick = () => { 
-        historyList.classList.toggle("open"); 
-        historyToggle.innerText = historyList.classList.contains("open") ? "Recently Played ▲" : "Recently Played ▼"; 
-    };
-
-    async function directFetch(url) { const res = await fetch(url + "?t=" + Date.now()); return await res.json(); }
-    
-    async function fetchGlobalHistory() { 
-        try { 
-            const data = await directFetch(`${STREAM_BASE}/history.json`); 
-            if (data) historyList.innerHTML = data.filter(t => t).map(track => `<li class="history-item">${track}</li>`).join(''); 
-        } catch(e) {} 
-    }
-
-    // Pure CSS Marquee population
-    function updateTicker(base) {
-        const artHtml = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}">` : `<div style="width:26px; height:26px; margin:0 15px;"></div>`;
-        const tickerState = `${base}|${currentArtUrl || ""}`;
-        if (tickerState === lastTickerState) return;
-        lastTickerState = tickerState;
-        
-        const itemHtml = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
-        // Load enough to easily overflow screen width times two for infinite CSS scroll trick
-        const content = Array(20).fill(itemHtml).join(''); 
-        
-        topMarquee.innerHTML = content + content;
-        bottomMarquee.innerHTML = content + content;
-    }
-
-    function setStatus(text, dotClass) { 
-        centerStatus.innerText = text; 
-        pulseIndicator.className = "pulse-dot " + dotClass; 
+    // ── STATUS ─────────────────────────────────────────────────────
+    function setStatus(text, dotClass) {
+        centerStatus.innerText = text;
+        pulseIndicator.className = 'pulse-dot ' + dotClass;
     }
 
     async function fetchSongData() {
         try {
-            const data = await directFetch(`${STREAM_BASE}/status-json.xsl`);
-            let s = data.icestats.source; if (!s) throw new Error();
-            isOnline = true; 
-            let t = Array.isArray(s) ? (s[0].title || "ON AIR") : (s.title || "ON AIR");
-            
-            if (!playing) setStatus("LIVE", "live");
-            
+            const data = await fetch(`${STREAM_BASE}/status-json.xsl?t=` + Date.now()).then(r => r.json());
+            const s = data.icestats.source;
+            if (!s) throw new Error('offline');
+            isOnline = true;
+            const t = Array.isArray(s) ? (s[0].title || 'ON AIR') : (s.title || 'ON AIR');
+            if (!playing) setStatus('LIVE', 'live');
             if (t !== currentTitle) {
                 currentTitle = t;
-                fetchGlobalHistory(); 
-                currentArtUrl = "";
-                await fetchArtwork();
-            } else if (!currentArtUrl) {
+                fetchGlobalHistory();
                 await fetchArtwork();
             }
             updateTicker(`NOW PLAYING: ${t}`);
-        } catch (e) { 
-            isOnline = false; 
-            if (!playing) { setStatus("OFFLINE", ""); updateTicker("STANDBY"); } 
+        } catch(_) {
+            isOnline = false;
+            if (!playing) { setStatus('OFFLINE', ''); updateTicker('STANDBY'); }
         }
     }
 
-    player.onwaiting = () => { if (playing) setStatus("BUFFERING...", "buffering"); };
-    player.onplaying = () => { if (playing) setStatus("ON AIR", "on-air"); };
-    player.onpause = () => { if (isOnline) setStatus("LIVE", "live"); };
+    // ── AUDIO EVENTS ───────────────────────────────────────────────
+    player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
+    player.onplaying  = () => { if (playing) setStatus('ON AIR', 'on-air'); };
+    player.onpause    = () => { if (isOnline) setStatus('LIVE', 'live'); };
 
     btn.onclick = () => {
-        if (!playing) { 
-            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`; 
-            player.play(); 
-            btn.innerText = "⏸ Disconnect"; 
-            setStatus("BUFFERING...", "buffering");
-        } else { 
-            player.pause(); 
-            player.src = ""; 
-            btn.innerText = "LISTEN NOW"; 
-            setStatus(isOnline ? "LIVE" : "OFFLINE", isOnline ? "live" : "");
+        if (!playing) {
+            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
+            player.play();
+            btn.innerText = '⏸ Disconnect';
+            setStatus('BUFFERING...', 'buffering');
+        } else {
+            player.pause(); player.src = '';
+            btn.innerText = '▶ Listen';
+            setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : '');
         }
         playing = !playing;
     };
 
+    // ── INIT ───────────────────────────────────────────────────────
+    updateTicker('STANDBY');
+    fetchSongData();
+    fetchGlobalHistory();
     setInterval(fetchSongData, 4000);
-    fetchGlobalHistory(); fetchArtwork(); updateTicker("STANDBY"); fetchSongData();
 </script>
 </body>
 </html>
