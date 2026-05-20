@@ -35,16 +35,12 @@
             transform-origin: 40% 100%; /* Sucks down into the 2nd dock slot */
             transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
             transform: scale(1) translateY(0);
-            opacity: 1;
-            border-radius: 0;
-            position: relative;
-            overflow: hidden;
+            opacity: 1; border-radius: 0; position: relative; overflow: hidden;
         }
 
         .genie-state {
             transform: scale(0.05) translateY(50vh) !important;
-            opacity: 0 !important;
-            border-radius: 100px !important;
+            opacity: 0 !important; border-radius: 100px !important;
         }
 
         /* --- UI SEQUENCED ANIMATIONS --- */
@@ -55,6 +51,7 @@
         body.is-exiting .back-btn-top { animation: slideUpToTop 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting .td-window { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting .logo-group { animation: breatheDown 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .global-clock { opacity: 0; }
 
         @keyframes breatheUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes breatheDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(40px); } }
@@ -65,12 +62,12 @@
         /* --- HEADER SECTION --- */
         .brand-header {
             background-color: #ffffff; padding: 30px 20px;
-            display: flex; flex-direction: column; align-items: center;
-            position: relative; flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; flex-shrink: 0; height: 160px;
         }
 
         .back-btn-top {
-            position: absolute; left: 30px; top: 30px;
+            position: absolute; left: 30px; top: 25px;
             color: #000; text-decoration: none; font-weight: 800; 
             text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
             border: 2px solid #000; padding: 8px 16px; border-radius: 20px;
@@ -78,17 +75,24 @@
         }
         .back-btn-top:hover { background-color: #000; color: #fff; }
 
-        .logo-group { display: flex; align-items: flex-end; justify-content: center; margin-top: 10px; }
+        .global-clock {
+            position: absolute; top: 25px; right: 30px;
+            font-size: 14px; font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase; color: #000; white-space: nowrap;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo-group { display: flex; align-items: flex-end; justify-content: center; }
         
-        h1 { 
-            font-size: clamp(4rem, 12vw, 12rem); font-weight: 950; 
-            text-transform: uppercase; letter-spacing: -6px; 
-            margin: 0; color: #000; line-height: 0.8; 
+        .header-cuceu-img {
+            height: clamp(3rem, 10vw, 7rem); width: auto; object-fit: contain; z-index: 2;
         }
 
         .td-text { 
             font-size: clamp(1.5rem, 5vw, 4rem); font-weight: 400; 
-            text-transform: lowercase; margin-left: 5px; color: #000; letter-spacing: -2px; 
+            text-transform: lowercase; color: #000; letter-spacing: -2px; 
+            margin-left: -10px; /* Pulls closely against image */
+            line-height: 1; margin-bottom: 5px; z-index: 1;
         }
 
         /* --- TOUCHDESIGNER WINDOW --- */
@@ -160,7 +164,6 @@
         .td-node:hover { border-color: #999; }
         .td-node:active { transform: scale(0.98); }
 
-        /* INCREASED NODE DIMENSIONS & ADJUSTED SPACING (1.5x) */
         #project-node { width: 270px; left: calc(50vw - 280px); top: calc(50vh - 220px); }
         #download-node { width: 140px; left: calc(50vw + 70px); top: calc(50vh - 120px); }
         
@@ -236,9 +239,11 @@
         a { text-decoration: none; color: inherit; }
 
         @media (max-width: 768px) {
-            h1 { font-size: 4.5rem; letter-spacing: -4px; }
-            .td-window { margin: 0 10px 10px 10px; }
+            .global-clock { font-size: 11px; top: 20px; right: 20px; letter-spacing: 0.8px; }
             .back-btn-top { left: 15px; top: 15px; padding: 6px 12px; font-size: 10px; border-width: 1.5px;}
+            
+            .brand-header { height: 120px; }
+            .td-window { margin: 0 10px 10px 10px; }
             
             /* Responsive Scaling for Mobile! */
             #project-node { left: calc(50vw - 180px); top: calc(50vh - 260px); width: 210px; }
@@ -258,8 +263,9 @@
     <div id="app-container" class="genie-state">
         <div class="brand-header">
             <a href="/" class="back-btn-top internal-link">← Home</a>
+            <div class="global-clock" id="mac-clock">MONDAY | 00:00 AM</div>
             <div class="logo-group">
-                <h1>CUCEU</h1>
+                <img src="cuceugrta.png" alt="CUCEU" class="header-cuceu-img">
                 <span class="td-text">.td</span>
             </div>
         </div>
@@ -382,6 +388,17 @@
     </div>
 
     <script>
+        // --- GLOBAL CLOCK LOGIC ---
+        function updateDateTime() {
+            const now = new Date();
+            const days = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+            let h = now.getHours() % 12 || 12;
+            let m = now.getMinutes().toString().padStart(2, '0');
+            let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            document.getElementById('mac-clock').innerText = `${days[now.getDay()]} | ${h}:${m} ${ampm}`;
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
+
         // --- COMBINED GENIE & REVERSE EXIT ANIMATION LOGIC ---
         document.addEventListener("DOMContentLoaded", () => {
             const overlay = document.getElementById('page-transition-overlay');
