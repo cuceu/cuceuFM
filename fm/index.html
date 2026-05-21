@@ -11,7 +11,6 @@
         html, body {
             margin: 0; padding: 0;
             height: 100dvh; overflow: hidden;
-            background: #fff;
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
         }
 
@@ -23,31 +22,34 @@
         }
         #page-transition-overlay.loaded { opacity: 0; }
 
-        /* ── APP SHELL ───────────────────────────────────── */
+        /* ── FULL-BLEED BACKGROUND ───────────────────────── */
+        /* background-size: cover fills the whole viewport — no white bars */
         #app-container {
             width: 100vw; height: 100dvh;
-            display: flex; flex-direction: column;
-            background: #fff; overflow: hidden;
+            position: relative; overflow: hidden;
+            background-image: url('./IMG_1148.webp');
+            background-size: cover;
+            background-position: center 30%;
             animation: appIn 0.65s cubic-bezier(0.25,1,0.5,1) forwards;
         }
         body.is-exiting #app-container {
             animation: appOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards;
         }
-        @keyframes appIn  { 0%{opacity:0;transform:scale(0.97)} 100%{opacity:1;transform:none} }
-        @keyframes appOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(0.97);filter:blur(4px)} }
+        @keyframes appIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:none} }
+        @keyframes appOut { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.97);filter:blur(3px)} }
 
-        /* ── TICKERS ─────────────────────────────────────── */
+        /* ── TICKERS — absolute, sit on top of full-bleed bg ─ */
         .ticker-tape {
-            flex-shrink: 0; height: 58px;
+            position: absolute; left: 0; right: 0;
+            height: 58px; z-index: 60;
             background: #000; color: #fff;
             overflow: hidden; display: flex; align-items: center;
         }
-        .ticker-top    { border-bottom: 3px solid #000; }
-        .ticker-bottom { border-top:    3px solid #000; }
+        .ticker-top    { top: 0;    border-bottom: 3px solid #000; }
+        .ticker-bottom { bottom: 0; border-top:    3px solid #000; }
 
-        /* Entrance / exit */
-        .ticker-top    { transform: translateY(-100%); animation: slideTopIn    0.55s cubic-bezier(0.25,1,0.5,1) 0.25s forwards; }
-        .ticker-bottom { transform: translateY( 100%); animation: slideBottomIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.25s forwards; }
+        .ticker-top    { transform: translateY(-100%); animation: slideTopIn    0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
+        .ticker-bottom { transform: translateY( 100%); animation: slideBottomIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
         body.is-exiting .ticker-top    { animation: slideTopOut    0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes slideTopIn     { to { transform: translateY(0); } }
@@ -58,38 +60,32 @@
         .marquee-wrapper {
             display: flex; white-space: nowrap; align-items: center;
             width: fit-content;
-            /* duration set by JS */
+            /* duration + offset set by JS — never touches innerHTML on repeat polls */
             animation: tickerScroll linear infinite;
         }
-        @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
         .ticker-item  { display: inline-flex; align-items: center; }
-        .ticker-sep   { display: inline-block; width: 40px; opacity: 0.35; font-size: 1.4rem; text-align: center; }
         .ticker-art   { height: 44px; width: 44px; object-fit: cover; margin: 0 20px; border-radius: 3px; opacity: 0; transition: opacity 0.3s; }
         .ticker-art.has-art { opacity: 1; }
-        .song-display {
-            font-size: 1.65rem; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 4px;
-            padding: 0 8px;
-        }
+        .song-display { font-size: 1.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding: 0 10px; }
 
-        /* ── NAV BAR ─────────────────────────────────────── */
+        /* ── NAV — floats over photo ─────────────────────── */
         .top-nav-bar {
-            flex-shrink: 0; height: 66px;
+            position: absolute; top: 66px; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px; background: #fff;
+            padding: 12px 24px; z-index: 50;
             animation: navIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s both;
         }
         body.is-exiting .top-nav-bar { animation: navOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes navIn  { 0%{opacity:0;transform:translateY(-10px)} 100%{opacity:1;transform:none} }
-        @keyframes navOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(-10px)} }
+        @keyframes navIn  { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+        @keyframes navOut { from{opacity:1;transform:none} to{opacity:0;transform:translateY(-10px)} }
 
-        /* SQUARE back button — matches fm aesthetic */
         .back-btn-top {
-            color: #000; text-decoration: none;
-            font-weight: 900; text-transform: uppercase;
-            font-size: 12px; letter-spacing: 1.5px;
+            color: #000; text-decoration: none; font-weight: 900;
+            text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px;
             border: 2.5px solid #000; padding: 8px 16px;
+            background: rgba(255,255,255,0.90);
             transition: background 0.2s, color 0.2s;
         }
         .back-btn-top:hover { background: #000; color: #fff; }
@@ -97,142 +93,128 @@
         .date-time-display {
             font-size: clamp(11px,1.3vw,14px); font-weight: 900;
             letter-spacing: 1.5px; text-transform: uppercase; color: #000;
+            background: rgba(255,255,255,0.85); padding: 4px 10px;
         }
 
-        /* ── WINDOW FRAME (main image area) ─────────────── */
-        #window-frame {
-            flex: 1; position: relative; overflow: hidden;
-            background-image: url('./IMG_1148.webp');
-            background-size: cover; background-position: center 42%;
-            display: flex; align-items: center; justify-content: center;
-            animation: windowOpen 0.75s cubic-bezier(0.25,1,0.5,1) 0.1s both;
-        }
-        body.is-exiting #window-frame { animation: windowClose 0.4s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes windowOpen  { 0%{opacity:0;transform:scale(0.97)} 100%{opacity:1;transform:none} }
-        @keyframes windowClose { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(1.03)} }
-
-        /* Logo cluster inside the window */
+        /* ── LOGO CLUSTER — positioned inside the shutter window ─
+           top: ~43% places it in the lower-middle of the window frame.
+           The keyframes bake in the centering transform so there's no
+           conflict between the base transform and the animation.        */
         #logo-cluster {
-            display: flex; flex-direction: column;
-            align-items: center; gap: 12px; z-index: 5;
+            position: absolute;
+            top: 43%; left: 50%;
+            z-index: 10;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            text-align: center;
             animation: logoIn 0.85s cubic-bezier(0.34,1.35,0.64,1) 0.4s both;
         }
         body.is-exiting #logo-cluster { animation: logoOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes logoIn  { 0%{opacity:0;transform:scale(0.82) translateY(24px)} 100%{opacity:1;transform:none} }
-        @keyframes logoOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:scale(0.9) translateY(10px)} }
 
-        .logo-row {
-            display: flex; align-items: flex-end; gap: 0;
+        @keyframes logoIn {
+            from { opacity:0; transform: translate(-50%, calc(-50% + 22px)) scale(0.84); }
+            to   { opacity:1; transform: translate(-50%, -50%); }
         }
+        @keyframes logoOut {
+            from { opacity:1; transform: translate(-50%, -50%); }
+            to   { opacity:0; transform: translate(-50%, calc(-50% + 12px)) scale(0.9); }
+        }
+
+        .logo-row { display: flex; align-items: flex-end; gap: 0; }
+
         .cuceu-logo-img {
-            height: clamp(3.5rem,13vw,6.5rem); width: auto;
+            height: clamp(3.5rem, 13vw, 6.5rem); width: auto;
             user-select: none; -webkit-user-drag: none;
-            filter: drop-shadow(0 2px 14px rgba(0,0,0,0.45));
+            filter: drop-shadow(0 2px 14px rgba(0,0,0,0.5));
         }
         .fm-text {
-            font-size: clamp(1.3rem,4.5vw,2.4rem);
+            font-size: clamp(1.3rem, 4.5vw, 2.4rem);
             font-weight: 900; letter-spacing: -2px; color: #111;
-            padding-bottom: clamp(0.25rem,0.8vw,0.55rem);
-            /* Pull close — compensates for PNG transparent right edge */
+            padding-bottom: clamp(0.25rem, 0.8vw, 0.55rem);
             margin-left: -14px;
-            text-shadow: 0 0 16px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6);
+            text-shadow: 0 0 16px rgba(255,255,255,0.85), 0 1px 4px rgba(255,255,255,0.6);
         }
 
         .live-status {
             display: inline-flex; align-items: center; gap: 10px;
-            font-size: 1rem; font-weight: 900;
-            letter-spacing: 5px; text-transform: uppercase;
-            color: #fff;
-            text-shadow: 0 1px 10px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.5);
+            font-size: 1rem; font-weight: 900; letter-spacing: 5px;
+            text-transform: uppercase; color: #fff;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.85), 0 0 30px rgba(0,0,0,0.5);
         }
-        .pulse-dot {
-            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
-            background: #777;
-        }
+        .pulse-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: #777; }
         .pulse-dot.live      { background: #34c759; box-shadow: 0 0 12px #34c759; }
-        .pulse-dot.buffering { background: #ffcc00; box-shadow: 0 0 14px #ffcc00; animation: pDot 1s infinite ease-in-out; }
+        .pulse-dot.buffering { background: #ffcc00; box-shadow: 0 0 14px #ffcc00; animation: pDot 1s   infinite ease-in-out; }
         .pulse-dot.on-air    { background: #ff3b30; box-shadow: 0 0 14px #ff3b30; animation: pDot 1.2s infinite ease-in-out; }
         @keyframes pDot {
             0%,100% { transform: scale(0.8); opacity: 0.7; }
-            50%     { transform: scale(1.3); opacity: 1; }
+            50%     { transform: scale(1.3); opacity: 1;   }
         }
 
-        /* ── CONTROLS (falls from above the window) ──────── */
+        /* ── CONTROLS — float below the window frame ────────
+           bottom: 68px keeps it just above the bottom ticker.  */
         #controls-area {
-            flex-shrink: 0;
+            position: absolute;
+            bottom: 68px; left: 50%;
+            transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center;
-            padding: 20px 24px 14px; background: #fff; gap: 0;
-            animation: controlsDown 0.8s cubic-bezier(0.25,1,0.5,1) 0.45s both;
+            z-index: 10; width: 100%; max-width: 400px; padding: 0 24px;
+            animation: controlsIn 0.75s cubic-bezier(0.25,1,0.5,1) 0.5s both;
         }
-        body.is-exiting #controls-area { animation: controlsUp 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes controlsDown {
-            /* Originates from center/window edge and falls into place */
-            0%   { opacity: 0; transform: translateY(-55px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes controlsUp {
-            0%   { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-30px); }
-        }
+        body.is-exiting #controls-area { animation: controlsOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes controlsIn  { from{opacity:0;transform:translateX(-50%) translateY(22px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        @keyframes controlsOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(14px)} }
 
-        /* Clean button — NO offset shadow */
+        /* Clean black button — no offset shadow */
         #btn {
             background: #000; color: #fff;
             border: 3px solid #000; padding: 16px 0;
             width: 100%; max-width: 340px;
             font-size: 1.05rem; font-weight: 900;
             letter-spacing: 3px; text-transform: uppercase;
-            cursor: pointer; margin-bottom: 14px;
+            cursor: pointer; margin-bottom: 10px;
             transition: background 0.2s, color 0.2s, transform 0.1s;
         }
         #btn:hover  { background: #fff; color: #000; }
         #btn:active { transform: scale(0.98); }
 
-        /* ── RECENTLY PLAYED — no dividers ───────────────── */
+        /* ── RECENTLY PLAYED — no dividers ──────────────── */
         .history-wrapper { width: 100%; max-width: 340px; }
 
         #history-toggle {
-            background: none; border: none; padding: 8px 0;
-            color: #000; font-size: 0.78rem; font-weight: 900;
-            letter-spacing: 2px; text-transform: uppercase;
+            background: rgba(255,255,255,0.88); border: none;
+            padding: 8px 16px; color: #000; font-size: 0.78rem;
+            font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
             cursor: pointer; width: 100%; text-align: center;
             transition: opacity 0.2s;
         }
-        #history-toggle:hover { opacity: 0.55; }
+        #history-toggle:hover { opacity: 0.65; }
 
         #history-list {
             list-style: none; padding: 0; margin: 0; overflow: hidden;
             max-height: 0; opacity: 0;
-            /* Smooth spring-like reveal */
-            transition:
-                max-height 0.55s cubic-bezier(0.25,1,0.5,1),
-                opacity    0.4s  ease;
+            transition: max-height 0.55s cubic-bezier(0.25,1,0.5,1), opacity 0.4s ease;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         }
-        #history-list.open { max-height: 280px; opacity: 1; }
+        #history-list.open { max-height: 220px; opacity: 1; }
 
-        /* Items fade in staggered via slight delay variation — no borders */
         .history-item {
-            padding: 9px 14px;
-            font-size: 0.7rem; font-weight: 800;
+            padding: 9px 16px; font-size: 0.7rem; font-weight: 800;
             letter-spacing: 1.5px; text-transform: uppercase;
             text-align: center; color: #000;
-            background: rgba(0,0,0,0.03); margin-bottom: 3px;
-            border-radius: 2px;
-            /* No border-bottom, no dividers */
+            /* no border-bottom / no dividers */
         }
-        .history-item:last-child { margin-bottom: 0; }
 
         /* ── MOBILE ──────────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar    { height: 58px; padding: 0 16px; }
-            .back-btn-top   { font-size: 11px; padding: 7px 12px; border-width: 2px; }
-            .date-time-display { font-size: 11px; }
-            .ticker-tape    { height: 50px; }
-            .song-display   { font-size: 1.3rem; letter-spacing: 3px; }
-            .ticker-art     { height: 38px; width: 38px; }
-            #controls-area  { padding: 16px 16px 10px; }
-            #btn            { font-size: 0.95rem; padding: 14px 0; }
-            .fm-text        { margin-left: -16px; } /* more pull on mobile */
+            .top-nav-bar  { top: 58px; padding: 10px 16px; }
+            .ticker-tape  { height: 50px; }
+            .song-display { font-size: 1.3rem; letter-spacing: 3px; }
+            .ticker-art   { height: 38px; width: 38px; }
+            #controls-area { padding: 0 16px; }
+            #btn          { font-size: 0.95rem; padding: 14px 0; }
+            .fm-text      { margin-left: -16px; }
+            /* On portrait mobile the window in the photo sits higher */
+            #logo-cluster { top: 40%; }
         }
     </style>
 </head>
@@ -242,12 +224,10 @@
 
     <div id="app-container">
 
-        <!-- TOP TICKER -->
         <div class="ticker-tape ticker-top">
             <div class="marquee-wrapper" id="top-marquee"></div>
         </div>
 
-        <!-- NAV -->
         <div class="top-nav-bar">
             <a href="/" class="back-btn-top internal-link">← Back</a>
             <div class="date-time-display">
@@ -255,32 +235,29 @@
             </div>
         </div>
 
-        <!-- WINDOW FRAME — bg photo + logo overlay -->
-        <div id="window-frame">
-            <div id="logo-cluster">
-                <div class="logo-row">
-                    <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
-                    <span class="fm-text">.fm</span>
-                </div>
-                <div class="live-status">
-                    <div class="pulse-dot" id="pulse-indicator"></div>
-                    <span id="center-status">CHECKING...</span>
-                </div>
+        <!-- Logo sits inside the shutter/window frame of the background photo -->
+        <div id="logo-cluster">
+            <div class="logo-row">
+                <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
+                <span class="fm-text">.fm</span>
+            </div>
+            <div class="live-status">
+                <div class="pulse-dot" id="pulse-indicator"></div>
+                <span id="center-status">CHECKING...</span>
             </div>
         </div>
 
-        <!-- CONTROLS — falls from window edge downward -->
+        <!-- Controls float below the window frame, above the bottom ticker -->
         <div id="controls-area">
             <button id="btn">▶ Listen</button>
             <div class="history-wrapper">
                 <button id="history-toggle">Recently Played ▼</button>
                 <ul id="history-list">
-                    <li class="history-item" style="border:none;">Loading...</li>
+                    <li class="history-item">Loading...</li>
                 </ul>
             </div>
         </div>
 
-        <!-- BOTTOM TICKER -->
         <div class="ticker-tape ticker-bottom">
             <div class="marquee-wrapper" id="bottom-marquee"></div>
         </div>
@@ -289,7 +266,7 @@
     </div>
 
 <script>
-    // ── PAGE TRANSITIONS ────────────────────────────────────────────
+    // ── PAGE TRANSITIONS ─────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         const overlay = document.getElementById('page-transition-overlay');
         requestAnimationFrame(() => overlay.classList.add('loaded'));
@@ -311,20 +288,19 @@
         }
     });
 
-    // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────
+    // ── CLOCK ────────────────────────────────────────────────────
     const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
     function updateDateTime() {
-        const n = new Date();
-        const h = n.getHours() % 12 || 12;
-        const m = n.getMinutes().toString().padStart(2,'0');
+        const n  = new Date();
+        const h  = n.getHours() % 12 || 12;
+        const m  = n.getMinutes().toString().padStart(2, '0');
         const ap = n.getHours() >= 12 ? 'PM' : 'AM';
         document.getElementById('live-single-line').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
     }
     updateDateTime(); setInterval(updateDateTime, 1000);
 
-    // ── STREAM ─────────────────────────────────────────────────────
-    const STREAM_BASE = "https://stream.cuceu.co.uk";
-
+    // ── STREAM ───────────────────────────────────────────────────
+    const STREAM_BASE    = "https://stream.cuceu.co.uk";
     const btn            = document.getElementById('btn');
     const player         = document.getElementById('radioPlayer');
     const centerStatus   = document.getElementById('center-status');
@@ -334,45 +310,42 @@
     const topMarquee     = document.getElementById('top-marquee');
     const bottomMarquee  = document.getElementById('bottom-marquee');
 
-    let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '';
+    let playing = false, isOnline = false;
+    let currentTitle = '', currentArtUrl = '', currentTickerBase = '';
 
-    // ── TICKER ─────────────────────────────────────────────────────
+    // ── TICKER — only rebuilt when the track actually changes ────
+    // This is the fix for the FPS flicker: previously updateTicker()
+    // was called every 4 s resetting innerHTML and restarting the
+    // animation. Now it only fires on a genuine track change.
     function updateTicker(base) {
         const artHtml = currentArtUrl
             ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="">`
-            : `<span class="ticker-sep">·</span>`;
-        const item = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
+            : `<span style="display:inline-block;width:10px"></span>`;
+        const item    = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
         const content = Array(14).fill(item).join('');
+        const dur     = Math.max(22, base.length * 1.6);
 
-        // Speed: ~70px/char minimum, nice and slow
-        const dur = Math.max(22, base.length * 1.6);
-
-        topMarquee.innerHTML = content + content;
+        topMarquee.innerHTML    = content + content;
         topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
 
-        bottomMarquee.innerHTML = content + content;
+        bottomMarquee.innerHTML    = content + content;
         bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
-        // Offset bottom ~44% so they're never in sync with each other
+        // Offset bottom ~44% so the two never move in lockstep
         bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
     }
 
-    // ── RECENTLY PLAYED ────────────────────────────────────────────
+    // ── RECENTLY PLAYED ──────────────────────────────────────────
     historyToggle.onclick = () => {
         historyList.classList.toggle('open');
         historyToggle.innerText = historyList.classList.contains('open')
-            ? 'Recently Played ▲'
-            : 'Recently Played ▼';
+            ? 'Recently Played ▲' : 'Recently Played ▼';
     };
 
     async function fetchGlobalHistory() {
         try {
             const data = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
-            if (data) {
-                historyList.innerHTML = data
-                    .filter(Boolean)
-                    .map(t => `<li class="history-item">${t}</li>`)
-                    .join('');
-            }
+            if (data) historyList.innerHTML = data.filter(Boolean)
+                .map(t => `<li class="history-item">${t}</li>`).join('');
         } catch(_) {}
     }
 
@@ -383,12 +356,13 @@
         } catch(_) { currentArtUrl = ''; }
     }
 
-    // ── STATUS ─────────────────────────────────────────────────────
+    // ── STATUS ───────────────────────────────────────────────────
     function setStatus(text, dotClass) {
         centerStatus.innerText = text;
         pulseIndicator.className = 'pulse-dot ' + dotClass;
     }
 
+    // ── SONG POLL — ticker only rebuilt on track change ──────────
     async function fetchSongData() {
         try {
             const data = await fetch(`${STREAM_BASE}/status-json.xsl?t=` + Date.now()).then(r => r.json());
@@ -397,19 +371,29 @@
             isOnline = true;
             const t = Array.isArray(s) ? (s[0].title || 'ON AIR') : (s.title || 'ON AIR');
             if (!playing) setStatus('LIVE', 'live');
+
             if (t !== currentTitle) {
+                // New track — fetch artwork then rebuild ticker once
                 currentTitle = t;
                 fetchGlobalHistory();
                 await fetchArtwork();
+                currentTickerBase = `NOW PLAYING: ${t}`;
+                updateTicker(currentTickerBase);
             }
-            updateTicker(`NOW PLAYING: ${t}`);
+            // Same track → do nothing → no DOM rebuild → no animation flicker
         } catch(_) {
             isOnline = false;
-            if (!playing) { setStatus('OFFLINE', ''); updateTicker('STANDBY'); }
+            if (!playing) {
+                setStatus('OFFLINE', '');
+                if (currentTickerBase !== 'STANDBY') {
+                    currentTickerBase = 'STANDBY';
+                    updateTicker('STANDBY');
+                }
+            }
         }
     }
 
-    // ── AUDIO EVENTS ───────────────────────────────────────────────
+    // ── AUDIO EVENTS ─────────────────────────────────────────────
     player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
     player.onplaying  = () => { if (playing) setStatus('ON AIR', 'on-air'); };
     player.onpause    = () => { if (isOnline) setStatus('LIVE', 'live'); };
@@ -428,7 +412,7 @@
         playing = !playing;
     };
 
-    // ── INIT ───────────────────────────────────────────────────────
+    // ── INIT ─────────────────────────────────────────────────────
     updateTicker('STANDBY');
     fetchSongData();
     fetchGlobalHistory();
