@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceu.fm</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2290%22 font-weight=%22900%22 font-family=%22system-ui%22 fill=%22%23000%22>.fm</text></svg>" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2255%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22 letter-spacing=%22-2%22>.fm</text></svg>">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
-
         html, body {
-            margin: 0; padding: 0;
-            height: 100dvh; overflow: hidden;
+            margin: 0; padding: 0; height: 100dvh; overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
         }
 
-        /* ── PAGE TRANSITION ─────────────────────────────── */
+        /* ── PAGE TRANSITION ─────────────────────────── */
         #page-transition-overlay {
             position: fixed; inset: 0; background: #fff;
             z-index: 99999; pointer-events: none; opacity: 1;
@@ -22,23 +21,23 @@
         }
         #page-transition-overlay.loaded { opacity: 0; }
 
-        /* ── FULL-BLEED BACKGROUND ───────────────────────── */
-        /* background-size: cover fills the whole viewport — no white bars */
+        /* ── FULL-BLEED CONTAINER ────────────────────── */
         #app-container {
             width: 100vw; height: 100dvh;
             position: relative; overflow: hidden;
             background-image: url('./IMG_1148.webp');
             background-size: cover;
             background-position: center 30%;
+            background-color: #fff;
+            transition: background-color 1.8s ease;
             animation: appIn 0.65s cubic-bezier(0.25,1,0.5,1) forwards;
         }
-        body.is-exiting #app-container {
-            animation: appOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards;
-        }
+        #app-container.viz-mode { background-color: #000; }
+        body.is-exiting #app-container { animation: appOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes appIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:none} }
-        @keyframes appOut { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.97);filter:blur(3px)} }
+        @keyframes appOut { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.97)} }
 
-        /* ── TICKERS — absolute, sit on top of full-bleed bg ─ */
+        /* ── TICKERS ─────────────────────────────────── */
         .ticker-tape {
             position: absolute; left: 0; right: 0;
             height: 58px; z-index: 60;
@@ -47,40 +46,32 @@
         }
         .ticker-top    { top: 0;    border-bottom: 3px solid #000; }
         .ticker-bottom { bottom: 0; border-top:    3px solid #000; }
-
-        .ticker-top    { transform: translateY(-100%); animation: slideTopIn    0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        .ticker-bottom { transform: translateY( 100%); animation: slideBottomIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        body.is-exiting .ticker-top    { animation: slideTopOut    0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .ticker-bottom { animation: slideBottomOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes slideTopIn     { to { transform: translateY(0); } }
-        @keyframes slideBottomIn  { to { transform: translateY(0); } }
-        @keyframes slideTopOut    { to { transform: translateY(-100%); } }
-        @keyframes slideBottomOut { to { transform: translateY( 100%); } }
-
-        .marquee-wrapper {
-            display: flex; white-space: nowrap; align-items: center;
-            width: fit-content;
-            /* duration + offset set by JS — never touches innerHTML on repeat polls */
-            animation: tickerScroll linear infinite;
-        }
+        .ticker-top    { transform: translateY(-100%); animation: stIn  0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
+        .ticker-bottom { transform: translateY( 100%); animation: sbIn  0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
+        body.is-exiting .ticker-top    { animation: stOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.is-exiting .ticker-bottom { animation: sbOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes stIn  { to{transform:translateY(0)} }
+        @keyframes sbIn  { to{transform:translateY(0)} }
+        @keyframes stOut { to{transform:translateY(-100%)} }
+        @keyframes sbOut { to{transform:translateY( 100%)} }
+        .marquee-wrapper { display:flex; white-space:nowrap; align-items:center; width:fit-content; animation:tickerScroll linear infinite; }
         @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        .ticker-item  { display:inline-flex; align-items:center; }
+        .ticker-art   { height:44px; width:44px; object-fit:cover; margin:0 20px; border-radius:3px; opacity:0; transition:opacity 0.3s; }
+        .ticker-art.has-art { opacity:1; }
+        .song-display { font-size:1.65rem; font-weight:900; text-transform:uppercase; letter-spacing:4px; padding:0 10px; }
 
-        .ticker-item  { display: inline-flex; align-items: center; }
-        .ticker-art   { height: 44px; width: 44px; object-fit: cover; margin: 0 20px; border-radius: 3px; opacity: 0; transition: opacity 0.3s; }
-        .ticker-art.has-art { opacity: 1; }
-        .song-display { font-size: 1.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; padding: 0 10px; }
-
-        /* ── NAV — floats over photo ─────────────────────── */
+        /* ── NAV ─────────────────────────────────────── */
         .top-nav-bar {
             position: absolute; top: 66px; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 24px; z-index: 50;
             animation: navIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s both;
+            transition: opacity 1.6s cubic-bezier(0.25,1,0.5,1);
         }
         body.is-exiting .top-nav-bar { animation: navOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes navIn  { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
         @keyframes navOut { from{opacity:1;transform:none} to{opacity:0;transform:translateY(-10px)} }
-
         .back-btn-top {
             color: #000; text-decoration: none; font-weight: 900;
             text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px;
@@ -89,157 +80,151 @@
             transition: background 0.2s, color 0.2s;
         }
         .back-btn-top:hover { background: #000; color: #fff; }
-
         .date-time-display {
             font-size: clamp(11px,1.3vw,14px); font-weight: 900;
             letter-spacing: 1.5px; text-transform: uppercase; color: #000;
             background: rgba(255,255,255,0.85); padding: 4px 10px;
         }
 
-        /* ── LOGO CLUSTER — positioned inside the shutter window ─
-           top: ~43% places it in the lower-middle of the window frame.
-           The keyframes bake in the centering transform so there's no
-           conflict between the base transform and the animation.        */
+        /* ── LOGO CLUSTER ────────────────────────────── */
         #logo-cluster {
-            position: absolute;
-            top: 43%; left: 50%;
-            z-index: 10;
+            position: absolute; top: 43%; left: 50%; z-index: 10;
             display: flex; flex-direction: column; align-items: center; gap: 10px;
-            text-align: center;
             animation: logoIn 0.85s cubic-bezier(0.34,1.35,0.64,1) 0.4s both;
+            transition: opacity 1.6s cubic-bezier(0.25,1,0.5,1);
         }
         body.is-exiting #logo-cluster { animation: logoOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-
-        @keyframes logoIn {
-            from { opacity:0; transform: translate(-50%, calc(-50% + 22px)) scale(0.84); }
-            to   { opacity:1; transform: translate(-50%, -50%); }
-        }
-        @keyframes logoOut {
-            from { opacity:1; transform: translate(-50%, -50%); }
-            to   { opacity:0; transform: translate(-50%, calc(-50% + 12px)) scale(0.9); }
-        }
-
-        .logo-row { display: flex; align-items: flex-end; gap: 0; }
-
+        @keyframes logoIn  { from{opacity:0;transform:translate(-50%,calc(-50% + 22px)) scale(0.84)} to{opacity:1;transform:translate(-50%,-50%)} }
+        @keyframes logoOut { from{opacity:1;transform:translate(-50%,-50%)} to{opacity:0;transform:translate(-50%,calc(-50% + 12px)) scale(0.9)} }
+        .logo-row { display:flex; align-items:flex-end; gap:0; }
         .cuceu-logo-img {
-            height: clamp(5.5rem, 20vw, 11rem); width: auto;
+            height: clamp(5.5rem,20vw,11rem); width: auto;
             user-select: none; -webkit-user-drag: none;
-            /* Glow + hard shadow so it reads against any part of the photo */
-            filter:
-                drop-shadow(0 0 18px rgba(0,0,0,0.75))
-                drop-shadow(0 0 40px rgba(0,0,0,0.5))
-                drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+            filter: drop-shadow(0 0 18px rgba(0,0,0,0.75)) drop-shadow(0 0 40px rgba(0,0,0,0.5)) drop-shadow(0 4px 8px rgba(0,0,0,0.6));
         }
         .fm-text {
-            font-size: clamp(1.9rem, 7vw, 4rem);
-            font-weight: 900; letter-spacing: -2px; color: #111;
-            padding-bottom: clamp(0.25rem, 0.8vw, 0.55rem);
-            margin-left: -18px;
+            font-size: clamp(1.9rem,7vw,4rem); font-weight: 900; letter-spacing: -2px; color: #111;
+            padding-bottom: clamp(0.25rem,0.8vw,0.55rem); margin-left: -18px;
             text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 1px 6px rgba(255,255,255,0.7);
         }
-
         .live-status {
             display: inline-flex; align-items: center; gap: 10px;
-            font-size: 1rem; font-weight: 900; letter-spacing: 5px;
+            font-size: 1.2rem; font-weight: 900; letter-spacing: 5px;
             text-transform: uppercase; color: #fff;
             text-shadow: 0 1px 10px rgba(0,0,0,0.85), 0 0 30px rgba(0,0,0,0.5);
         }
-        .pulse-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: #777; }
-        .pulse-dot.live      { background: #34c759; box-shadow: 0 0 12px #34c759; }
-        .pulse-dot.buffering { background: #ffcc00; box-shadow: 0 0 14px #ffcc00; animation: pDot 1s   infinite ease-in-out; }
-        .pulse-dot.on-air    { background: #ff3b30; box-shadow: 0 0 14px #ff3b30; animation: pDot 1.2s infinite ease-in-out; }
-        @keyframes pDot {
-            0%,100% { transform: scale(0.8); opacity: 0.7; }
-            50%     { transform: scale(1.3); opacity: 1;   }
-        }
+        .pulse-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; background:#777; }
+        .pulse-dot.live      { background:#34c759; box-shadow:0 0 14px #34c759; }
+        .pulse-dot.buffering { background:#ffcc00; box-shadow:0 0 16px #ffcc00; animation:pDot 1s   infinite ease-in-out; }
+        .pulse-dot.on-air    { background:#ff3b30; box-shadow:0 0 16px #ff3b30; animation:pDot 1.2s infinite ease-in-out; }
+        @keyframes pDot { 0%,100%{transform:scale(0.8);opacity:0.7} 50%{transform:scale(1.3);opacity:1} }
 
-        /* ── CONTROLS — float below the window frame ────────
-           bottom: 68px keeps it just above the bottom ticker.  */
+        /* ── CONTROLS ────────────────────────────────── */
         #controls-area {
-            position: absolute;
-            bottom: 68px; left: 50%;
+            position: absolute; bottom: 115px; left: 50%;
             transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center;
             z-index: 10; width: 100%; max-width: 400px; padding: 0 24px;
-            animation: controlsIn 0.75s cubic-bezier(0.25,1,0.5,1) 0.5s both;
+            animation: ctrlIn 0.75s cubic-bezier(0.25,1,0.5,1) 0.5s both;
+            transition: opacity 1.6s cubic-bezier(0.25,1,0.5,1);
         }
-        body.is-exiting #controls-area { animation: controlsOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes controlsIn  { from{opacity:0;transform:translateX(-50%) translateY(22px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-        @keyframes controlsOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(14px)} }
-
-        /* Clean black button — no offset shadow */
+        body.is-exiting #controls-area { animation: ctrlOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes ctrlIn  { from{opacity:0;transform:translateX(-50%) translateY(22px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        @keyframes ctrlOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(14px)} }
         #btn {
-            background: #000; color: #fff;
-            border: 3px solid #000; padding: 16px 0;
-            width: 100%; max-width: 340px;
-            font-size: 1.05rem; font-weight: 900;
-            letter-spacing: 3px; text-transform: uppercase;
-            cursor: pointer; margin-bottom: 10px;
+            background:#000; color:#fff; border:3px solid #000; padding:16px 0;
+            width:100%; max-width:340px; font-size:1.05rem; font-weight:900;
+            letter-spacing:3px; text-transform:uppercase; cursor:pointer; margin-bottom:10px;
             transition: background 0.2s, color 0.2s, transform 0.1s;
         }
-        #btn:hover  { background: #fff; color: #000; }
-        #btn:active { transform: scale(0.98); }
-
-        /* ── RECENTLY PLAYED — no dividers ──────────────── */
-        .history-wrapper { width: 100%; max-width: 340px; }
-
+        #btn:hover  { background:#fff; color:#000; }
+        #btn:active { transform:scale(0.98); }
+        .history-wrapper { width:100%; max-width:340px; }
         #history-toggle {
-            background: rgba(255,255,255,0.88); border: none;
-            padding: 8px 16px; color: #000; font-size: 0.78rem;
-            font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
-            cursor: pointer; width: 100%; text-align: center;
-            transition: opacity 0.2s;
+            background:rgba(255,255,255,0.88); border:none; padding:8px 16px;
+            color:#000; font-size:0.78rem; font-weight:900; letter-spacing:2px;
+            text-transform:uppercase; cursor:pointer; width:100%; text-align:center;
+            transition:opacity 0.2s;
         }
-        #history-toggle:hover { opacity: 0.65; }
-
+        #history-toggle:hover { opacity:0.65; }
         #history-list {
-            list-style: none; padding: 0; margin: 0; overflow: hidden;
-            max-height: 0; opacity: 0;
+            list-style:none; padding:0; margin:0; overflow:hidden;
+            max-height:0; opacity:0;
             transition: max-height 0.55s cubic-bezier(0.25,1,0.5,1), opacity 0.4s ease;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            background:rgba(255,255,255,0.92); backdrop-filter:blur(14px);
         }
-        #history-list.open { max-height: 220px; opacity: 1; }
-
+        #history-list.open { max-height:220px; opacity:1; }
         .history-item {
-            padding: 9px 16px; font-size: 0.7rem; font-weight: 800;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            text-align: center; color: #000;
-            /* no border-bottom / no dividers */
+            padding:9px 16px; font-size:0.7rem; font-weight:800;
+            letter-spacing:1.5px; text-transform:uppercase; text-align:center; color:#000;
         }
 
-        /* ── MOBILE ──────────────────────────────────────── */
+        /* ── VISUALIZER LAYERS ───────────────────────── */
+        /* Black overlay fades in first, then canvas draws on top */
+        #viz-bg {
+            position: absolute; inset: 0; z-index: 18;
+            background: #000; opacity: 0; pointer-events: none;
+            transition: opacity 1.8s ease;
+        }
+        #app-container.viz-mode #viz-bg { opacity: 1; }
+
+        #viz-canvas {
+            position: absolute; inset: 0; z-index: 19;
+            width: 100%; height: 100%;
+            opacity: 0; pointer-events: none;
+            transition: opacity 1.8s cubic-bezier(0.25,1,0.5,1);
+        }
+        #app-container.viz-mode #viz-canvas { opacity: 1; }
+
+        /* ── VISUALIZER TOGGLE ───────────────────────── */
+        #viz-toggle {
+            position: absolute; bottom: 72px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 70;
+            background: rgba(0,0,0,0.55);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 7px 20px; font-size: 10px; font-weight: 900;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            cursor: pointer; white-space: nowrap;
+            backdrop-filter: blur(12px); border-radius: 20px;
+            transition: color 0.4s, background 0.4s, border-color 0.4s, box-shadow 0.4s;
+        }
+        #viz-toggle:hover {
+            color: #fff; background: rgba(0,0,0,0.75);
+            border-color: rgba(255,255,255,0.4);
+        }
+        #app-container.viz-mode #viz-toggle {
+            color: #0ff; background: rgba(0,0,0,0.8);
+            border-color: rgba(0,255,255,0.45);
+            box-shadow: 0 0 14px rgba(0,255,255,0.25), inset 0 0 8px rgba(0,255,255,0.08);
+        }
+
+        /* ── MOBILE ──────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar  { top: 58px; padding: 10px 16px; }
-            .ticker-tape  { height: 50px; }
-            .song-display { font-size: 1.3rem; letter-spacing: 3px; }
-            .ticker-art   { height: 38px; width: 38px; }
-            #controls-area { padding: 0 16px; }
-            #btn          { font-size: 0.95rem; padding: 14px 0; }
-            .fm-text      { margin-left: -16px; }
-            /* On portrait mobile the window in the photo sits higher */
-            #logo-cluster { top: 40%; }
+            .top-nav-bar  { top:58px; padding:10px 16px; }
+            .ticker-tape  { height:50px; }
+            .song-display { font-size:1.3rem; letter-spacing:3px; }
+            .ticker-art   { height:38px; width:38px; }
+            #controls-area { padding:0 16px; bottom:108px; }
+            #btn          { font-size:0.95rem; padding:14px 0; }
+            .fm-text      { margin-left:-16px; }
+            #logo-cluster { top:40%; }
+            #app-container { margin:0 6px; width:calc(100vw - 12px); }
         }
     </style>
 </head>
 <body>
-
     <div id="page-transition-overlay"></div>
 
     <div id="app-container">
-
-        <div class="ticker-tape ticker-top">
-            <div class="marquee-wrapper" id="top-marquee"></div>
-        </div>
+        <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
         <div class="top-nav-bar">
             <a href="/" class="back-btn-top internal-link">← Back</a>
-            <div class="date-time-display">
-                <span id="live-single-line">MONDAY | 00:00 AM</span>
-            </div>
+            <div class="date-time-display"><span id="live-single-line">MONDAY | 00:00 AM</span></div>
         </div>
 
-        <!-- Logo sits inside the shutter/window frame of the background photo -->
         <div id="logo-cluster">
             <div class="logo-row">
                 <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
@@ -251,176 +236,398 @@
             </div>
         </div>
 
-        <!-- Controls float below the window frame, above the bottom ticker -->
         <div id="controls-area">
             <button id="btn">▶ Listen</button>
             <div class="history-wrapper">
                 <button id="history-toggle">Recently Played ▼</button>
-                <ul id="history-list">
-                    <li class="history-item">Loading...</li>
-                </ul>
+                <ul id="history-list"><li class="history-item">Loading...</li></ul>
             </div>
         </div>
 
-        <div class="ticker-tape ticker-bottom">
-            <div class="marquee-wrapper" id="bottom-marquee"></div>
-        </div>
+        <!-- Visualizer layers -->
+        <div id="viz-bg"></div>
+        <canvas id="viz-canvas"></canvas>
 
+        <!-- Always visible toggle (z-index above everything except overlay) -->
+        <button id="viz-toggle">VISUALISER</button>
+
+        <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
         <audio id="radioPlayer" preload="none"></audio>
     </div>
 
 <script>
-    // ── PAGE TRANSITIONS ─────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-        const overlay = document.getElementById('page-transition-overlay');
-        requestAnimationFrame(() => overlay.classList.add('loaded'));
-        document.querySelectorAll('.internal-link').forEach(link => {
-            link.addEventListener('click', e => {
-                e.preventDefault();
-                document.body.classList.add('is-exiting');
-                setTimeout(() => window.location.href = link.href, 800);
-            });
+// ── PAGE TRANSITIONS ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const ov = document.getElementById('page-transition-overlay');
+    requestAnimationFrame(() => ov.classList.add('loaded'));
+    document.querySelectorAll('.internal-link').forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(() => window.location.assign(link.href), 800);
         });
     });
+});
+window.addEventListener('pageshow', e => {
+    if (e.persisted) {
+        document.body.classList.remove('is-exiting');
+        const ov = document.getElementById('page-transition-overlay');
+        ov.classList.remove('loaded');
+        requestAnimationFrame(() => ov.classList.add('loaded'));
+    }
+});
 
-    window.addEventListener('pageshow', e => {
-        if (e.persisted) {
-            document.body.classList.remove('is-exiting');
-            const ov = document.getElementById('page-transition-overlay');
-            ov.classList.remove('loaded');
-            requestAnimationFrame(() => ov.classList.add('loaded'));
+// ── CLOCK ─────────────────────────────────────────────────────
+const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+function updateDateTime() {
+    const n = new Date(), h = n.getHours() % 12 || 12;
+    const m = n.getMinutes().toString().padStart(2,'0');
+    document.getElementById('live-single-line').innerText =
+        `${DAYS[n.getDay()]} | ${h}:${m} ${n.getHours() >= 12 ? 'PM' : 'AM'}`;
+}
+updateDateTime(); setInterval(updateDateTime, 1000);
+
+// ── STREAM ────────────────────────────────────────────────────
+const STREAM_BASE    = "https://stream.cuceu.co.uk";
+const btn            = document.getElementById('btn');
+const player         = document.getElementById('radioPlayer');
+const centerStatus   = document.getElementById('center-status');
+const pulseIndicator = document.getElementById('pulse-indicator');
+const historyList    = document.getElementById('history-list');
+const historyToggle  = document.getElementById('history-toggle');
+const topMarquee     = document.getElementById('top-marquee');
+const bottomMarquee  = document.getElementById('bottom-marquee');
+let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '', currentTickerBase = '';
+
+function updateTicker(base) {
+    const art = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="">` : `<span style="display:inline-block;width:10px"></span>`;
+    const item = `<div class="ticker-item"><span class="song-display">${base}</span>${art}</div>`;
+    const content = Array(14).fill(item).join('');
+    const dur = Math.max(22, base.length * 1.6);
+    topMarquee.innerHTML = content + content;
+    topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+    bottomMarquee.innerHTML = content + content;
+    bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+    bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
+}
+
+historyToggle.onclick = () => {
+    historyList.classList.toggle('open');
+    historyToggle.innerText = historyList.classList.contains('open') ? 'Recently Played ▲' : 'Recently Played ▼';
+};
+async function fetchGlobalHistory() {
+    try {
+        const d = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
+        if (d) historyList.innerHTML = d.filter(Boolean).map(t => `<li class="history-item">${t}</li>`).join('');
+    } catch(_) {}
+}
+async function fetchArtwork() {
+    try {
+        const u = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
+        if (u && u.startsWith('http')) currentArtUrl = u;
+    } catch(_) { currentArtUrl = ''; }
+}
+function setStatus(t, c) { centerStatus.innerText = t; pulseIndicator.className = 'pulse-dot ' + c; }
+async function fetchSongData() {
+    try {
+        const data = await fetch(`${STREAM_BASE}/status-json.xsl?t=` + Date.now()).then(r => r.json());
+        const s = data.icestats.source; if (!s) throw new Error();
+        isOnline = true;
+        const t = Array.isArray(s) ? (s[0].title || 'ON AIR') : (s.title || 'ON AIR');
+        if (!playing) setStatus('LIVE', 'live');
+        if (t !== currentTitle) {
+            currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
+            currentTickerBase = `NOW PLAYING: ${t}`;
+            updateTicker(currentTickerBase);
         }
-    });
-
-    // ── CLOCK ────────────────────────────────────────────────────
-    const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-    function updateDateTime() {
-        const n  = new Date();
-        const h  = n.getHours() % 12 || 12;
-        const m  = n.getMinutes().toString().padStart(2, '0');
-        const ap = n.getHours() >= 12 ? 'PM' : 'AM';
-        document.getElementById('live-single-line').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
-    }
-    updateDateTime(); setInterval(updateDateTime, 1000);
-
-    // ── STREAM ───────────────────────────────────────────────────
-    const STREAM_BASE    = "https://stream.cuceu.co.uk";
-    const btn            = document.getElementById('btn');
-    const player         = document.getElementById('radioPlayer');
-    const centerStatus   = document.getElementById('center-status');
-    const pulseIndicator = document.getElementById('pulse-indicator');
-    const historyList    = document.getElementById('history-list');
-    const historyToggle  = document.getElementById('history-toggle');
-    const topMarquee     = document.getElementById('top-marquee');
-    const bottomMarquee  = document.getElementById('bottom-marquee');
-
-    let playing = false, isOnline = false;
-    let currentTitle = '', currentArtUrl = '', currentTickerBase = '';
-
-    // ── TICKER — only rebuilt when the track actually changes ────
-    // This is the fix for the FPS flicker: previously updateTicker()
-    // was called every 4 s resetting innerHTML and restarting the
-    // animation. Now it only fires on a genuine track change.
-    function updateTicker(base) {
-        const artHtml = currentArtUrl
-            ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="Album artwork">`
-            : `<span style="display:inline-block;width:10px"></span>`;
-        const item    = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
-        const content = Array(14).fill(item).join('');
-        const dur     = Math.max(22, base.length * 1.6);
-
-        topMarquee.innerHTML    = content + content;
-        topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
-
-        bottomMarquee.innerHTML    = content + content;
-        bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
-        // Offset bottom ~44% so the two never move in lockstep
-        bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
-    }
-
-    // ── RECENTLY PLAYED ──────────────────────────────────────────
-    historyToggle.onclick = () => {
-        historyList.classList.toggle('open');
-        historyToggle.innerText = historyList.classList.contains('open')
-            ? 'Recently Played ▲' : 'Recently Played ▼';
-    };
-
-    async function fetchGlobalHistory() {
-        try {
-            const data = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
-            if (data) historyList.innerHTML = data.filter(Boolean)
-                .map(t => `<li class="history-item">${t}</li>`).join('');
-        } catch(_) {}
-    }
-
-    async function fetchArtwork() {
-        try {
-            const url = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
-            if (url && url.startsWith('http')) currentArtUrl = url;
-        } catch(_) { currentArtUrl = ''; }
-    }
-
-    // ── STATUS ───────────────────────────────────────────────────
-    function setStatus(text, dotClass) {
-        centerStatus.innerText = text;
-        pulseIndicator.className = 'pulse-dot ' + dotClass;
-    }
-
-    // ── SONG POLL — ticker only rebuilt on track change ──────────
-    async function fetchSongData() {
-        try {
-            const data = await fetch(`${STREAM_BASE}/status-json.xsl?t=` + Date.now()).then(r => r.json());
-            const s = data.icestats.source;
-            if (!s) throw new Error('offline');
-            isOnline = true;
-            const t = Array.isArray(s) ? (s[0].title || 'ON AIR') : (s.title || 'ON AIR');
-            if (!playing) setStatus('LIVE', 'live');
-
-            if (t !== currentTitle) {
-                // New track — fetch artwork then rebuild ticker once
-                currentTitle = t;
-                fetchGlobalHistory();
-                await fetchArtwork();
-                currentTickerBase = `NOW PLAYING: ${t}`;
-                updateTicker(currentTickerBase);
-            }
-            // Same track → do nothing → no DOM rebuild → no animation flicker
-        } catch(_) {
-            isOnline = false;
-            if (!playing) {
-                setStatus('OFFLINE', '');
-                if (currentTickerBase !== 'STANDBY') {
-                    currentTickerBase = 'STANDBY';
-                    updateTicker('STANDBY');
-                }
-            }
-        }
-    }
-
-    // ── AUDIO EVENTS ─────────────────────────────────────────────
-    player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
-    player.onplaying  = () => { if (playing) setStatus('ON AIR', 'on-air'); };
-    player.onpause    = () => { if (isOnline) setStatus('LIVE', 'live'); };
-
-    btn.onclick = () => {
+    } catch(_) {
+        isOnline = false;
         if (!playing) {
-            player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
-            player.play();
-            btn.innerText = '⏸ Disconnect';
-            setStatus('BUFFERING...', 'buffering');
-        } else {
-            player.pause(); player.src = '';
-            btn.innerText = '▶ Listen';
-            setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : '');
+            setStatus('OFFLINE', '');
+            if (currentTickerBase !== 'STANDBY') { currentTickerBase = 'STANDBY'; updateTicker('STANDBY'); }
         }
-        playing = !playing;
-    };
+    }
+}
+player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
+player.onplaying  = () => {
+    if (playing) setStatus('ON AIR', 'on-air');
+    // Try to hook visualizer into live audio once playback starts
+    if (vizActive && !audioReady) initAudio();
+};
+player.onpause = () => { if (isOnline) setStatus('LIVE', 'live'); };
+btn.onclick = () => {
+    if (!playing) {
+        player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
+        player.play(); btn.innerText = '⏸ Disconnect';
+        setStatus('BUFFERING...', 'buffering');
+    } else {
+        player.pause(); player.src = ''; btn.innerText = '▶ Listen';
+        setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : '');
+    }
+    playing = !playing;
+};
+updateTicker('STANDBY'); fetchSongData(); fetchGlobalHistory();
+setInterval(fetchSongData, 4000);
 
-    // ── INIT ─────────────────────────────────────────────────────
-    updateTicker('STANDBY');
-    fetchSongData();
-    fetchGlobalHistory();
-    setInterval(fetchSongData, 4000);
+// ══════════════════════════════════════════════════════════════
+// WINDOWS XP MEDIA PLAYER VISUALIZER
+// ══════════════════════════════════════════════════════════════
+const canvas    = document.getElementById('viz-canvas');
+const ctx       = canvas.getContext('2d');
+const container = document.getElementById('app-container');
+const vizBtn    = document.getElementById('viz-toggle');
+
+let vizActive   = false;
+let vizAnimId   = null;
+let audioCtx    = null;
+let analyser    = null;
+let audioReady  = false;
+let simTime     = 0;
+let particles   = [];
+
+// The UI elements that fade away in viz mode
+const fadeEls = () => [
+    document.querySelector('.top-nav-bar'),
+    document.getElementById('logo-cluster'),
+    document.getElementById('controls-area')
+];
+
+function resizeCanvas() {
+    canvas.width  = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ── AUDIO CONNECT ─────────────────────────────────────────────
+function initAudio() {
+    if (audioReady) return;
+    try {
+        audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+        analyser  = audioCtx.createAnalyser();
+        analyser.fftSize             = 512;
+        analyser.smoothingTimeConstant = 0.82;
+        const src = audioCtx.createMediaElementSource(player);
+        src.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        audioReady = true;
+    } catch(_) { audioReady = false; }
+}
+
+// ── SIMULATED FREQUENCY DATA (when stream isn't playing / CORS blocked) ──
+function getSimFreq() {
+    simTime += 0.04;
+    const n   = 256;
+    const out = new Uint8Array(n);
+    const beat = Math.max(0, Math.sin(simTime * 2.6)) * 0.85;
+
+    // Bass
+    for (let i = 0; i < 12; i++)
+        out[i] = Math.round(Math.min(255, (0.55 + beat * 0.45) * 220 * Math.exp(-i * 0.22) + Math.random() * 25));
+    // Mids
+    for (let i = 12; i < 90; i++) {
+        const peak = 38 + 10 * Math.sin(simTime * 0.4);
+        out[i] = Math.round(Math.min(255,
+            (0.45 + 0.3 * Math.sin(simTime * 0.7 + i * 0.04)) *
+            140 * Math.exp(-Math.pow((i - peak) / 18, 2)) + Math.random() * 18));
+    }
+    // Highs — taper off
+    for (let i = 90; i < n; i++)
+        out[i] = Math.max(0, Math.round(38 * Math.exp(-(i - 90) * 0.07) + Math.random() * 10));
+
+    return out;
+}
+
+// ── ALCHEMY PARTICLES ────────────────────────────────────────
+function spawnParticles(freq, W, H) {
+    const bass = freq[3] / 255;
+    if (bass < 0.38 || Math.random() > bass * 0.4) return;
+    const count = Math.ceil(bass * 4);
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x:     W / 2 + (Math.random() - 0.5) * W * 0.5,
+            y:     H / 2 + (Math.random() - 0.5) * H * 0.35,
+            vx:    (Math.random() - 0.5) * 3.5 * bass,
+            vy:    (Math.random() - 0.5) * 3.5 * bass - 0.8,
+            life:  1.0,
+            decay: 0.007 + Math.random() * 0.013,
+            size:  2 + Math.random() * 4.5 * bass,
+            hue:   175 + Math.random() * 85   // cyan → magenta
+        });
+    }
+}
+
+function tickParticles(ctx) {
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+        p.x  += p.vx; p.y += p.vy;
+        p.vy -= 0.025; // gentle float up
+        p.vx *= 0.98; p.vy *= 0.98;
+        p.life -= p.decay;
+        ctx.save();
+        ctx.globalAlpha    = p.life * 0.55;
+        ctx.shadowColor    = `hsl(${p.hue},100%,65%)`;
+        ctx.shadowBlur     = 14;
+        ctx.fillStyle      = `hsl(${p.hue},100%,70%)`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+// ── MAIN DRAW LOOP ───────────────────────────────────────────
+function drawFrame() {
+    if (!vizActive) return;
+
+    const W = canvas.width, H = canvas.height;
+
+    // Get frequency data — real audio if available, simulated otherwise
+    let freq;
+    if (analyser && playing && audioReady) {
+        freq = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(freq);
+    } else {
+        freq = getSimFreq();
+    }
+
+    // Motion-blur trail
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.fillRect(0, 0, W, H);
+
+    // ── FREQUENCY BARS (WMP style, mirrored on Y axis) ────────
+    const BAR_COUNT = 92;
+    const totalW    = W * 0.88;
+    const startX    = W * 0.06;
+    const bw        = totalW / BAR_COUNT;
+    const midY      = H * 0.5;
+
+    for (let i = 0; i < BAR_COUNT; i++) {
+        const bin   = Math.floor(i / BAR_COUNT * freq.length * 0.65);
+        const val   = freq[bin] / 255;
+        const bh    = val * midY * 0.88;
+        if (bh < 1) continue;
+
+        const bx  = startX + i * bw;
+        const bwd = Math.max(1, bw - 1.2);
+
+        // Classic WMP hue: deep blue → cyan → green → yellow
+        const hue = 228 - val * 128;
+        const sat = 88 + val * 12;
+        const lit = 38 + val * 32;
+
+        ctx.save();
+        ctx.shadowColor = `hsl(${hue},${sat}%,${lit + 22}%)`;
+        ctx.shadowBlur  = 10 + val * 22;
+
+        // Vertical gradient fill
+        const g = ctx.createLinearGradient(0, midY, 0, midY - bh);
+        g.addColorStop(0,   `hsla(${hue + 18},${sat}%,${lit - 12}%,0.55)`);
+        g.addColorStop(0.5, `hsla(${hue},${sat}%,${lit}%,0.82)`);
+        g.addColorStop(1,   `hsla(${hue - 18},${sat + 6}%,${lit + 28}%,1)`);
+        ctx.fillStyle = g;
+
+        // Top half
+        ctx.fillRect(bx, midY - bh, bwd, bh);
+        // Mirrored bottom half
+        ctx.fillRect(bx, midY, bwd, bh);
+
+        // WMP peak dot — bright white cap
+        if (val > 0.12) {
+            ctx.shadowBlur = 8;
+            ctx.fillStyle  = `rgba(255,255,255,${0.55 + val * 0.45})`;
+            ctx.fillRect(bx, midY - bh - 2, bwd, 2);
+            ctx.fillRect(bx, midY + bh,     bwd, 2);
+        }
+
+        ctx.restore();
+    }
+
+    // ── CENTRE LINE (WMP "waves" element) ────────────────────
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,220,255,0.35)';
+    ctx.lineWidth   = 1.2;
+    ctx.shadowColor = 'rgba(0,220,255,0.55)';
+    ctx.shadowBlur  = 7;
+    ctx.beginPath();
+    ctx.moveTo(startX, midY);
+    ctx.lineTo(startX + totalW, midY);
+    ctx.stroke();
+    ctx.restore();
+
+    // ── OSCILLOSCOPE WAVEFORM ─────────────────────────────────
+    if (analyser && playing && audioReady) {
+        const wave = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(wave);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,255,180,0.22)';
+        ctx.lineWidth   = 1.5;
+        ctx.shadowColor = 'rgba(0,255,180,0.4)';
+        ctx.shadowBlur  = 6;
+        ctx.beginPath();
+        const step = totalW / wave.length;
+        for (let i = 0; i < wave.length; i++) {
+            const y = midY + ((wave[i] / 128) - 1) * midY * 0.35;
+            i === 0 ? ctx.moveTo(startX + i * step, y) : ctx.lineTo(startX + i * step, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // ── ALCHEMY PARTICLES ─────────────────────────────────────
+    spawnParticles(freq, W, H);
+    tickParticles(ctx);
+
+    vizAnimId = requestAnimationFrame(drawFrame);
+}
+
+// ── TOGGLE ───────────────────────────────────────────────────
+function toggleViz() {
+    vizActive = !vizActive;
+    vizBtn.textContent = vizActive ? 'MAIN VIEW' : 'VISUALISER';
+
+    if (vizActive) {
+        // Try to connect real audio (user gesture satisfies autoplay policy)
+        if (playing && !audioReady) initAudio();
+        if (audioCtx?.state === 'suspended') audioCtx.resume();
+
+        // Fade out main UI (long smooth fade)
+        fadeEls().forEach(el => {
+            if (!el) return;
+            el.style.transition  = 'opacity 1.6s cubic-bezier(0.25,1,0.5,1)';
+            el.style.opacity     = '0';
+            el.style.pointerEvents = 'none';
+        });
+
+        // Activate layers (CSS transitions handle the fade-in)
+        container.classList.add('viz-mode');
+
+        // Prime canvas with solid black before first frame
+        resizeCanvas();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Start loop (delayed slightly so canvas opacity transition begins first)
+        setTimeout(drawFrame, 120);
+
+    } else {
+        // Stop draw loop
+        if (vizAnimId) { cancelAnimationFrame(vizAnimId); vizAnimId = null; }
+
+        // Deactivate layers
+        container.classList.remove('viz-mode');
+
+        // Fade main UI back in — slightly slower for drama
+        fadeEls().forEach(el => {
+            if (!el) return;
+            el.style.transition  = 'opacity 1.3s cubic-bezier(0.25,1,0.5,1)';
+            el.style.opacity     = '1';
+            el.style.pointerEvents = '';
+        });
+    }
+}
+
+vizBtn.addEventListener('click', toggleViz);
 </script>
 </body>
 </html>
