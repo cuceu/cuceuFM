@@ -122,16 +122,20 @@
         .logo-row { display: flex; align-items: flex-end; gap: 0; }
 
         .cuceu-logo-img {
-            height: clamp(3.5rem, 13vw, 6.5rem); width: auto;
+            height: clamp(5.5rem, 20vw, 11rem); width: auto;
             user-select: none; -webkit-user-drag: none;
-            filter: drop-shadow(0 2px 14px rgba(0,0,0,0.5));
+            /* Glow + hard shadow so it reads against any part of the photo */
+            filter:
+                drop-shadow(0 0 18px rgba(0,0,0,0.75))
+                drop-shadow(0 0 40px rgba(0,0,0,0.5))
+                drop-shadow(0 4px 8px rgba(0,0,0,0.6));
         }
         .fm-text {
-            font-size: clamp(1.3rem, 4.5vw, 2.4rem);
+            font-size: clamp(1.9rem, 7vw, 4rem);
             font-weight: 900; letter-spacing: -2px; color: #111;
             padding-bottom: clamp(0.25rem, 0.8vw, 0.55rem);
-            margin-left: -14px;
-            text-shadow: 0 0 16px rgba(255,255,255,0.85), 0 1px 4px rgba(255,255,255,0.6);
+            margin-left: -18px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 1px 6px rgba(255,255,255,0.7);
         }
 
         .live-status {
