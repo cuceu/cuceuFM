@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceu.fm</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2255%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22 letter-spacing=%22-2%22>.fm</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22c[...]
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
@@ -278,7 +278,7 @@
             link.addEventListener('click', e => {
                 e.preventDefault();
                 document.body.classList.add('is-exiting');
-                setTimeout(() => window.location.assign(link.href), 800);
+                setTimeout(() => window.location.href = link.href, 800);
             });
         });
     });
@@ -323,7 +323,7 @@
     // animation. Now it only fires on a genuine track change.
     function updateTicker(base) {
         const artHtml = currentArtUrl
-            ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="">`
+            ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="Album artwork">`
             : `<span style="display:inline-block;width:10px"></span>`;
         const item    = `<div class="ticker-item"><span class="song-display">${base}</span>${artHtml}</div>`;
         const content = Array(14).fill(item).join('');
