@@ -3,94 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>cuceu</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
+        html, body {
+            margin: 0; padding: 0;
+            height: 100vh; height: 100dvh;
+            background: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            display: flex; flex-direction: column; overflow: hidden;
+            color: #000;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #f4f4f4;
+
+        /* ── PAGE TRANSITION ─────────────────────────────────────────── */
+        #page-transition-overlay {
+            position: fixed; inset: 0; background: #fff;
+            z-index: 99999; pointer-events: none; opacity: 1;
+            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
         }
-        .app-badge {
-            display: flex;
-            align-items: center;
+        #page-transition-overlay.loaded  { opacity: 0; }
+        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
+
+        /* ── NOW PLAYING BANNER (brutalist / fm-matched) ─────────────── */
+        #now-playing-banner {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 62px; background: #fff;
+            border-bottom: 3px solid #000;
+            z-index: 120;
+            transform: translateY(-100%);
+            transition: transform 0.55s cubic-bezier(0.25,1,0.5,1);
         }
-        .recording-dot {
-            width: 8px;
-            height: 8px;
-            background-color: red;
-            border-radius: 50%;
-            margin-right: 8px;
+        #now-playing-banner.visible { transform: translateY(0); }
+        body.is-exiting #now-playing-banner {
+            transition: transform 0.30s cubic-bezier(0.25,1,0.5,1);
+            transform: translateY(-100%);
         }
-        .app-icon {
-            font-size: 24px;
-            color: #666;
+        .banner-inner {
+            display: flex; align-items: center;
+            height: 100%; padding: 0 24px; gap: 14px;
         }
-        .dock-app {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: #333;
+        .banner-live-dot {
+            width: 8px; height: 8px; flex-shrink: 0;
+            background: #ff3b30; border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255,59,48,0.85);
+            animation: pulse-dot 1.2s ease-in-out infinite;
         }
-        .dock-app:hover {
-            text-decoration: underline;
-        }
-        #page-transition-overlay.leaving {
-            opacity: 0;
-        }
-        .now-playing-banner {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 10px 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-        .now-playing-banner.visible {
-            display: block;
+        @keyframes pulse-dot {
+            0%,100% { transform: scale(0.8); opacity: 0.7; }
+            50%      { transform: scale(1.3); opacity: 1; }
         }
         #banner-art {
-            max-width: 100%;
-            height: auto;
-            display: none;
+            width: 40px; height: 40px; border-radius: 3px;
+            border: 1.5px solid #000; object-fit: cover; flex-shrink: 0;
+            opacity: 0; transition: opacity 0.35s ease;
         }
-        #banner-art.has-art {
-            display: block;
+        #banner-art.has-art { opacity: 1; }
+        .banner-info { flex: 1; min-width: 0; }
+        .banner-label {
+            display: block; font-size: 8px; font-weight: 900;
+            letter-spacing: 2.5px; color: #ff3b30; text-transform: uppercase;
+        }
+        #banner-track {
+            display: block; font-size: 13px; font-weight: 800;
+            color: #000; text-transform: uppercase; letter-spacing: 0.8px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .banner-btn {
+            flex-shrink: 0; background: #000; color: #fff;
+            font-size: 10px; font-weight: 900; letter-spacing: 1.5px;
+            text-transform: uppercase; text-decoration: none;
+            padding: 9px 18px; border: 2px solid #000; white-space: nowrap;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .banner-btn:hover { background: #ff3b30; border-color: #ff3b30; }
+
+        /* ── CLOCK ───────────────────────────────────────────────────── */
+        .status-area {
+            position: absolute; top: 25px; right: 30px;
+            display: flex; align-items: center; z-index: 100;
+            font-size: clamp(11px, 1.3vw, 15px);
+            font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+            color: #000;
+            text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px rgba(255,255,255,0.9);
+            opacity: 0; transform: translateX(15px);
+            animation: clockIn 0.8s cubic-bezier(0.25,1,0.5,1) 0.5s forwards;
+            transition: top 0.55s cubic-bezier(0.25,1,0.5,1);
+        }
+        body.banner-active .status-area { top: 78px; }
+        body.is-exiting   .status-area { animation: clockOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes clockIn  { 0%{opacity:0;transform:translateX(15px);filter:blur(3px)} 100%{opacity:1;transform:none;filter:none} }
+        @keyframes clockOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(15px);filter:blur(3px)} }
+
+        /* ── MARQUEE BACKGROUND ──────────────────────────────── */
+        .main-content { flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative; }
+
+        #logo-wrapper {
+            position: absolute; top: 50px; left: 0;
+            width: 100vw; height: calc(100dvh - 160px);
+            display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden; pointer-events: none;
+        }
+        body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); } }
+
+        .marquee-track {
+            display: flex; flex-wrap: nowrap;
+            width: max-content; will-change: transform;
+            margin-top: -0.8vw;
+        }
+        .marquee-track:first-child { margin-top: 0; }
+        .marquee-track:nth-child(even) { margin-left: -7vw; }
+
+        /* START PAUSED — JS resumes on load so widths are correct */
+        .track-right { animation: scrollRight 8s linear infinite; animation-play-state: paused; }
+        .track-left  { animation: scrollLeft  8s linear infinite; animation-play-state: paused; }
+
+        @keyframes scrollRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} }
+        @keyframes scrollLeft  { 0%{transform:translateX(0%)}   100%{transform:translateX(-50%)} }
+
+        img.cuceu-img {
+            height: clamp(3rem,4.5vw,6rem); width: auto;
+            margin-right: 1vw; flex-shrink: 0;
+            user-select: none; -webkit-user-drag: none; opacity: 0;
+        }
+
+        @keyframes dropInOdd  { 0%{opacity:0;transform:translateY(-50px)}           100%{opacity:1;transform:none} }
+        @keyframes dropInEven { 0%{opacity:0;transform:translateY(-50px) rotate(180deg)} 100%{opacity:1;transform:rotate(180deg)} }
+
+        .marquee-track:nth-child(odd)  img.cuceu-img { animation: dropInOdd  0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
+        .marquee-track:nth-child(even) img.cuceu-img { animation: dropInEven 0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
+        .marquee-track:nth-child(1) img.cuceu-img { animation-delay:.1s }
+        .marquee-track:nth-child(2) img.cuceu-img { animation-delay:.2s }
+        .marquee-track:nth-child(3) img.cuceu-img { animation-delay:.3s }
+        .marquee-track:nth-child(4) img.cuceu-img { animation-delay:.4s }
+        .marquee-track:nth-child(5) img.cuceu-img { animation-delay:.5s }
+        .marquee-track:nth-child(6) img.cuceu-img { animation-delay:.6s }
+        .marquee-track:nth-child(7) img.cuceu-img { animation-delay:.7s }
+        .marquee-track:nth-child(8) img.cuceu-img { animation-delay:.8s }
+
+        /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
+        .mac-dock-container {
+            position: absolute; bottom: 30px; width: 100%;
+            display: flex; justify-content: center; z-index: 10;
+        }
+
+        .mac-dock {
+            /* Liquid glass base */
+            background: linear-gradient(170deg,
+                rgba(255,255,255,0.30) 0%,
+                rgba(255,255,255,0.10) 55%,
+                rgba(255,255,255,0.20) 100%
+            );
+            backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
+            -webkit-backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
+
+            /* Edge refraction */
+            border: 1px solid rgba(255,255,255,0.60);
+            border-top-color: rgba(255,255,255,0.85);
+            border-bottom-color: rgba(255,255,255,0.30);
+            border-radius: 30px;
+            padding: 10px 18px;
+            display: flex; gap: 14px; align-items: center;
+
+            /* Depth + inner gloss */
+            box-shadow:
+                0 12px 48px rgba(0,0,0,0.10),
+                0 2px 8px rgba(0,0,0,0.06),
+                inset 0 1.5px 0 rgba(255,255,255,0.85),
+                inset 0 -1px 0 rgba(255,255,255,0.18),
+                inset 1px 0 0 rgba(255,255,255,0.25),
+                inset -1px 0 0 rgba(255,255,255,0.25);
+
+            opacity: 0;
+            animation: dockSlideUp 0.8s cubic-bezier(0.25,1,0.5,1) 1.2s forwards;
+            position: relative;
+        }
+
+        /* Curved specular highlight — the "glass curve" */
+        .mac-dock::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 50%;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.32) 0%,
+                rgba(255,255,255,0.06) 65%,
+                transparent 100%
+            );
+            border-radius: 30px 30px 50% 50% / 28px 28px 18px 18px;
+            pointer-events: none; z-index: 0;
+        }
+
+        body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
+        @keyframes dockSlideUp   { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
+        @keyframes dockSlideDown { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
+
+        .dock-app {
+            text-decoration: none; display: flex; flex-direction: column;
+            align-items: center; color: #fff;
+            transition: transform 0.3s cubic-bezier(0.25,1,0.5,1);
+            position: relative; height: 70px; justify-content: center;
+            z-index: 1;
+        }
+        .dock-app.is-open::after {
+            content: ''; position: absolute; bottom: 2px; left: 50%;
+            transform: translateX(-50%); width: 4px; height: 4px;
+            background: rgba(255,255,255,0.95); border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .dock-app:hover { transform: translateY(-10px); }
+
+        .app-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.08) 100%);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(255,255,255,0.42);
+            border-top-color: rgba(255,255,255,0.70);
+            color: #fff; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 900;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 6px rgba(0,0,0,0.06);
+        }
+        .icon-ig {
+            background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888) !important;
+            border: none !important; backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
+        }
+        .icon-td {
+            background: linear-gradient(180deg,#f4f4f4,#e0e0e0) !important;
+            border: 1px solid rgba(0,0,0,0.10) !important;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,0,0,0.08) !important;
+        }
+        .icon-trash { }
+        .icon-trash svg { width: 38px; height: 38px; margin-top: 2px; }
+
+        .app-tooltip {
+            position: absolute; top: -35px;
+            background: rgba(20,20,25,0.88); backdrop-filter: blur(12px);
+            padding: 6px 14px; border-radius: 10px;
+            font-size: 11px; font-weight: 700;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
+        }
+        .dock-app:hover .app-tooltip { opacity: 1; }
+
+        .app-badge {
+            position: absolute; top: -4px; right: -8px;
+            background: rgba(20,20,25,0.92); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+            padding: 3px 7px; display: flex; align-items: center; gap: 4px;
+            font-size: 8px; font-weight: 800; color: #fff;
+            opacity: 0; z-index: 20;
+        }
+        .app-badge.visible { opacity: 1; }
+        .recording-dot {
+            width: 5px; height: 5px; background: #ff3b30; border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        /* ── MOBILE ──────────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            .status-area { font-size: 11px; top: 20px; right: 16px; letter-spacing: 0.8px; }
+            body.banner-active .status-area { top: 72px; }
+            .track-right, .track-left { animation-duration: 35s; }
+            .marquee-track:first-child, .marquee-track:last-child { display: none; }
+            img.cuceu-img { height: 4rem; margin-right: 4vw; }
+            .marquee-track { margin-top: -1vw; }
+            .mac-dock { gap: 10px; padding: 8px 14px; border-radius: 26px; }
+            .app-icon { width: 48px; height: 48px; font-size: 1.3rem; }
+            .icon-td svg { width: 30px; height: 30px; }
+            #now-playing-banner { height: 54px; }
+            .banner-btn { padding: 7px 12px; font-size: 9px; }
+            #banner-track { font-size: 11px; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="#" class="dock-app internal-link">
-            <div class="app-tooltip">CUEUPNGS</div>
-            <img src="path-to-your-image.png" alt="CUEUPNGS Logo" class="app-icon">
-        </a>
-        <a href="#" class="dock-app internal-link">
-            <div class="app-tooltip">STATUS</div>
-            <div class="app-badge visible">
-                <div class="recording-dot"></div>
-                <span id="fm-badge-text">STATUS...</span>
-            </div>
-            <div class="app-icon .fm">
-                CUEUPNGS
-            </div>
-        </a>
-        <a href="/bin" class="dock-app internal-link">
-            <div class="app-tooltip">Trash</div>
-            <div class="app-icon icon-trash">
-                Trash
-            </div>
-        </a>
-    </div>
 
     <div id="page-transition-overlay"></div>
+
+    <!-- NOW PLAYING BANNER -->
+    <div id="now-playing-banner">
+        <div class="banner-inner">
+            <span class="banner-live-dot"></span>
+            <img id="banner-art" alt="">
+            <div class="banner-info">
+                <span class="banner-label">Live Now</span>
+                <span id="banner-track">—</span>
+            </div>
+            <a href="/fm" class="banner-btn internal-link">Listen Now →</a>
+        </div>
+    </div>
+
+    <div class="status-area">
+        <span id="mac-clock">MONDAY | 12:00 AM</span>
+    </div>
+
+    <div class="main-content">
+        <div id="logo-wrapper">
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cucueu-img" src="cuceugrta.png">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png">
+            </div>
+            <div class="marquee-track track-right">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cucueu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cucueu.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png">
+            </div>
+            <div class="marquee-track track-left">
+                <img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png">
+            </div>
+        </div>
+    </div>
+
+    <div class="mac-dock-container">
+        <div class="mac-dock">
+
+            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
+                <div class="app-tooltip">Instagram</div>
+                <div class="app-icon icon-ig">
+                    <svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644-.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.073-1.644-.073-4.849 0-3.204.014-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.69-.073 4.949-.073zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.949-.059-1.265-.073-1.69-.073-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
+                </div>
+            </a>
+
+            <a href="/td" class="dock-app internal-link">
+                <div class="app-tooltip">TouchDesigner</div>
+                <div class="app-icon icon-td">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="100" height="100" fill="#919c7d" stroke="#111" stroke-width="4"/>
+                        <path d="M50 0L50 100M0 50L100 50" stroke="#111" stroke-width="5"/>
+                        <path d="M20 20L50 50M80 20L50 50M20 80L50 50M80 80L50 50" stroke="#111" stroke-width="5"/>
+                        <rect x="12" y="12" width="20" height="20" fill="#111"/>
+                        <rect x="68" y="12" width="20" height="20" fill="#111"/>
+                        <rect x="12" y="68" width="20" height="20" fill="#111"/>
+                        <rect x="68" y="68" width="20" height="20" fill="#111"/>
+                        <circle cx="50" cy="50" r="23" fill="#fff" stroke="#111" stroke-width="5"/>
+                        <rect x="43" y="43" width="14" height="14" fill="#111"/>
+                    </svg>
+                </div>
+            </a>
+
+            <a href="/fm" class="dock-app is-open internal-link" id="fm-app">
+                <div class="app-tooltip">cuceuFM</div>
+                <div class="app-badge" id="fm-badge">
+                    <div class="recording-dot"></div>
+                    <span id="fm-badge-text">STATUS...</span>
+                </div>
+                <div class="app-icon">.fm</div>
+            </a>
+
+            <a href="/bin" class="dock-app internal-link">
+                <div class="app-tooltip">Trash</div>
+                <div class="app-icon icon-trash">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255,255,255,0.7)"/><stop offset="20%" stop-color="rgba(255,255,255,0.2)"/><stop offset="80%" stop-color="rgba(255,255,255,0.2)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient>
+                            <linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#ddd"/></linearGradient>
+                            <linearGradient id="p2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f0f0f0"/><stop offset="100%" stop-color="#aaa"/></linearGradient>
+                        </defs>
+                        <path d="M30 35Q25 15 45 10T65 20Q70 35 60 40Z" fill="url(#p2)" stroke="#999" stroke-width="0.5"/>
+                        <path d="M40 18Q50 10 55 20" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M20 40Q15 25 35 22T55 30Q50 45 35 45Z" fill="url(#p1)" stroke="#aaa" stroke-width="0.5"/>
+                        <path d="M55 25Q65 20 75 28" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M20 40Q15 25 35 22T55 30Q50 45 35 45Z" fill="url(#p1)" stroke="#aaa" stroke-width="0.5"/>
+                        <ellipse cx="50" cy="30" rx="34" ry="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+                        <path d="M16 30L26 86C26 94,74 94,74 86L84 30Z" fill="url(#g)" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+                        <path d="M22 36L30 83" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M16 30A34 9 0 0 0 84 30" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </a>
+
+        </div>
+    </div>
 
     <script>
         // ── PAGE TRANSITIONS ─────────────────────────────────────────────
@@ -105,28 +391,27 @@
                     setTimeout(() => window.location.href = link.href, 900);
                 });
             });
-        });
 
-        // ── MARQUEE FIX — pause on hide, resume on show ──────────────────
-        // Animations start PAUSED in CSS. This ensures widths are correct
-        // before scrolling begins, and prevents bfcache time-drift entirely.
-        function setMarqueeState(state) {
-            document.querySelectorAll('.marquee-track').forEach(t => {
-                t.style.animationPlayState = state;
-            });
-        }
-
-        window.addEventListener('load',           () => setMarqueeState('running'));
-        window.addEventListener('pagehide',       () => setMarqueeState('paused'));
-        document.addEventListener('visibilitychange', () => setMarqueeState(document.hidden ? 'paused' : 'running'));
-        window.addEventListener('pageshow', e => {
-            setMarqueeState('running');
-            if (e.persisted) {
-                const ov = document.getElementById('page-transition-overlay');
-                ov.classList.remove('loaded','leaving');
-                document.body.classList.remove('is-exiting');
-                requestAnimationFrame(() => ov.classList.add('loaded'));
+            // ── MARQUEE FIX — pause on hide, resume on show ──────────────────
+            // Animations start PAUSED in CSS. This ensures widths are correct
+            // before scrolling begins, and prevents bfcache time-drift entirely.
+            const marqueeTracks = document.querySelectorAll('.marquee-track');
+            function setMarqueeState(state) {
+                marqueeTracks.forEach(t => t.style.animationPlayState = state);
             }
+
+            // Pause all marquee tracks on page load
+            setMarqueeState('paused');
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    setMarqueeState('running');
+                }
+            });
+
+            window.addEventListener('pageshow', () => {
+                setMarqueeState('running');
+            });
         });
 
         // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────────
@@ -147,17 +432,17 @@
             const proxy = "https://api.allorigins.win/raw?url=" +
                 encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now());
             try {
-                const data = await fetch(proxy, { cache: "no-store" }).then(r => r.json());
-                const src  = data.icestats.source;
+                const data = await fetch(proxy, { cache: "no-store" }).then(r => r.text());
+                const src  = data.match(/<title>(.*?)<\/title>/);
                 if (src) {
-                    const title = Array.isArray(src) ? (src[0].title||"ON AIR") : (src.title||"ON AIR");
+                    const title = src[1] || "ON AIR";
                     document.getElementById('fm-badge-text').innerText = "ON AIR";
                     document.getElementById('fm-badge').classList.add('visible');
                     document.getElementById('banner-track').textContent = title;
                     if (!bannerShown) {
                         bannerShown = true;
                         try {
-                            const artUrl = (await fetch('https://stream.cuceu.co.uk/artwork.txt?t=' + Date.now()).then(r => r.text())).trim();
+                            const artUrl = await fetch('https://stream.cuceu.co.uk/artwork.txt?t=' + Date.now()).then(r => r.text());
                             if (artUrl.startsWith('http')) {
                                 const img = document.getElementById('banner-art');
                                 img.onload = () => img.classList.add('has-art');
