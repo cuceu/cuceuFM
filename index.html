@@ -99,7 +99,7 @@
 
         #logo-wrapper {
             position: absolute; top: 50px; left: 0;
-            width: 100vw; height: calc(100dvh - 160px);
+            width: 100vw; height: calc(100dvh - 160px); /* Keeps the marquee occupying most of the viewport */
             display: flex; flex-direction: column; justify-content: center;
             overflow: hidden; pointer-events: none;
         }
@@ -109,10 +109,10 @@
         .marquee-track {
             display: flex; flex-wrap: nowrap;
             width: max-content; will-change: transform;
-            margin-top: -0.8vw;
+            margin-top: -0.8vw; /* Vertical overlap to create dense lines */
         }
         .marquee-track:first-child { margin-top: 0; }
-        .marquee-track:nth-child(even) { margin-left: -7vw; }
+        /* *** FIX APPLIED HERE: Removed horizontal offset for even tracks to ensure perfect vertical alignment *** */
 
         /* START PAUSED — JS resumes on load so widths are correct */
         .track-right { animation: scrollRight 8s linear infinite; animation-play-state: paused; }
@@ -279,9 +279,9 @@
         }
     </style>
 </head>
-<body>
+<body class="is-loading">
 
-    <div id="page-transition-overlay"></div>
+    <div id="page-transition-overlay"></div >
 
     <!-- NOW PLAYING BANNER -->
     <div id="now-playing-banner">
@@ -298,37 +298,38 @@
 
     <div class="status-area">
         <span id="mac-clock">MONDAY | 12:00 AM</span>
-    </div>
+    </div >
 
     <div class="main-content">
         <div id="logo-wrapper">
+            <!-- Note: The alternating track-right/track-left classes ensure opposing scroll directions -->
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cucueu-img" src="cuceugrta.png">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cucueu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cucueu.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png">
+                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
             <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png">
+                <img class="cuccueugrta.png" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuccueugrta.png" alt="CUCEU">
             </div>
-        </div>
+        </div >
     </div>
 
     <div class="mac-dock-container">
         <div class="mac-dock">
 
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
-                <div class="app-tooltip">Instagram</div>
+                <div class="app-tooltip">Instagram</div >
                 <div class="app-icon icon-ig">
                     <svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644-.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.073-1.644-.073-4.849 0-3.204.014-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.69-.073 4.949-.073zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.949-.059-1.265-.073-1.69-.073-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
-                </div>
-            </a>
+                </div >
+            </a >
 
             <a href="/td" class="dock-app internal-link">
-                <div class="app-tooltip">TouchDesigner</div>
+                <div class="app-tooltip">TouchDesigner</div >
                 <div class="app-icon icon-td">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0" y="0" width="100" height="100" fill="#919c7d" stroke="#111" stroke-width="4"/>
@@ -342,19 +343,19 @@
                         <rect x="43" y="43" width="14" height="14" fill="#111"/>
                     </svg>
                 </div>
-            </a>
+            </a >
 
             <a href="/fm" class="dock-app is-open internal-link" id="fm-app">
-                <div class="app-tooltip">cuceuFM</div>
+                <div class="app-tooltip">cuceuFM</div >
                 <div class="app-badge" id="fm-badge">
-                    <div class="recording-dot"></div>
+                    <div class="recording-dot"></div >
                     <span id="fm-badge-text">STATUS...</span>
                 </div>
                 <div class="app-icon">.fm</div>
-            </a>
+            </a >
 
             <a href="/bin" class="dock-app internal-link">
-                <div class="app-tooltip">Trash</div>
+                <div class="app-tooltip">Trash</div >
                 <div class="app-icon icon-trash">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <defs>
@@ -373,9 +374,9 @@
                         <path d="M16 30A34 9 0 0 0 84 30" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
                     </svg>
                 </div>
-            </a>
+            </a >
 
-        </div>
+        </div >
     </div>
 
     <script>
@@ -393,8 +394,6 @@
             });
 
             // ── MARQUEE FIX — pause on hide, resume on show ──────────────────
-            // Animations start PAUSED in CSS. This ensures widths are correct
-            // before scrolling begins, and prevents bfcache time-drift entirely.
             const marqueeTracks = document.querySelectorAll('.marquee-track');
             function setMarqueeState(state) {
                 marqueeTracks.forEach(t => t.style.animationPlayState = state);
