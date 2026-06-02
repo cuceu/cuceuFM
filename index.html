@@ -124,20 +124,19 @@
             user-select: none; -webkit-user-drag: none; opacity: 0;
         }
 
-        @keyframes dropInOdd  { 0%{opacity:0;transform:translateY(-50px)}           100%{opacity:1;transform:none} }
-        @keyframes dropInEven { 0%{opacity:0;transform:translateY(-50px) rotate(180deg)} 100%{opacity:1;transform:rotate(180deg)} }
+        /* LIQUID GLASS FADE IN ANIMATION */
+        @keyframes glassFadeOdd {
+            0%   { opacity: 0; filter: blur(20px); transform: scale(1.05); }
+            100% { opacity: 1; filter: blur(0px); transform: scale(1); }
+        }
+        @keyframes glassFadeEven {
+            0%   { opacity: 0; filter: blur(20px); transform: scale(1.05) rotate(180deg); }
+            100% { opacity: 1; filter: blur(0px); transform: scale(1) rotate(180deg); }
+        }
 
-        .marquee-track:nth-child(odd)  img.cuceu-img { animation: dropInOdd  0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
-        .marquee-track:nth-child(even) img.cuceu-img { animation: dropInEven 0.6s cubic-bezier(0.1,0.9,0.2,1) both; }
-        
-        .marquee-track:nth-child(1) img.cuceu-img { animation-delay:.1s }
-        .marquee-track:nth-child(2) img.cuceu-img { animation-delay:.3s }
-        .marquee-track:nth-child(3) img.cuceu-img { animation-delay:.5s }
-        .marquee-track:nth-child(4) img.cuceu-img { animation-delay:.7s }
-        .marquee-track:nth-child(5) img.cuceu-img { animation-delay:.9s }
-        .marquee-track:nth-child(6) img.cuceu-img { animation-delay:1.1s }
-        .marquee-track:nth-child(7) img.cuceu-img { animation-delay:1.3s }
-        .marquee-track:nth-child(8) img.cuceu-img { animation-delay:1.5s }
+        /* Applied globally without staggering delays to create a unified structural load in */
+        .marquee-track:nth-child(odd)  img.cuceu-img { animation: glassFadeOdd 2.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .marquee-track:nth-child(even) img.cuceu-img { animation: glassFadeEven 2.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
         /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
         .mac-dock-container {
@@ -227,7 +226,7 @@
 
         /* Specific App Colors */
         .icon-ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-        .icon-td { background: transparent; } /* Reverted to transparent to let the SVG rect show */
+        .icon-td { background: transparent; } 
         .icon-fm { background: #000; color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
         .icon-bin { background: transparent; box-shadow: none; width: 56px; height: 56px; margin-bottom: -4px; }
 
@@ -278,7 +277,6 @@
 
     <div id="page-transition-overlay"></div >
 
-    <!-- NOW PLAYING BANNER -->
     <div id="now-playing-banner">
         <div class="banner-inner">
             <span class="banner-live-dot"></span>
@@ -297,7 +295,6 @@
 
     <div class="main-content">
         <div id="logo-wrapper">
-            <!-- 8 Lines Total: Lines 7 and 8 have the 'mobile-hide' class -->
             <div class="marquee-track track-right">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
@@ -330,7 +327,6 @@
     <div class="mac-dock-container">
         <div class="mac-dock">
 
-            <!-- INSTAGRAM (Official App Logo) -->
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div >
                 <div class="app-icon squircle icon-ig">
@@ -342,7 +338,6 @@
                 </div >
             </a >
 
-            <!-- TOUCHDESIGNER (Original Custom Logo) -->
             <a href="/td" class="dock-app internal-link">
                 <div class="app-tooltip">TouchDesigner</div >
                 <div class="app-icon squircle icon-td">
@@ -360,7 +355,6 @@
                 </div>
             </a >
 
-            <!-- CUCEU FM (.fm text) -->
             <a href="/fm" class="dock-app internal-link" id="fm-app">
                 <div class="app-tooltip">cuceuFM</div >
                 <div class="app-badge" id="fm-badge">
@@ -370,7 +364,6 @@
                 <div class="app-icon squircle icon-fm">.fm</div>
             </a >
 
-            <!-- BIN (Official macOS Empty Bin) -->
             <a href="/bin" class="dock-app internal-link">
                 <div class="app-tooltip">Bin</div >
                 <div class="app-icon icon-bin">
