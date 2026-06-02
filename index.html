@@ -333,50 +333,41 @@
     <div class="mac-dock-container">
         <div class="mac-dock">
 
-            <!-- INSTAGRAM (OG Polaroid) -->
+            <!-- INSTAGRAM (Official Gradient & Logo) -->
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div >
                 <div class="app-icon icon-ig">
                     <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0" y="0" width="100" height="100" fill="#B58966" />
-                        <rect x="0" y="0" width="100" height="38" fill="#E8E2D7"/>
-                        <!-- Rainbow -->
-                        <rect x="18" y="38" width="10" height="62" fill="#F8CF4A"/>
-                        <rect x="28" y="38" width="10" height="62" fill="#E04639"/>
-                        <rect x="38" y="38" width="10" height="62" fill="#A0CF66"/>
-                        <rect x="48" y="38" width="10" height="62" fill="#5891C9"/>
-                        <!-- Lens shadow -->
-                        <circle cx="50" cy="50" r="23" fill="rgba(0,0,0,0.15)"/>
-                        <!-- Lens -->
-                        <circle cx="50" cy="48" r="22" fill="#D2CBBD"/>
-                        <circle cx="50" cy="48" r="17" fill="#2D2926"/>
-                        <circle cx="50" cy="48" r="10" fill="#4D4946"/>
-                        <circle cx="54" cy="44" r="3" fill="#fff" opacity="0.5"/>
-                        <!-- Viewfinder -->
-                        <rect x="70" y="10" width="16" height="16" rx="4" fill="#2D2926"/>
-                        <circle cx="78" cy="18" r="3" fill="#fff" opacity="0.5"/>
+                        <defs>
+                            <linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#f09433"/>
+                                <stop offset="25%" stop-color="#e6683c"/>
+                                <stop offset="50%" stop-color="#dc2743"/>
+                                <stop offset="75%" stop-color="#cc2366"/>
+                                <stop offset="100%" stop-color="#bc1888"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="100" height="100" fill="url(#igGrad)"/>
+                        <rect x="22" y="22" width="56" height="56" rx="16" fill="none" stroke="#fff" stroke-width="7"/>
+                        <circle cx="50" cy="50" r="14" fill="none" stroke="#fff" stroke-width="7"/>
+                        <circle cx="67" cy="33" r="3.5" fill="#fff"/>
                     </svg>
                 </div >
             </a >
 
-            <!-- TOUCHDESIGNER (OG Nodes) -->
+            <!-- TOUCHDESIGNER (Official Logo) -->
             <a href="/td" class="dock-app internal-link">
                 <div class="app-tooltip">TouchDesigner</div >
                 <div class="app-icon icon-td">
                     <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="#1e1e1e"/>
-                        <path d="M30 30 L50 50 L70 30 M30 70 L50 50 L70 70" stroke="#666" stroke-width="5" fill="none"/>
-                        <rect x="20" y="20" width="20" height="20" rx="5" fill="#e0e0e0"/>
-                        <rect x="60" y="20" width="20" height="20" rx="5" fill="#e0e0e0"/>
-                        <rect x="20" y="60" width="20" height="20" rx="5" fill="#e0e0e0"/>
-                        <rect x="60" y="60" width="20" height="20" rx="5" fill="#e0e0e0"/>
-                        <circle cx="50" cy="50" r="15" fill="#e0e0e0"/>
-                        <circle cx="50" cy="50" r="5" fill="#1e1e1e"/>
+                        <rect width="100" height="100" fill="#222"/>
+                        <circle cx="50" cy="50" r="26" fill="none" stroke="#fff" stroke-width="8"/>
+                        <circle cx="69" cy="31" r="5" fill="#fff"/>
                     </svg>
                 </div>
             </a >
 
-            <!-- CUCEU FM (Cute Radio) -->
+            <!-- CUCEU FM (Monochrome Radio) -->
             <a href="/fm" class="dock-app internal-link" id="fm-app">
                 <div class="app-tooltip">cuceuFM</div >
                 <div class="app-badge" id="fm-badge">
@@ -385,48 +376,29 @@
                 </div >
                 <div class="app-icon icon-fm">
                     <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="fmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#FF512F" />
-                                <stop offset="100%" stop-color="#DD2476" />
-                            </linearGradient>
-                        </defs>
-                        <rect width="100" height="100" fill="url(#fmGrad)"/>
-                        <!-- Radio -->
-                        <rect x="16" y="35" width="68" height="46" rx="8" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="5"/>
-                        <path d="M26 35 L26 18 M74 35 L74 18" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M16 18 L84 18" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                        <!-- Speaker -->
-                        <circle cx="36" cy="58" r="12" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="4"/>
-                        <circle cx="36" cy="58" r="4" fill="#fff"/>
-                        <!-- Dials -->
-                        <circle cx="70" cy="48" r="4" fill="#fff"/>
-                        <circle cx="70" cy="68" r="4" fill="#fff"/>
-                        <!-- Screen -->
-                        <rect x="58" y="55" width="24" height="6" rx="3" fill="#fff"/>
+                        <rect width="100" height="100" fill="#1a1a1a"/>
+                        <rect x="16" y="35" width="68" height="46" rx="8" fill="#2d2d2d" stroke="#e0e0e0" stroke-width="4"/>
+                        <path d="M26 35 L26 18 M74 35 L74 18" stroke="#e0e0e0" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M16 18 L84 18" stroke="#e0e0e0" stroke-width="5" stroke-linecap="round"/>
+                        <circle cx="36" cy="58" r="12" fill="#1a1a1a" stroke="#e0e0e0" stroke-width="4"/>
+                        <circle cx="36" cy="58" r="3" fill="#e0e0e0"/>
+                        <circle cx="70" cy="48" r="4" fill="#e0e0e0"/>
+                        <circle cx="70" cy="68" r="4" fill="#e0e0e0"/>
+                        <rect x="58" y="55" width="24" height="6" rx="3" fill="#e0e0e0"/>
                     </svg>
                 </div>
             </a >
 
-            <!-- TRASH (macOS Bin) -->
+            <!-- TRASH (Monochrome macOS Bin) -->
             <a href="/bin" class="dock-app internal-link">
                 <div class="app-tooltip">Trash</div >
                 <div class="app-icon icon-trash">
                     <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="trashGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#f8f9fa" />
-                                <stop offset="100%" stop-color="#caced1" />
-                            </linearGradient>
-                        </defs>
-                        <rect width="100" height="100" fill="url(#trashGrad)"/>
-                        <!-- Trash bin lines -->
-                        <path d="M26 30 L74 30" stroke="#8e8e93" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M40 30 L40 20 Q40 16 50 16 Q60 16 60 20 L60 30" fill="none" stroke="#8e8e93" stroke-width="5" stroke-linecap="round"/>
-                        <!-- Bin Body -->
-                        <path d="M32 30 L38 80 Q39 85 50 85 Q61 85 62 80 L68 30" fill="rgba(255,255,255,0.5)" stroke="#8e8e93" stroke-width="5" stroke-linejoin="round"/>
-                        <!-- Ribs -->
-                        <path d="M43 45 L45 70 M57 45 L55 70" stroke="#8e8e93" stroke-width="4" stroke-linecap="round"/>
+                        <rect width="100" height="100" fill="#e5e5ea"/>
+                        <path d="M28 30 L72 30" stroke="#1c1c1e" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M42 30 L42 20 Q42 16 50 16 Q58 16 58 20 L58 30" fill="none" stroke="#1c1c1e" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M34 30 L40 80 Q40 85 50 85 Q60 85 60 80 L66 30" fill="none" stroke="#1c1c1e" stroke-width="5" stroke-linejoin="round"/>
+                        <path d="M44 45 L46 70 M56 45 L54 70" stroke="#1c1c1e" stroke-width="4" stroke-linecap="round"/>
                     </svg>
                 </div >
             </a >
