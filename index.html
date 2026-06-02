@@ -102,6 +102,10 @@
             width: 100vw; height: calc(100dvh - 160px);
             display: flex; flex-direction: column; justify-content: center;
             overflow: hidden; pointer-events: none;
+            
+            /* CRT Wake Up Master Animation */
+            transform-origin: center center;
+            animation: crtWakeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
         }
         body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); } }
@@ -124,19 +128,31 @@
             user-select: none; -webkit-user-drag: none; opacity: 0;
         }
 
-        /* LIQUID GLASS FADE IN ANIMATION */
-        @keyframes glassFadeOdd {
-            0%   { opacity: 0; filter: blur(20px); transform: scale(1.05); }
-            100% { opacity: 1; filter: blur(0px); transform: scale(1); }
-        }
-        @keyframes glassFadeEven {
-            0%   { opacity: 0; filter: blur(20px); transform: scale(1.05) rotate(180deg); }
-            100% { opacity: 1; filter: blur(0px); transform: scale(1) rotate(180deg); }
+        /* CRT POWER ON KEYFRAMES */
+        @keyframes crtWakeUp {
+            0% {
+                transform: scaleY(0.001) scaleX(0);
+                filter: brightness(12) blur(1px);
+                opacity: 0;
+            }
+            35% {
+                transform: scaleY(0.003) scaleX(1);
+                filter: brightness(12) blur(1px);
+                opacity: 1;
+            }
+            100% {
+                transform: scaleY(1) scaleX(1);
+                filter: brightness(1) blur(0px);
+                opacity: 1;
+            }
         }
 
-        /* Applied globally without staggering delays to create a unified structural load in */
-        .marquee-track:nth-child(odd)  img.cuceu-img { animation: glassFadeOdd 2.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .marquee-track:nth-child(even) img.cuceu-img { animation: glassFadeEven 2.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        /* Makes the image textures instantly ready inside the expanding line wrapper */
+        @keyframes crtShowOdd  { 0%{opacity:0;} 5%{opacity:1;} 100%{opacity:1;transform:none;} }
+        @keyframes crtShowEven { 0%{opacity:0;} 5%{opacity:1;} 100%{opacity:1;transform:rotate(180deg);} }
+
+        .marquee-track:nth-child(odd)  img.cuceu-img { animation: crtShowOdd 0.2s linear both; }
+        .marquee-track:nth-child(even) img.cuceu-img { animation: crtShowEven 0.2s linear both; }
 
         /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
         .mac-dock-container {
@@ -215,7 +231,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             overflow: hidden;
         }
-        /* Glossy inner border for standard apps */
         .squircle::after {
             content: ''; position: absolute; inset: 0;
             border: 1px solid rgba(255,255,255,0.2);
@@ -320,7 +335,6 @@
              <div class="marquee-track track-left mobile-hide">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-
         </div >
     </div>
 
@@ -352,7 +366,7 @@
                         <circle cx="50" cy="50" r="23" fill="#fff" stroke="#111" stroke-width="5"/>
                         <rect x="43" y="43" width="14" height="14" fill="#111"/>
                     </svg>
-                </div>
+                </div >
             </a >
 
             <a href="/fm" class="dock-app internal-link" id="fm-app">
@@ -410,15 +424,16 @@
                 });
             });
 
-            // ── MARQUEE FIX ───────────────────────
+            // ── MARQUEE ANIMATION RUNNING TRIGGER ───────────────────────
             const marqueeTracks = document.querySelectorAll('.marquee-track');
             function setMarqueeState(state) {
                 marqueeTracks.forEach(t => t.style.animationPlayState = state);
             }
 
+            // Sync horizontal loop initialization immediately following the CRT expansion burst
             setTimeout(() => {
                 setMarqueeState('running');
-            }, 150);
+            }, 500);
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
