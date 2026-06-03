@@ -5,34 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceu.fm</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2255%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22 letter-spacing=%22-2%22>.fm</text></svg>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0; height: 100dvh; overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-            background: #000;
+            background: #fff;
+            transition: background 0.8s ease;
         }
-
-        /* ── PAGE TRANSITION ─────────────────────────── */
-        #page-transition-overlay {
-            position: fixed; inset: 0; background: #fff;
-            z-index: 99999; pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
-        }
-        #page-transition-overlay.loaded { opacity: 0; }
+        body.dark-mode { background: #0a0a0a; }
 
         /* ── FULL-BLEED CONTAINER ────────────────────── */
         #app-container {
             width: 100vw; height: 100dvh;
             position: relative; overflow: hidden;
-            background-image: url('./IMG_1148.webp');
-            background-size: cover;
-            background-position: center 30%;
             background-color: #fff;
-            transition: background-color 1.8s ease;
+            transition: background-color 0.8s ease;
             animation: appIn 0.65s cubic-bezier(0.25,1,0.5,1) forwards;
         }
         #app-container.viz-mode { background-color: #000; }
+        body.dark-mode #app-container { background-color: #0a0a0a; }
         body.is-exiting #app-container { animation: appOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes appIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:none} }
         @keyframes appOut { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.97)} }
@@ -77,14 +70,106 @@
             text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px;
             border: 2.5px solid #000; padding: 8px 16px;
             background: rgba(255,255,255,0.90);
-            transition: background 0.2s, color 0.2s;
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
         }
         .back-btn-top:hover { background: #000; color: #fff; }
+        .nav-right {
+            display: flex; align-items: center; gap: 12px;
+            position: relative;
+        }
         .date-time-display {
             font-size: clamp(11px,1.3vw,14px); font-weight: 900;
             letter-spacing: 1.5px; text-transform: uppercase; color: #000;
-            background: rgba(255,255,255,0.85); padding: 4px 10px;
+            text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 14px rgba(255,255,255,0.6);
+            transition: color 0.8s ease, text-shadow 0.8s ease;
         }
+
+        /* ── SETTINGS ────────────────────────────────── */
+        .settings-btn {
+            background: none; border: none; cursor: pointer;
+            width: 28px; height: 28px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.5; transition: opacity 0.2s, transform 0.3s;
+        }
+        .settings-btn:hover { opacity: 1; }
+        .settings-btn.open { transform: rotate(60deg); opacity: 1; }
+        .settings-btn svg { 
+            transition: fill 0.8s ease; 
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 14px rgba(255,255,255,0.6));
+        }
+        .settings-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0;
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
+            padding: 8px 0; min-width: 160px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            opacity: 0; transform: translateY(-6px); pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .settings-dropdown.open {
+            opacity: 1; transform: translateY(0); pointer-events: auto;
+        }
+        .settings-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; cursor: pointer;
+            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #000;
+            transition: background 0.15s, color 0.8s;
+        }
+        .settings-item:hover { background: rgba(0,0,0,0.04); }
+        .theme-toggle-track {
+            width: 36px; height: 20px; border-radius: 10px;
+            background: rgba(0,0,0,0.12); position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle-track.active { background: #000; }
+        .theme-toggle-thumb {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; position: absolute; top: 2px; left: 2px;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .theme-toggle-track.active .theme-toggle-thumb { transform: translateX(16px); }
+
+        /* ── DARK MODE OVERRIDES ─────────────────────── */
+        body.dark-mode .fm-text { color: #fff; }
+        /* Logo: NEVER invert — just adjust the shadow */
+        body.dark-mode .cuceu-logo-img { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15)); }
+
+        /* Nav */
+        body.dark-mode .back-btn-top {
+            color: #fff; border-color: #fff;
+            background: rgba(255,255,255,0.08);
+        }
+        body.dark-mode .back-btn-top:hover { background: #fff; color: #000; }
+        body.dark-mode .date-time-display {
+            color: #fff;
+            text-shadow: 0 0 8px rgba(0,0,0,0.5), 0 0 14px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .settings-btn svg { fill: #fff; }
+        body.dark-mode .settings-dropdown {
+            background: rgba(30,30,30,0.92);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        body.dark-mode .settings-item { color: #fff; }
+        body.dark-mode .settings-item:hover { background: rgba(255,255,255,0.06); }
+        body.dark-mode .theme-toggle-track { background: rgba(255,255,255,0.15); }
+        body.dark-mode .theme-toggle-track.active { background: #fff; }
+        body.dark-mode .theme-toggle-track.active .theme-toggle-thumb { background: #111; }
+
+        /* Play button */
+        body.dark-mode #btn { background: #fff; color: #000; }
+        body.dark-mode #btn:hover { background: #ddd; }
+
+        /* History */
+        body.dark-mode #history-toggle { color: #fff; border-color: rgba(255,255,255,0.3); }
+        body.dark-mode #history-toggle:hover { color: #ccc; border-color: rgba(255,255,255,0.5); }
+        body.dark-mode .history-item { color: rgba(255,255,255,0.4); }
+
+        /* Live status */
+        body.dark-mode .live-status { color: rgba(255,255,255,0.5); }
 
         /* ── LOGO CLUSTER ────────────────────────────── */
         #logo-cluster {
@@ -100,23 +185,35 @@
         .cuceu-logo-img {
             height: clamp(5.5rem,20vw,11rem); width: auto;
             user-select: none; -webkit-user-drag: none;
-            filter: drop-shadow(0 0 18px rgba(0,0,0,0.75)) drop-shadow(0 0 40px rgba(0,0,0,0.5)) drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+            transition: filter 1.8s ease;
+        }
+        #app-container.viz-mode .cuceu-logo-img {
+            filter: drop-shadow(0 4px 16px rgba(255,255,255,0.15));
         }
         .fm-text {
             font-size: clamp(1.9rem,7vw,4rem); font-weight: 900; letter-spacing: -2px; color: #111;
             padding-bottom: clamp(0.25rem,0.8vw,0.55rem); margin-left: -18px;
-            text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 1px 6px rgba(255,255,255,0.7);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: color 1.8s ease, text-shadow 1.8s ease;
+        }
+        #app-container.viz-mode .fm-text {
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(255,255,255,0.2);
         }
         .live-status {
-            display: inline-flex; align-items: center; gap: 10px;
-            font-size: 1.2rem; font-weight: 900; letter-spacing: 5px;
-            text-transform: uppercase; color: #fff;
-            text-shadow: 0 1px 10px rgba(0,0,0,0.85), 0 0 30px rgba(0,0,0,0.5);
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.65rem; font-weight: 900; letter-spacing: 3px;
+            text-transform: uppercase; color: #999;
+            transition: color 1.8s ease;
         }
-        .pulse-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; background:#777; }
-        .pulse-dot.live      { background:#34c759; box-shadow:0 0 14px #34c759; }
-        .pulse-dot.buffering { background:#ffcc00; box-shadow:0 0 16px #ffcc00; animation:pDot 1s   infinite ease-in-out; }
-        .pulse-dot.on-air    { background:#ff3b30; box-shadow:0 0 16px #ff3b30; animation:pDot 1.2s infinite ease-in-out; }
+        #app-container.viz-mode .live-status {
+            color: rgba(255,255,255,0.5);
+        }
+        .pulse-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; background:#ccc; }
+        .pulse-dot.live      { background:#34c759; }
+        .pulse-dot.buffering { background:#ffcc00; animation:pDot 1s infinite ease-in-out; }
+        .pulse-dot.on-air    { background:#ff3b30; animation:pDot 1.2s infinite ease-in-out; }
         @keyframes pDot { 0%,100%{transform:scale(0.8);opacity:0.7} 50%{transform:scale(1.3);opacity:1} }
 
         /* ── CONTROLS ────────────────────────────────── */
@@ -132,72 +229,106 @@
         @keyframes ctrlIn  { from{opacity:0;transform:translateX(-50%) translateY(22px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
         @keyframes ctrlOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(14px)} }
         #btn {
-            background:#000; color:#fff; border:3px solid #000; padding:16px 0;
-            width:100%; max-width:340px; font-size:1.05rem; font-weight:900;
-            letter-spacing:3px; text-transform:uppercase; cursor:pointer; margin-bottom:10px;
-            transition: background 0.2s, color 0.2s, transform 0.1s;
+            background: #000; color: #fff; border: none;
+            padding: 13px 48px; border-radius: 50px;
+            font-size: 0.78rem; font-weight: 900; letter-spacing: 3px;
+            text-transform: uppercase; cursor: pointer;
+            transition: background 0.25s, transform 0.15s;
+            margin-top: 4px;
         }
-        #btn:hover  { background:#fff; color:#000; }
-        #btn:active { transform:scale(0.98); }
-        .history-wrapper { width:100%; max-width:340px; }
+        #btn:hover  { background: #222; }
+        #btn:active { transform: scale(0.96); }
+        .history-wrapper { width: 100%; max-width: 300px; margin-top: 16px; }
         #history-toggle {
-            background:rgba(255,255,255,0.88); border:none; padding:8px 16px;
-            color:#000; font-size:0.78rem; font-weight:900; letter-spacing:2px;
-            text-transform:uppercase; cursor:pointer; width:100%; text-align:center;
-            transition:opacity 0.2s;
+            background: transparent; border: none; padding: 0 0 4px 0;
+            color: #000; font-size: 0.65rem; font-weight: 900; letter-spacing: 2px;
+            text-transform: uppercase; cursor: pointer; width: 100%; text-align: center;
+            border-bottom: 1.5px solid #000;
+            transition: color 0.2s, border-color 0.2s;
         }
-        #history-toggle:hover { opacity:0.65; }
+        #history-toggle:hover { color: #555; border-color: #555; }
+        #app-container.viz-mode #history-toggle { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
+        #app-container.viz-mode #history-toggle:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
         #history-list {
-            list-style:none; padding:0; margin:0; overflow:hidden;
-            max-height:0; opacity:0;
+            list-style: none; padding: 0; margin: 8px 0 0 0; overflow: hidden;
+            max-height: 0; opacity: 0;
             transition: max-height 0.55s cubic-bezier(0.25,1,0.5,1), opacity 0.4s ease;
-            background:rgba(255,255,255,0.92); backdrop-filter:blur(14px);
         }
-        #history-list.open { max-height:220px; opacity:1; }
+        #history-list.open { max-height: 220px; opacity: 1; }
         .history-item {
-            padding:9px 16px; font-size:0.7rem; font-weight:800;
-            letter-spacing:1.5px; text-transform:uppercase; text-align:center; color:#000;
+            padding: 5px 0; font-size: 0.58rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase; text-align: center;
+            color: #888;
+            transition: color 1.8s ease;
+        }
+        #app-container.viz-mode .history-item { color: rgba(255,255,255,0.35); }
+
+        /* ── BACKGROUND MODES ────────────────────────── */
+        #bg-layer {
+            position: absolute; inset: 0; z-index: 1;
+            pointer-events: none; overflow: hidden;
+            transition: background-color 1.2s ease;
+        }
+        #bg-layer.mode-dvd { background: transparent; }
+        #bg-layer.mode-td  { background: transparent; }
+
+        #dvd-artwork {
+            position: absolute;
+            width: clamp(120px, 22vw, 220px); height: auto;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            will-change: transform;
+        }
+        #bg-layer.mode-dvd #dvd-artwork { opacity: 1; }
+
+        #td-container {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 1.2s ease;
+        }
+        #bg-layer.mode-td #td-container { opacity: 1; }
+        .td-placeholder {
+            font-size: 0.65rem; font-weight: 900; letter-spacing: 3px;
+            text-transform: uppercase; color: rgba(255,255,255,0.25);
         }
 
-        /* ── VISUALIZER LAYERS ───────────────────────── */
-        /* Black overlay fades in first, then canvas draws on top */
-        #viz-bg {
-            position: absolute; inset: 0; z-index: 18;
-            background: #000; opacity: 0; pointer-events: none;
-            transition: opacity 1.8s ease;
-        }
-        #app-container.viz-mode #viz-bg { opacity: 1; }
-
-        #viz-canvas {
-            position: absolute; inset: 0; z-index: 19;
-            width: 100%; height: 100%;
-            opacity: 0; pointer-events: none;
-            transition: opacity 1.8s cubic-bezier(0.25,1,0.5,1);
-        }
-        #app-container.viz-mode #viz-canvas { opacity: 1; }
-
-        /* ── VISUALIZER TOGGLE ───────────────────────── */
-        #viz-toggle {
+        /* ── MODE TOGGLE ────────────────────────────── */
+        .mode-toggle {
             position: absolute; bottom: 72px; left: 50%;
             transform: translateX(-50%);
             z-index: 70;
-            background: rgba(0,0,0,0.55);
-            color: rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.18);
-            padding: 7px 20px; font-size: 10px; font-weight: 900;
-            letter-spacing: 2.5px; text-transform: uppercase;
-            cursor: pointer; white-space: nowrap;
-            backdrop-filter: blur(12px); border-radius: 20px;
-            transition: color 0.4s, background 0.4s, border-color 0.4s, box-shadow 0.4s;
+            display: flex; gap: 0;
+            background: rgba(0,0,0,0.06);
+            border-radius: 20px; padding: 3px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,0,0,0.08);
+            transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
         }
-        #viz-toggle:hover {
-            color: #fff; background: rgba(0,0,0,0.75);
-            border-color: rgba(255,255,255,0.4);
+        .mode-btn {
+            background: transparent; border: none;
+            padding: 6px 16px; font-size: 9px; font-weight: 900;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: rgba(0,0,0,0.35); cursor: pointer;
+            border-radius: 17px; white-space: nowrap;
+            transition: color 0.3s, background 0.3s;
         }
-        #app-container.viz-mode #viz-toggle {
-            color: #0ff; background: rgba(0,0,0,0.8);
-            border-color: rgba(0,255,255,0.45);
-            box-shadow: 0 0 14px rgba(0,255,255,0.25), inset 0 0 8px rgba(0,255,255,0.08);
+        .mode-btn:hover { color: rgba(0,0,0,0.7); }
+        .mode-btn.active { background: #000; color: #fff; }
+
+        /* Dark mode OR forced-dark (DVD always has black bg) */
+        body.dark-mode .mode-toggle,
+        .mode-toggle.on-dark {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.12);
+        }
+        body.dark-mode .mode-btn,
+        .mode-toggle.on-dark .mode-btn { color: rgba(255,255,255,0.35); }
+        body.dark-mode .mode-btn:hover,
+        .mode-toggle.on-dark .mode-btn:hover { color: rgba(255,255,255,0.7); }
+        body.dark-mode .mode-btn.active,
+        .mode-toggle.on-dark .mode-btn.active {
+            background: rgba(255,255,255,0.15); color: #fff;
         }
 
         /* ── MOBILE ──────────────────────────────────── */
@@ -215,14 +346,28 @@
     </style>
 </head>
 <body>
-    <div id="page-transition-overlay"></div>
 
     <div id="app-container">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
         <div class="top-nav-bar">
-            <a href="/" class="back-btn-top internal-link">← Back</a>
-            <div class="date-time-display"><span id="live-single-line">MONDAY | 00:00 AM</span></div>
+            <a href="/" class="back-btn-top internal-link">Home</a>
+            <div class="nav-right">
+                <div class="date-time-display"><span id="live-single-line">MONDAY | 00:00 AM</span></div>
+                <button class="settings-btn" id="settings-btn" aria-label="Settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/>
+                    </svg>
+                </button>
+                <div class="settings-dropdown" id="settings-dropdown">
+                    <div class="settings-item" id="theme-toggle-item">
+                        <span>Dark Mode</span>
+                        <div class="theme-toggle-track" id="theme-track">
+                            <div class="theme-toggle-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="logo-cluster">
@@ -234,9 +379,6 @@
                 <div class="pulse-dot" id="pulse-indicator"></div>
                 <span id="center-status">CHECKING...</span>
             </div>
-        </div>
-
-        <div id="controls-area">
             <button id="btn">▶ Listen</button>
             <div class="history-wrapper">
                 <button id="history-toggle">Recently Played ▼</button>
@@ -244,36 +386,39 @@
             </div>
         </div>
 
-        <!-- Visualizer layers -->
-        <div id="viz-bg"></div>
-        <canvas id="viz-canvas"></canvas>
+        <!-- Background mode layers -->
+        <div id="bg-layer">
+            <img id="dvd-artwork" src="" alt="">
+            <div id="td-container">
+                <span class="td-placeholder">TouchDesigner Visualiser — Coming Soon</span>
+            </div>
+        </div>
 
-        <!-- Always visible toggle (z-index above everything except overlay) -->
-        <button id="viz-toggle">VISUALISER</button>
+        <!-- Mode toggle -->
+        <div class="mode-toggle" id="mode-toggle">
+            <button class="mode-btn active" data-mode="clean">Clean</button>
+            <button class="mode-btn" data-mode="dvd">DVD</button>
+            <button class="mode-btn" data-mode="td">Stars</button>
+        </div>
 
         <div class="ticker-tape ticker-bottom"><div class="marquee-wrapper" id="bottom-marquee"></div></div>
-        <audio id="radioPlayer" preload="none"></audio>
+        <audio id="radioPlayer" preload="none" crossorigin="anonymous"></audio>
     </div>
 
 <script>
 // ── PAGE TRANSITIONS ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    const ov = document.getElementById('page-transition-overlay');
-    requestAnimationFrame(() => ov.classList.add('loaded'));
     document.querySelectorAll('.internal-link').forEach(link => {
         link.addEventListener('click', e => {
             e.preventDefault();
             document.body.classList.add('is-exiting');
-            setTimeout(() => window.location.assign(link.href), 800);
+            setTimeout(() => window.location.assign(link.href), 600);
         });
     });
 });
 window.addEventListener('pageshow', e => {
     if (e.persisted) {
         document.body.classList.remove('is-exiting');
-        const ov = document.getElementById('page-transition-overlay');
-        ov.classList.remove('loaded');
-        requestAnimationFrame(() => ov.classList.add('loaded'));
     }
 });
 
@@ -351,8 +496,6 @@ async function fetchSongData() {
 player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
 player.onplaying  = () => {
     if (playing) setStatus('ON AIR', 'on-air');
-    // Try to hook visualizer into live audio once playback starts
-    if (vizActive && !audioReady) initAudio();
 };
 player.onpause = () => { if (isOnline) setStatus('LIVE', 'live'); };
 btn.onclick = () => {
@@ -370,264 +513,418 @@ updateTicker('STANDBY'); fetchSongData(); fetchGlobalHistory();
 setInterval(fetchSongData, 4000);
 
 // ══════════════════════════════════════════════════════════════
-// WINDOWS XP MEDIA PLAYER VISUALIZER
+// BACKGROUND MODE SYSTEM (Clean / DVD / TD)
 // ══════════════════════════════════════════════════════════════
-const canvas    = document.getElementById('viz-canvas');
-const ctx       = canvas.getContext('2d');
-const container = document.getElementById('app-container');
-const vizBtn    = document.getElementById('viz-toggle');
+const bgLayer      = document.getElementById('bg-layer');
+const dvdArt       = document.getElementById('dvd-artwork');
+const modeToggle   = document.getElementById('mode-toggle');
+const modeBtns     = modeToggle.querySelectorAll('.mode-btn');
+const container    = document.getElementById('app-container');
 
-let vizActive   = false;
-let vizAnimId   = null;
-let audioCtx    = null;
-let analyser    = null;
-let audioReady  = false;
-let simTime     = 0;
-let particles   = [];
+let currentMode = 'clean';
+let dvdAnimId   = null;
 
-// The UI elements that fade away in viz mode
+// DVD bounce state
+let dvdX = 100, dvdY = 100, dvdVx = 1.5, dvdVy = 1.2;
+let dvdW = 180, dvdH = 180;
+
+// ── UI ELEMENTS TO FADE ──────────────────────────────────────
 const fadeEls = () => [
     document.querySelector('.top-nav-bar'),
-    document.getElementById('logo-cluster'),
-    document.getElementById('controls-area')
+    document.getElementById('logo-cluster')
 ];
 
-function resizeCanvas() {
-    canvas.width  = container.offsetWidth;
-    canvas.height = container.offsetHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-// ── AUDIO CONNECT ─────────────────────────────────────────────
-function initAudio() {
-    if (audioReady) return;
-    try {
-        audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
-        analyser  = audioCtx.createAnalyser();
-        analyser.fftSize             = 512;
-        analyser.smoothingTimeConstant = 0.82;
-        const src = audioCtx.createMediaElementSource(player);
-        src.connect(analyser);
-        analyser.connect(audioCtx.destination);
-        audioReady = true;
-    } catch(_) { audioReady = false; }
-}
-
-// ── SIMULATED FREQUENCY DATA (when stream isn't playing / CORS blocked) ──
-function getSimFreq() {
-    simTime += 0.04;
-    const n   = 256;
-    const out = new Uint8Array(n);
-    const beat = Math.max(0, Math.sin(simTime * 2.6)) * 0.85;
-
-    // Bass
-    for (let i = 0; i < 12; i++)
-        out[i] = Math.round(Math.min(255, (0.55 + beat * 0.45) * 220 * Math.exp(-i * 0.22) + Math.random() * 25));
-    // Mids
-    for (let i = 12; i < 90; i++) {
-        const peak = 38 + 10 * Math.sin(simTime * 0.4);
-        out[i] = Math.round(Math.min(255,
-            (0.45 + 0.3 * Math.sin(simTime * 0.7 + i * 0.04)) *
-            140 * Math.exp(-Math.pow((i - peak) / 18, 2)) + Math.random() * 18));
-    }
-    // Highs — taper off
-    for (let i = 90; i < n; i++)
-        out[i] = Math.max(0, Math.round(38 * Math.exp(-(i - 90) * 0.07) + Math.random() * 10));
-
-    return out;
-}
-
-// ── ALCHEMY PARTICLES ────────────────────────────────────────
-function spawnParticles(freq, W, H) {
-    const bass = freq[3] / 255;
-    if (bass < 0.38 || Math.random() > bass * 0.4) return;
-    const count = Math.ceil(bass * 4);
-    for (let i = 0; i < count; i++) {
-        particles.push({
-            x:     W / 2 + (Math.random() - 0.5) * W * 0.5,
-            y:     H / 2 + (Math.random() - 0.5) * H * 0.35,
-            vx:    (Math.random() - 0.5) * 3.5 * bass,
-            vy:    (Math.random() - 0.5) * 3.5 * bass - 0.8,
-            life:  1.0,
-            decay: 0.007 + Math.random() * 0.013,
-            size:  2 + Math.random() * 4.5 * bass,
-            hue:   175 + Math.random() * 85   // cyan → magenta
-        });
-    }
-}
-
-function tickParticles(ctx) {
-    particles = particles.filter(p => p.life > 0);
-    particles.forEach(p => {
-        p.x  += p.vx; p.y += p.vy;
-        p.vy -= 0.025; // gentle float up
-        p.vx *= 0.98; p.vy *= 0.98;
-        p.life -= p.decay;
-        ctx.save();
-        ctx.globalAlpha    = p.life * 0.55;
-        ctx.shadowColor    = `hsl(${p.hue},100%,65%)`;
-        ctx.shadowBlur     = 14;
-        ctx.fillStyle      = `hsl(${p.hue},100%,70%)`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+function fadeUI(out) {
+    fadeEls().forEach(el => {
+        if (!el) return;
+        el.style.transition = 'opacity 1.2s cubic-bezier(0.25,1,0.5,1)';
+        el.style.opacity = out ? '0' : '1';
+        el.style.pointerEvents = out ? 'none' : '';
     });
 }
 
-// ── MAIN DRAW LOOP ───────────────────────────────────────────
-function drawFrame() {
-    if (!vizActive) return;
-
-    const W = canvas.width, H = canvas.height;
-
-    // Get frequency data — real audio if available, simulated otherwise
-    let freq;
-    if (analyser && playing && audioReady) {
-        freq = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(freq);
-    } else {
-        freq = getSimFreq();
-    }
-
-    // Motion-blur trail
-    ctx.fillStyle = 'rgba(0,0,0,0.16)';
-    ctx.fillRect(0, 0, W, H);
-
-    // ── FREQUENCY BARS (WMP style, mirrored on Y axis) ────────
-    const BAR_COUNT = 92;
-    const totalW    = W * 0.88;
-    const startX    = W * 0.06;
-    const bw        = totalW / BAR_COUNT;
-    const midY      = H * 0.5;
-
-    for (let i = 0; i < BAR_COUNT; i++) {
-        const bin   = Math.floor(i / BAR_COUNT * freq.length * 0.65);
-        const val   = freq[bin] / 255;
-        const bh    = val * midY * 0.88;
-        if (bh < 1) continue;
-
-        const bx  = startX + i * bw;
-        const bwd = Math.max(1, bw - 1.2);
-
-        // Classic WMP hue: deep blue → cyan → green → yellow
-        const hue = 228 - val * 128;
-        const sat = 88 + val * 12;
-        const lit = 38 + val * 32;
-
-        ctx.save();
-        ctx.shadowColor = `hsl(${hue},${sat}%,${lit + 22}%)`;
-        ctx.shadowBlur  = 10 + val * 22;
-
-        // Vertical gradient fill
-        const g = ctx.createLinearGradient(0, midY, 0, midY - bh);
-        g.addColorStop(0,   `hsla(${hue + 18},${sat}%,${lit - 12}%,0.55)`);
-        g.addColorStop(0.5, `hsla(${hue},${sat}%,${lit}%,0.82)`);
-        g.addColorStop(1,   `hsla(${hue - 18},${sat + 6}%,${lit + 28}%,1)`);
-        ctx.fillStyle = g;
-
-        // Top half
-        ctx.fillRect(bx, midY - bh, bwd, bh);
-        // Mirrored bottom half
-        ctx.fillRect(bx, midY, bwd, bh);
-
-        // WMP peak dot — bright white cap
-        if (val > 0.12) {
-            ctx.shadowBlur = 8;
-            ctx.fillStyle  = `rgba(255,255,255,${0.55 + val * 0.45})`;
-            ctx.fillRect(bx, midY - bh - 2, bwd, 2);
-            ctx.fillRect(bx, midY + bh,     bwd, 2);
-        }
-
-        ctx.restore();
-    }
-
-    // ── CENTRE LINE (WMP "waves" element) ────────────────────
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0,220,255,0.35)';
-    ctx.lineWidth   = 1.2;
-    ctx.shadowColor = 'rgba(0,220,255,0.55)';
-    ctx.shadowBlur  = 7;
-    ctx.beginPath();
-    ctx.moveTo(startX, midY);
-    ctx.lineTo(startX + totalW, midY);
-    ctx.stroke();
-    ctx.restore();
-
-    // ── OSCILLOSCOPE WAVEFORM ─────────────────────────────────
-    if (analyser && playing && audioReady) {
-        const wave = new Uint8Array(analyser.fftSize);
-        analyser.getByteTimeDomainData(wave);
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0,255,180,0.22)';
-        ctx.lineWidth   = 1.5;
-        ctx.shadowColor = 'rgba(0,255,180,0.4)';
-        ctx.shadowBlur  = 6;
-        ctx.beginPath();
-        const step = totalW / wave.length;
-        for (let i = 0; i < wave.length; i++) {
-            const y = midY + ((wave[i] / 128) - 1) * midY * 0.35;
-            i === 0 ? ctx.moveTo(startX + i * step, y) : ctx.lineTo(startX + i * step, y);
-        }
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    // ── ALCHEMY PARTICLES ─────────────────────────────────────
-    spawnParticles(freq, W, H);
-    tickParticles(ctx);
-
-    vizAnimId = requestAnimationFrame(drawFrame);
+// ── DVD BOUNCE ANIMATION ─────────────────────────────────────
+function initDvdPosition() {
+    const cw = container.offsetWidth;
+    const ch = container.offsetHeight;
+    const tickerH = 61;
+    dvdW = dvdArt.offsetWidth || 180;
+    dvdH = dvdArt.offsetHeight || 180;
+    dvdX = Math.random() * (cw - dvdW);
+    dvdY = tickerH + Math.random() * (ch - dvdH - tickerH * 2);
+    const angle = Math.random() * Math.PI * 2;
+    dvdVx = Math.cos(angle) * 1.5;
+    dvdVy = Math.sin(angle) * 1.5;
 }
 
-// ── TOGGLE ───────────────────────────────────────────────────
-function toggleViz() {
-    vizActive = !vizActive;
-    vizBtn.textContent = vizActive ? 'MAIN VIEW' : 'VISUALISER';
+function dvdFrame() {
+    if (currentMode !== 'dvd') return;
 
-    if (vizActive) {
-        // Try to connect real audio (user gesture satisfies autoplay policy)
-        if (playing && !audioReady) initAudio();
-        if (audioCtx?.state === 'suspended') audioCtx.resume();
+    const cw = container.offsetWidth;
+    const ch = container.offsetHeight;
+    const tickerH = 61;
 
-        // Fade out main UI (long smooth fade)
-        fadeEls().forEach(el => {
-            if (!el) return;
-            el.style.transition  = 'opacity 1.6s cubic-bezier(0.25,1,0.5,1)';
-            el.style.opacity     = '0';
-            el.style.pointerEvents = 'none';
-        });
+    dvdX += dvdVx;
+    dvdY += dvdVy;
 
-        // Activate layers (CSS transitions handle the fade-in)
-        container.classList.add('viz-mode');
+    // Classic DVD bounce off edges and tickers
+    if (dvdX <= 0)                    { dvdX = 0;                    dvdVx = Math.abs(dvdVx); }
+    if (dvdX + dvdW >= cw)            { dvdX = cw - dvdW;            dvdVx = -Math.abs(dvdVx); }
+    if (dvdY <= tickerH)              { dvdY = tickerH;              dvdVy = Math.abs(dvdVy); }
+    if (dvdY + dvdH >= ch - tickerH)  { dvdY = ch - tickerH - dvdH;  dvdVy = -Math.abs(dvdVy); }
 
-        // Prime canvas with solid black before first frame
-        resizeCanvas();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    dvdArt.style.transform = `translate(${dvdX}px, ${dvdY}px)`;
+    dvdAnimId = requestAnimationFrame(dvdFrame);
+}
 
-        // Start loop (delayed slightly so canvas opacity transition begins first)
-        setTimeout(drawFrame, 120);
-
-    } else {
-        // Stop draw loop
-        if (vizAnimId) { cancelAnimationFrame(vizAnimId); vizAnimId = null; }
-
-        // Deactivate layers
-        container.classList.remove('viz-mode');
-
-        // Fade main UI back in — slightly slower for drama
-        fadeEls().forEach(el => {
-            if (!el) return;
-            el.style.transition  = 'opacity 1.3s cubic-bezier(0.25,1,0.5,1)';
-            el.style.opacity     = '1';
-            el.style.pointerEvents = '';
-        });
+function startDvd() {
+    // Use current artwork if available, fallback to logo
+    const artSrc = currentArtUrl || 'cuceugrta.png';
+    dvdArt.src = artSrc;
+    // Set up audio if playing (shares same analyser as Stars mode)
+    if (playing) initAudioReactivity();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    dvdArt.onload = () => {
+        initDvdPosition();
+        dvdFrame();
+    };
+    if (dvdArt.complete && dvdArt.naturalWidth > 0) {
+        initDvdPosition();
+        dvdFrame();
     }
 }
 
-vizBtn.addEventListener('click', toggleViz);
+function stopDvd() {
+    if (dvdAnimId) { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; }
+}
+
+// ── MODE SWITCHING ───────────────────────────────────────────
+function setMode(mode) {
+    if (mode === currentMode) return;
+
+    // Clean up previous mode
+    stopDvd();
+    stopVisualizer();
+    bgLayer.className = '';
+    container.classList.remove('viz-mode');
+    modeToggle.classList.remove('on-dark');
+
+    currentMode = mode;
+
+    // Update toggle button states
+    modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+    // Apply new mode
+    if (mode === 'clean') {
+        // Toggle adapts purely via body.dark-mode CSS
+        fadeUI(false);
+    } else if (mode === 'dvd') {
+        bgLayer.classList.add('mode-dvd');
+        // DVD keeps all controls visible and respects light/dark mode
+        fadeUI(false);
+        startDvd();
+    } else if (mode === 'td') {
+        bgLayer.classList.add('mode-td');
+        // Stars mode: no viz-mode, no on-dark — the toggle adapts via body.dark-mode CSS
+        fadeUI(false);
+        startVisualizer();
+    }
+}
+
+// Toggle button clicks
+modeBtns.forEach(b => {
+    b.addEventListener('click', () => setMode(b.dataset.mode));
+});
+
+// Update DVD artwork when track changes
+const origFetchArtwork = fetchArtwork;
+fetchArtwork = async function() {
+    await origFetchArtwork();
+    if (currentMode === 'dvd' && currentArtUrl) {
+        dvdArt.src = currentArtUrl;
+    }
+};
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS & DARK MODE
+// ══════════════════════════════════════════════════════════════
+const settingsBtn  = document.getElementById('settings-btn');
+const settingsDrop = document.getElementById('settings-dropdown');
+const themeItem    = document.getElementById('theme-toggle-item');
+const themeTrack   = document.getElementById('theme-track');
+
+// Toggle dropdown
+settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = settingsDrop.classList.toggle('open');
+    settingsBtn.classList.toggle('open', isOpen);
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => {
+    settingsDrop.classList.remove('open');
+    settingsBtn.classList.remove('open');
+});
+settingsDrop.addEventListener('click', (e) => e.stopPropagation());
+
+// Dark mode toggle
+function setDarkMode(on) {
+    document.body.classList.toggle('dark-mode', on);
+    themeTrack.classList.toggle('active', on);
+    localStorage.setItem('cuceu-fm-dark', on ? '1' : '0');
+}
+
+themeItem.addEventListener('click', () => {
+    setDarkMode(!document.body.classList.contains('dark-mode'));
+});
+
+// Restore preference on load
+if (localStorage.getItem('cuceu-fm-dark') === '1') {
+    setDarkMode(true);
+}
+
+// ══════════════════════════════════════════════════════════════
+// REAL-TIME AUDIO VISUALIZER — PARTICLE FIELD
+// Dots dance around the cuceu logo, avoiding the center zone
+// ══════════════════════════════════════════════════════════════
+let audioCtx, analyser, freqData, sourceNode;
+let isAudioSetup = false;
+let vizAnimId = null;
+const tdContainer = document.getElementById('td-container');
+
+// Three.js variables
+let scene, camera, renderer, starsGroup;
+let particles = [];
+let particlesBuilt = false;
+let starTexture = null;
+
+function setupVisualizer() {
+    if (renderer) return;
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera(60, tdContainer.clientWidth / tdContainer.clientHeight, 1, 4000);
+    camera.position.z = 600;
+
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    const resize = () => {
+        if (!tdContainer.clientWidth) return;
+        camera.aspect = tdContainer.clientWidth / tdContainer.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    tdContainer.innerHTML = '';
+    tdContainer.appendChild(renderer.domElement);
+    
+    starsGroup = new THREE.Group();
+    scene.add(starsGroup);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,0.6)');
+    grad.addColorStop(0.15, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.1)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    starTexture = new THREE.CanvasTexture(canvas);
+}
+
+function buildParticles() {
+    while(starsGroup.children.length > 0){ 
+        starsGroup.remove(starsGroup.children[0]); 
+    }
+    particles = [];
+
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    // ── SIX STAR CLASSES ────────────────────────────────────────
+    // Each class has a distinct visual identity tied to a frequency range
+    const classes = [
+        // SUB-BASS (bins 0–5): Large, slow-breathing orbs deep in space
+        { band: 'subBass',  count: 350,  scaleMin: 8,  scaleMax: 18, opacityMin: 0.04, opacityMax: 0.12, depthMin: 600,  depthMax: 1800, sizeLerp: 0.08, opacLerp: 0.10, sizeReact: 8,   opacReact: 2.0 },
+        // KICK-BASS (bins 5–15): Medium, punchy — flash in/out on kicks
+        { band: 'kickBass', count: 500,  scaleMin: 4,  scaleMax: 10, opacityMin: 0.0,  opacityMax: 0.05, depthMin: 400,  depthMax: 1600, sizeLerp: 0.35, opacLerp: 0.50, sizeReact: 6,   opacReact: 4.5 },
+        // LOW-MIDS (bins 15–40): Gentle pulse, warmth of the track
+        { band: 'lowMids',  count: 600,  scaleMin: 3,  scaleMax: 7,  opacityMin: 0.08, opacityMax: 0.22, depthMin: 300,  depthMax: 1400, sizeLerp: 0.15, opacLerp: 0.20, sizeReact: 10,  opacReact: 2.2 },
+        // HIGH-MIDS (bins 40–70): Shimmery, mid-sized, melodic content
+        { band: 'highMids', count: 600,  scaleMin: 2,  scaleMax: 5,  opacityMin: 0.10, opacityMax: 0.30, depthMin: 200,  depthMax: 1200, sizeLerp: 0.20, opacLerp: 0.25, sizeReact: 8,   opacReact: 2.5 },
+        // PRESENCE (bins 70–100): Tiny, fast-reacting sparkles
+        { band: 'presence', count: 800,  scaleMin: 1,  scaleMax: 3,  opacityMin: 0.12, opacityMax: 0.35, depthMin: 150,  depthMax: 1000, sizeLerp: 0.30, opacLerp: 0.40, sizeReact: 5,   opacReact: 3.0 },
+        // AIR (bins 100–128): Dust-like micro-particles, extreme twinkle
+        { band: 'air',      count: 650,  scaleMin: 0.5,scaleMax: 2,  opacityMin: 0.05, opacityMax: 0.20, depthMin: 100,  depthMax: 800,  sizeLerp: 0.50, opacLerp: 0.55, sizeReact: 3,   opacReact: 4.0 },
+    ];
+    
+    for (const cls of classes) {
+        for (let i = 0; i < cls.count; i++) {
+            let x, y, z;
+            do {
+                x = (Math.random() - 0.5) * 3500;
+                y = (Math.random() - 0.5) * 3500;
+                z = (Math.random() - 0.5) * 3500;
+            } while (Math.sqrt(x*x + y*y + z*z) < 250);
+            
+            // Push particles toward their depth range (closer = highs, deeper = bass)
+            const dist = Math.sqrt(x*x + y*y + z*z);
+            const targetDist = cls.depthMin + Math.random() * (cls.depthMax - cls.depthMin);
+            const scale3d = targetDist / Math.max(dist, 1);
+            x *= scale3d; y *= scale3d; z *= scale3d;
+
+            const material = new THREE.SpriteMaterial({ 
+                map: starTexture, 
+                color: isDark ? 0xffffff : 0x000000,
+                transparent: true,
+                blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
+                depthWrite: false,
+                opacity: 0
+            });
+            
+            const sprite = new THREE.Sprite(material);
+            sprite.position.set(x, y, z);
+            
+            const baseScale = cls.scaleMin + Math.random() * (cls.scaleMax - cls.scaleMin);
+            sprite.scale.set(baseScale, baseScale, 1);
+            
+            starsGroup.add(sprite);
+
+            particles.push({
+                sprite: sprite,
+                baseScale: baseScale,
+                baseOpacity: cls.opacityMin + Math.random() * (cls.opacityMax - cls.opacityMin),
+                currentOpacity: 0,
+                band: cls.band,
+                sizeLerp: cls.sizeLerp,
+                opacLerp: cls.opacLerp,
+                sizeReact: cls.sizeReact,
+                opacReact: cls.opacReact,
+                phase: Math.random() * Math.PI * 2,
+                sensitivity: 0.8 + Math.random() * 0.8,
+            });
+        }
+    }
+    particlesBuilt = true;
+}
+
+function initAudioReactivity() {
+    if (isAudioSetup) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.82;
+    // Widen the dynamic range so mastered/loud music doesn't max out the visualizer
+    analyser.minDecibels = -90;
+    analyser.maxDecibels = -10; 
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    sourceNode = audioCtx.createMediaElementSource(player);
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    isAudioSetup = true;
+}
+
+// Smoothed energy accumulators per band (prevents jitter, keeps snappiness)
+let smoothEnergy = { subBass: 0, kickBass: 0, lowMids: 0, highMids: 0, presence: 0, air: 0 };
+
+function animateVisualizer() {
+    if (currentMode !== 'td') return;
+    vizAnimId = requestAnimationFrame(animateVisualizer);
+
+    const isDark = document.body.classList.contains('dark-mode');
+    const targetColor = isDark ? 0xffffff : 0x000000;
+    const blendMode = isDark ? THREE.AdditiveBlending : THREE.NormalBlending;
+
+    let hasAudio = isAudioSetup && !player.paused;
+    
+    if (hasAudio) {
+        analyser.getByteFrequencyData(freqData);
+        
+        // Split into 6 fine-grained sub-bands
+        const avg = (start, end) => {
+            let sum = 0;
+            for (let i = start; i < end; i++) sum += freqData[i];
+            return (sum / (end - start)) / 255;
+        };
+        
+        const raw = {
+            subBass:  avg(0, 5),
+            kickBass: avg(5, 15),
+            lowMids:  avg(15, 40),
+            highMids: avg(40, 70),
+            presence: avg(70, 100),
+            air:      avg(100, 128),
+        };
+        
+        // Different power curves per band — bass is more linear (sensitive),
+        // highs are more exponential (only react to sharp transients)
+        const curves = { subBass: 1.1, kickBass: 1.2, lowMids: 1.4, highMids: 1.6, presence: 1.8, air: 2.0 };
+        // Different smoothing speeds — bass is slower/smoother, highs are snappy
+        const smoothSpeeds = { subBass: 0.12, kickBass: 0.30, lowMids: 0.20, highMids: 0.25, presence: 0.35, air: 0.45 };
+        
+        for (const band in raw) {
+            const curved = Math.pow(raw[band], curves[band]);
+            smoothEnergy[band] += (curved - smoothEnergy[band]) * smoothSpeeds[band];
+        }
+    } else {
+        // Decay gently when paused
+        for (const band in smoothEnergy) {
+            smoothEnergy[band] *= 0.95;
+        }
+    }
+
+    const time = Date.now() * 0.001;
+    
+    // Rotate the entire starfield slowly
+    starsGroup.rotation.y = time * 0.05;
+    starsGroup.rotation.x = Math.sin(time * 0.02) * 0.2;
+    starsGroup.rotation.z = Math.cos(time * 0.03) * 0.1;
+
+    for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        
+        const energy = smoothEnergy[p.band] || 0;
+        
+        // Scale reaction: each class has its own multiplier
+        const audioScale = energy * p.sensitivity * p.sizeReact;
+        const idleScale = Math.sin(time * 1.5 + p.phase) * (p.baseScale * 0.15);
+        const targetScale = Math.max(0.3, p.baseScale + audioScale + idleScale);
+        
+        // Opacity reaction: each class has its own boost
+        const opacityBoost = energy * p.opacReact;
+        const targetOpacity = Math.min(1, p.baseOpacity + opacityBoost);
+        
+        // Each class lerps at its own speed
+        p.sprite.scale.x += (targetScale - p.sprite.scale.x) * p.sizeLerp;
+        p.sprite.scale.y = p.sprite.scale.x;
+        
+        p.currentOpacity += (targetOpacity - p.currentOpacity) * p.opacLerp;
+        
+        p.sprite.material.opacity = p.currentOpacity;
+        p.sprite.material.color.setHex(targetColor);
+        p.sprite.material.blending = blendMode;
+    }
+    
+    renderer.render(scene, camera);
+}
+
+function startVisualizer() {
+    setupVisualizer();
+    if (!particlesBuilt) buildParticles();
+    if (playing) initAudioReactivity(); 
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    animateVisualizer();
+}
+
+function stopVisualizer() {
+    if (vizAnimId) { cancelAnimationFrame(vizAnimId); vizAnimId = null; }
+}
+
 </script>
 </body>
 </html>

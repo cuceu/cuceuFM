@@ -13,18 +13,20 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
             display: flex; flex-direction: column; overflow: hidden;
             color: #000;
+            transition: background 0.8s ease;
         }
+        body.dark-mode { background: #0a0a0a; }
 
-        /* ── PAGE TRANSITION ─────────────────────────────────────────── */
-        #page-transition-overlay {
-            position: fixed; inset: 0; background: #fff;
-            z-index: 99999; pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
-        }
-        #page-transition-overlay.loaded  { opacity: 0; }
-        #page-transition-overlay.leaving { opacity: 1; pointer-events: auto; }
 
         /* ── NOW PLAYING BANNER ──────────────────────────────────────── */
+        #app-container {
+            width: 100vw; height: 100dvh;
+            position: relative; overflow: hidden;
+            background-color: #fff;
+            transition: background-color 0.8s ease;
+        }
+        body.dark-mode #app-container { background-color: #0a0a0a; }
+
         #now-playing-banner {
             position: absolute; top: 0; left: 0; right: 0;
             height: 62px; background: #fff;
@@ -86,13 +88,63 @@
             color: #000;
             text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px rgba(255,255,255,0.9);
             opacity: 0; transform: translateX(15px);
-            animation: clockIn 0.8s cubic-bezier(0.25,1,0.5,1) 0.5s forwards;
+            animation: clockIn 1.2s cubic-bezier(0.25,1,0.5,1) 0.1s forwards;
             transition: top 0.55s cubic-bezier(0.25,1,0.5,1);
         }
         body.banner-active .status-area { top: 78px; }
         body.is-exiting   .status-area { animation: clockOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
         @keyframes clockIn  { 0%{opacity:0;transform:translateX(15px);filter:blur(3px)} 100%{opacity:1;transform:none;filter:none} }
         @keyframes clockOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(15px);filter:blur(3px)} }
+
+        /* ── SETTINGS ────────────────────────────────── */
+        .settings-btn {
+            background: none; border: none; cursor: pointer;
+            width: 28px; height: 28px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.5; transition: opacity 0.2s, transform 0.3s;
+        }
+        .settings-btn:hover { opacity: 1; }
+        .settings-btn.open { transform: rotate(60deg); opacity: 1; }
+        .settings-btn svg { 
+            transition: fill 0.8s ease; 
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 14px rgba(255,255,255,0.6));
+        }
+        .settings-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0;
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
+            padding: 8px 0; min-width: 160px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            opacity: 0; transform: translateY(-6px); pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            text-shadow: none;
+        }
+        .settings-dropdown.open {
+            opacity: 1; transform: translateY(0); pointer-events: auto;
+        }
+        .settings-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; cursor: pointer;
+            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #000;
+            transition: background 0.15s, color 0.8s;
+            text-shadow: none;
+        }
+        .settings-item:hover { background: rgba(0,0,0,0.04); }
+        .theme-toggle-track {
+            width: 36px; height: 20px; border-radius: 10px;
+            background: rgba(0,0,0,0.12); position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle-track.active { background: #000; }
+        .theme-toggle-thumb {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; position: absolute; top: 2px; left: 2px;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .theme-toggle-track.active .theme-toggle-thumb { transform: translateX(16px); }
 
         /* ── MARQUEE BACKGROUND ──────────────────────────────── */
         .main-content { flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative; }
@@ -103,12 +155,23 @@
             display: flex; flex-direction: column; justify-content: center;
             overflow: hidden; pointer-events: none;
             
-            /* CRT Wake Up Master Animation */
-            transform-origin: center center;
-            animation: crtWakeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+            /* Entry animation: slide up, fade in, blur-to-clear while stationary */
+            animation: blurSlideIn 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both;
         }
         body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); } }
+        @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); filter: blur(10px); } }
+        @keyframes blurSlideIn {
+            0% {
+                transform: translateY(35px);
+                filter: blur(15px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                filter: blur(0px);
+                opacity: 1;
+            }
+        }
 
         .marquee-track {
             display: flex; flex-wrap: nowrap;
@@ -116,43 +179,22 @@
             margin-top: -0.8vw;
         }
 
-        .track-right { animation: scrollRight 30s linear infinite; animation-play-state: paused; }
-        .track-left  { animation: scrollLeft  30s linear infinite; animation-play-state: paused; }
-
-        @keyframes scrollRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} }
-        @keyframes scrollLeft  { 0%{transform:translateX(0%)}   100%{transform:translateX(-50%)} }
+        /* Initial positions prior to JS Web Animations initialization */
+        .track-right { 
+            transform: translateX(-50%);
+        }
+        .track-left  { 
+            transform: translateX(0%);
+        }
 
         img.cuceu-img {
             height: clamp(3rem,4.5vw,6rem); width: auto;
             margin-right: 1vw; flex-shrink: 0;
-            user-select: none; -webkit-user-drag: none; opacity: 0;
+            user-select: none; -webkit-user-drag: none;
         }
-
-        /* CRT POWER ON KEYFRAMES */
-        @keyframes crtWakeUp {
-            0% {
-                transform: scaleY(0.001) scaleX(0);
-                filter: brightness(12) blur(1px);
-                opacity: 0;
-            }
-            35% {
-                transform: scaleY(0.003) scaleX(1);
-                filter: brightness(12) blur(1px);
-                opacity: 1;
-            }
-            100% {
-                transform: scaleY(1) scaleX(1);
-                filter: brightness(1) blur(0px);
-                opacity: 1;
-            }
+        .marquee-track:nth-child(even) img.cuceu-img {
+            transform: rotate(180deg);
         }
-
-        /* Makes the image textures instantly ready inside the expanding line wrapper */
-        @keyframes crtShowOdd  { 0%{opacity:0;} 5%{opacity:1;} 100%{opacity:1;transform:none;} }
-        @keyframes crtShowEven { 0%{opacity:0;} 5%{opacity:1;} 100%{opacity:1;transform:rotate(180deg);} }
-
-        .marquee-track:nth-child(odd)  img.cuceu-img { animation: crtShowOdd 0.2s linear both; }
-        .marquee-track:nth-child(even) img.cuceu-img { animation: crtShowEven 0.2s linear both; }
 
         /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
         .mac-dock-container {
@@ -182,7 +224,7 @@
                 inset 1px 0 0 rgba(255,255,255,0.25),
                 inset -1px 0 0 rgba(255,255,255,0.25);
             opacity: 0;
-            animation: dockSlideUp 0.8s cubic-bezier(0.25,1,0.5,1) 1.2s forwards;
+            animation: dockSlideUp 1.2s cubic-bezier(0.25,1,0.5,1) 0.1s forwards;
             position: relative;
         }
 
@@ -286,11 +328,68 @@
             .banner-btn { padding: 7px 12px; font-size: 9px; }
             #banner-track { font-size: 11px; }
         }
+
+        /* ── DARK MODE OVERRIDES ─────────────────────── */
+        /* Body + container handled above */
+
+        /* Clock / status area */
+        body.dark-mode .status-area {
+            color: #fff;
+            text-shadow: 0 0 15px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        /* Settings */
+        body.dark-mode .settings-btn svg { fill: #fff; }
+        body.dark-mode .settings-dropdown {
+            background: rgba(30,30,30,0.92);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        body.dark-mode .settings-item { color: #fff; }
+        body.dark-mode .settings-item:hover { background: rgba(255,255,255,0.06); }
+        body.dark-mode .theme-toggle-track { background: rgba(255,255,255,0.15); }
+        body.dark-mode .theme-toggle-track.active { background: #fff; }
+        body.dark-mode .theme-toggle-track.active .theme-toggle-thumb { background: #111; }
+
+        /* Now Playing Banner */
+        body.dark-mode #now-playing-banner {
+            background: #111;
+            border-bottom-color: #333;
+        }
+        body.dark-mode #banner-track { color: #fff; }
+        body.dark-mode .banner-btn {
+            background: #fff; color: #000;
+            border-color: #fff;
+        }
+        body.dark-mode .banner-btn:hover { background: #ff3b30; border-color: #ff3b30; color: #fff; }
+        body.dark-mode #banner-art { border-color: #444; }
+
+        /* Dock */
+        body.dark-mode .mac-dock {
+            background: linear-gradient(170deg,
+                rgba(255,255,255,0.08) 0%,
+                rgba(255,255,255,0.03) 55%,
+                rgba(255,255,255,0.06) 100%
+            );
+            border-color: rgba(255,255,255,0.12);
+            border-top-color: rgba(255,255,255,0.18);
+            border-bottom-color: rgba(255,255,255,0.06);
+            box-shadow:
+                0 12px 48px rgba(0,0,0,0.35),
+                0 2px 8px rgba(0,0,0,0.2),
+                inset 0 1.5px 0 rgba(255,255,255,0.12),
+                inset 0 -1px 0 rgba(255,255,255,0.04);
+        }
+        body.dark-mode .mac-dock::before {
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.06) 0%,
+                rgba(255,255,255,0.02) 65%,
+                transparent 100%
+            );
+        }
     </style>
 </head>
-<body class="is-loading">
-
-    <div id="page-transition-overlay"></div >
+<body>
 
     <div id="now-playing-banner">
         <div class="banner-inner">
@@ -306,7 +405,22 @@
 
     <div class="status-area">
         <span id="mac-clock">MONDAY | 12:00 AM</span>
-    </div >
+        <div style="margin-left: 12px; position: relative; display: flex; align-items: center;">
+            <button class="settings-btn" id="settings-btn" aria-label="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/>
+                </svg>
+            </button>
+            <div class="settings-dropdown" id="settings-dropdown">
+                <div class="settings-item" id="theme-toggle-item">
+                    <span>Dark Mode</span>
+                    <div class="theme-toggle-track" id="theme-track">
+                        <div class="theme-toggle-thumb"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="main-content">
         <div id="logo-wrapper">
@@ -325,17 +439,16 @@
             <div class="marquee-track track-right">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-             <div class="marquee-track track-left">
+            <div class="marquee-track track-left">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-            
             <div class="marquee-track track-right mobile-hide">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-             <div class="marquee-track track-left mobile-hide">
+            <div class="marquee-track track-left mobile-hide">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
-        </div >
+        </div>
     </div>
 
     <div class="mac-dock-container">
@@ -413,27 +526,80 @@
     <script>
         // ── PAGE TRANSITIONS ─────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
-            const overlay = document.getElementById('page-transition-overlay');
-            requestAnimationFrame(() => overlay.classList.add('loaded'));
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', e => {
                     e.preventDefault();
                     document.body.classList.add('is-exiting');
-                    setTimeout(() => { overlay.classList.remove('loaded'); overlay.classList.add('leaving'); }, 500);
-                    setTimeout(() => window.location.href = link.href, 1000); 
+                    setTimeout(() => window.location.href = link.href, 600); 
                 });
             });
 
-            // ── MARQUEE ANIMATION RUNNING TRIGGER ───────────────────────
-            const marqueeTracks = document.querySelectorAll('.marquee-track');
+            // ── MARQUEE ANIMATION RUNNING TRIGGER (Web Animations API) ──
+            const marqueeAnimations = [];
+            const tracks = document.querySelectorAll('.marquee-track');
+            let isSpinningUp = true;
+            
+            tracks.forEach((track, index) => {
+                const isRight = track.classList.contains('track-right');
+                const keyframes = isRight 
+                    ? [ { transform: 'translateX(-50%)' }, { transform: 'translateX(0%)' } ]
+                    : [ { transform: 'translateX(0%)' }, { transform: 'translateX(-50%)' } ];
+                
+                const anim = track.animate(keyframes, {
+                    duration: 30000,
+                    iterations: Infinity,
+                    easing: 'linear'
+                });
+                anim.pause();
+                // Stagger starting offsets so the rows are not perfectly aligned on load
+                anim.currentTime = (index * 4500) % 30000;
+                marqueeAnimations.push(anim);
+            });
+
             function setMarqueeState(state) {
-                marqueeTracks.forEach(t => t.style.animationPlayState = state);
+                if (isSpinningUp) return;
+                marqueeAnimations.forEach(anim => {
+                    if (state === 'running') {
+                        anim.play();
+                    } else {
+                        anim.pause();
+                    }
+                });
             }
 
-            // Sync horizontal loop initialization immediately following the CRT expansion burst
+            // Spin-up initialization (Tape Deck acceleration)
             setTimeout(() => {
-                setMarqueeState('running');
-            }, 500);
+                marqueeAnimations.forEach(anim => {
+                    anim.play();
+                    anim.playbackRate = 0;
+                });
+                
+                let start = null;
+                const duration = 2500; // 2.5 seconds spin-up duration
+                
+                function step(timestamp) {
+                    if (!start) start = timestamp;
+                    const elapsed = timestamp - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Cubic ease-in for a realistic mechanical acceleration feel
+                    const easeIn = progress * progress * progress;
+                    
+                    marqueeAnimations.forEach(anim => {
+                        anim.playbackRate = easeIn;
+                    });
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        marqueeAnimations.forEach(anim => {
+                            anim.playbackRate = 1;
+                        });
+                        isSpinningUp = false; // Spin-up complete, enable visibility event listeners
+                    }
+                }
+                requestAnimationFrame(step);
+            }, 1400);
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
@@ -443,8 +609,11 @@
                 }
             });
 
-            window.addEventListener('pageshow', () => {
-                setMarqueeState('running'); 
+            window.addEventListener('pageshow', (e) => {
+                if (e.persisted) {
+                    document.body.classList.remove('is-exiting');
+                    setMarqueeState('running'); 
+                }
             });
         });
 
@@ -532,6 +701,38 @@
 
         checkStream(); 
         setInterval(checkStream, 15000); 
+
+        // ── SETTINGS & DARK MODE ──────────────────────────────────────
+        const settingsBtn  = document.getElementById('settings-btn');
+        const settingsDrop = document.getElementById('settings-dropdown');
+        const themeItem    = document.getElementById('theme-toggle-item');
+        const themeTrack   = document.getElementById('theme-track');
+
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = settingsDrop.classList.toggle('open');
+            settingsBtn.classList.toggle('open', isOpen);
+        });
+
+        document.addEventListener('click', () => {
+            settingsDrop.classList.remove('open');
+            settingsBtn.classList.remove('open');
+        });
+        settingsDrop.addEventListener('click', (e) => e.stopPropagation());
+
+        function setDarkMode(on) {
+            document.body.classList.toggle('dark-mode', on);
+            themeTrack.classList.toggle('active', on);
+            localStorage.setItem('cuceu-fm-dark', on ? '1' : '0');
+        }
+
+        themeItem.addEventListener('click', () => {
+            setDarkMode(!document.body.classList.contains('dark-mode'));
+        });
+
+        if (localStorage.getItem('cuceu-fm-dark') === '1') {
+            setDarkMode(true);
+        }
     </script>
 </body>
 </html>
