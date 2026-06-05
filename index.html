@@ -4,735 +4,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceu</title>
+    <meta name="description" content="CUCEU — Music, Visuals, Creative Studio. Live radio, TouchDesigner visuals, and creative experiments.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared.css">
+    <!-- HLS.js for stream -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         html, body {
             margin: 0; padding: 0;
-            height: 100vh; height: 100dvh;
-            background: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-            display: flex; flex-direction: column; overflow: hidden;
-            color: #000;
-            transition: background 0.8s ease;
-        }
-        body.dark-mode { background: #0a0a0a; }
-
-
-        /* ── NOW PLAYING BANNER ──────────────────────────────────────── */
-        #app-container {
-            width: 100vw; height: 100dvh;
-            position: relative; overflow: hidden;
-            background-color: #fff;
-            transition: background-color 0.8s ease;
-        }
-        body.dark-mode #app-container { background-color: #0a0a0a; }
-
-        #now-playing-banner {
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 62px; background: #fff;
-            border-bottom: 3px solid #000;
-            z-index: 120;
-            transform: translateY(-100%);
-            transition: transform 0.55s cubic-bezier(0.25,1,0.5,1);
-        }
-        #now-playing-banner.visible { transform: translateY(0); }
-        body.is-exiting #now-playing-banner {
-            transition: transform 0.30s cubic-bezier(0.25,1,0.5,1);
-            transform: translateY(-100%);
-        }
-        .banner-inner {
-            display: flex; align-items: center;
-            height: 100%; padding: 0 24px; gap: 14px;
-        }
-        .banner-live-dot {
-            width: 8px; height: 8px; flex-shrink: 0;
-            background: #ff3b30; border-radius: 50%;
-            box-shadow: 0 0 8px rgba(255,59,48,0.85);
-            animation: pulse-dot 1.2s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%,100% { transform: scale(0.8); opacity: 0.7; }
-            50%      { transform: scale(1.3); opacity: 1; }
-        }
-        #banner-art {
-            width: 40px; height: 40px; border-radius: 3px;
-            border: 1.5px solid #000; object-fit: cover; flex-shrink: 0;
-            opacity: 0; transition: opacity 0.35s ease;
-        }
-        #banner-art.has-art { opacity: 1; }
-        .banner-info { flex: 1; min-width: 0; }
-        .banner-label {
-            display: block; font-size: 8px; font-weight: 900;
-            letter-spacing: 2.5px; color: #ff3b30; text-transform: uppercase;
-        }
-        #banner-track {
-            display: block; font-size: 13px; font-weight: 800;
-            color: #000; text-transform: uppercase; letter-spacing: 0.8px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .banner-btn {
-            flex-shrink: 0; background: #000; color: #fff;
-            font-size: 10px; font-weight: 900; letter-spacing: 1.5px;
-            text-transform: uppercase; text-decoration: none;
-            padding: 9px 18px; border: 2px solid #000; white-space: nowrap;
-            transition: background 0.2s, color 0.2s, border-color 0.2s;
-        }
-        .banner-btn:hover { background: #ff3b30; border-color: #ff3b30; }
-
-        /* ── CLOCK ───────────────────────────────────────────────────── */
-        .status-area {
-            position: absolute; top: 25px; right: 30px;
-            display: flex; align-items: center; z-index: 100;
-            font-size: clamp(11px, 1.3vw, 15px);
-            font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
-            color: #000;
-            text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px rgba(255,255,255,0.9);
-            opacity: 0; transform: translateX(15px);
-            animation: clockIn 1.2s cubic-bezier(0.25,1,0.5,1) 0.1s forwards;
-            transition: top 0.55s cubic-bezier(0.25,1,0.5,1);
-        }
-        body.banner-active .status-area { top: 78px; }
-        body.is-exiting   .status-area { animation: clockOut 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes clockIn  { 0%{opacity:0;transform:translateX(15px);filter:blur(3px)} 100%{opacity:1;transform:none;filter:none} }
-        @keyframes clockOut { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(15px);filter:blur(3px)} }
-
-        /* ── SETTINGS ────────────────────────────────── */
-        .settings-btn {
-            background: none; border: none; cursor: pointer;
-            width: 28px; height: 28px; padding: 0;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0.5; transition: opacity 0.2s, transform 0.3s;
-        }
-        .settings-btn:hover { opacity: 1; }
-        .settings-btn.open { transform: rotate(60deg); opacity: 1; }
-        .settings-btn svg { 
-            transition: fill 0.8s ease; 
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 14px rgba(255,255,255,0.6));
-        }
-        .settings-dropdown {
-            position: absolute; top: calc(100% + 10px); right: 0;
-            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
-            border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
-            padding: 8px 0; min-width: 160px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            opacity: 0; transform: translateY(-6px); pointer-events: none;
-            transition: opacity 0.25s, transform 0.25s;
-            text-shadow: none;
-        }
-        .settings-dropdown.open {
-            opacity: 1; transform: translateY(0); pointer-events: auto;
-        }
-        .settings-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 16px; cursor: pointer;
-            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
-            text-transform: uppercase; color: #000;
-            transition: background 0.15s, color 0.8s;
-            text-shadow: none;
-        }
-        .settings-item:hover { background: rgba(0,0,0,0.04); }
-        .theme-toggle-track {
-            width: 36px; height: 20px; border-radius: 10px;
-            background: rgba(0,0,0,0.12); position: relative;
-            transition: background 0.3s;
-            flex-shrink: 0;
-        }
-        .theme-toggle-track.active { background: #000; }
-        .theme-toggle-thumb {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #fff; position: absolute; top: 2px; left: 2px;
-            transition: transform 0.3s, background 0.3s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .theme-toggle-track.active .theme-toggle-thumb { transform: translateX(16px); }
-
-        /* ── MARQUEE BACKGROUND ──────────────────────────────── */
-        .main-content { flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative; }
-
-        #logo-wrapper {
-            position: absolute; top: 50px; left: 0;
-            width: 100vw; height: calc(100dvh - 160px);
-            display: flex; flex-direction: column; justify-content: center;
-            overflow: hidden; pointer-events: none;
-            
-            /* Entry animation: slide up, fade in, blur-to-clear while stationary */
-            animation: blurSlideIn 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both;
-        }
-        body.is-exiting #logo-wrapper { animation: glideOut 0.6s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes glideOut { to { opacity:0; transform:translateY(30px) scale(0.95); filter: blur(10px); } }
-        @keyframes blurSlideIn {
-            0% {
-                transform: translateY(35px);
-                filter: blur(15px);
-                opacity: 0;
-            }
-            100% {
-                transform: translateY(0);
-                filter: blur(0px);
-                opacity: 1;
-            }
-        }
-
-        .marquee-track {
-            display: flex; flex-wrap: nowrap;
-            width: max-content; will-change: transform;
-            margin-top: -0.8vw;
-        }
-
-        /* Initial positions prior to JS Web Animations initialization */
-        .track-right { 
-            transform: translateX(-50%);
-        }
-        .track-left  { 
-            transform: translateX(0%);
-        }
-
-        img.cuceu-img {
-            height: clamp(3rem,4.5vw,6rem); width: auto;
-            margin-right: 1vw; flex-shrink: 0;
-            user-select: none; -webkit-user-drag: none;
-        }
-        .marquee-track:nth-child(even) img.cuceu-img {
-            transform: rotate(180deg);
-        }
-
-        /* ── LIQUID GLASS DOCK ───────────────────────────────────────── */
-        .mac-dock-container {
-            position: absolute; bottom: 30px; width: 100%;
-            display: flex; justify-content: center; z-index: 10;
-        }
-
-        .mac-dock {
-            background: linear-gradient(170deg,
-                rgba(255,255,255,0.30) 0%,
-                rgba(255,255,255,0.10) 55%,
-                rgba(255,255,255,0.20) 100%
-            );
-            backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
-            -webkit-backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
-            border: 1px solid rgba(255,255,255,0.60);
-            border-top-color: rgba(255,255,255,0.85);
-            border-bottom-color: rgba(255,255,255,0.30);
-            border-radius: 28px;
-            padding: 10px 16px;
-            display: flex; gap: 12px; align-items: center;
-            box-shadow:
-                0 12px 48px rgba(0,0,0,0.10),
-                0 2px 8px rgba(0,0,0,0.06),
-                inset 0 1.5px 0 rgba(255,255,255,0.85),
-                inset 0 -1px 0 rgba(255,255,255,0.18),
-                inset 1px 0 0 rgba(255,255,255,0.25),
-                inset -1px 0 0 rgba(255,255,255,0.25);
-            opacity: 0;
-            animation: dockSlideUp 1.2s cubic-bezier(0.25,1,0.5,1) 0.1s forwards;
-            position: relative;
-        }
-
-        .mac-dock::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 50%;
-            background: linear-gradient(180deg,
-                rgba(255,255,255,0.32) 0%,
-                rgba(255,255,255,0.06) 65%,
-                transparent 100%
-            );
-            border-radius: 30px 30px 50% 50% / 28px 28px 18px 18px;
-            pointer-events: none; z-index: 0;
-        }
-
-        body.is-exiting .mac-dock { animation: dockSlideDown 0.5s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes dockSlideUp   { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
-        @keyframes dockSlideDown { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
-
-        .dock-app {
-            text-decoration: none; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            transition: transform 0.3s cubic-bezier(0.25,1,0.5,1);
-            position: relative; height: 60px; width: 60px;
-            z-index: 1;
-        }
-        .dock-app.is-open::after {
-            content: ''; position: absolute; bottom: 2px; left: 50%;
-            transform: translateX(-50%); width: 4px; height: 4px;
-            background: rgba(255,255,255,0.95); border-radius: 50%;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        .dock-app:hover { transform: translateY(-10px); }
-
-        /* Icon Base Styles */
-        .app-icon {
-            width: 50px; height: 50px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-        }
-
-        /* App Squircle Shape (Used for IG, TD, FM) */
-        .squircle {
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            width: 100vw; height: 100vh; height: 100dvh;
             overflow: hidden;
+            background: var(--c-bg); /* Fallback while loading */
         }
-        .squircle::after {
-            content: ''; position: absolute; inset: 0;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-top-color: rgba(255,255,255,0.5);
-            border-bottom-color: rgba(0,0,0,0.1);
-            border-radius: inherit; pointer-events: none;
+        #app-frame {
+            width: 100%; height: 100%;
+            border: none; display: block;
         }
 
-        /* Specific App Colors */
-        .icon-ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-        .icon-td { background: transparent; } 
-        .icon-fm { background: #000; color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-        .icon-bin { background: transparent; box-shadow: none; width: 56px; height: 56px; margin-bottom: -4px; }
-
-        .app-tooltip {
-            position: absolute; top: -35px;
-            background: rgba(20,20,25,0.88); backdrop-filter: blur(12px);
-            padding: 6px 14px; border-radius: 8px;
-            font-size: 11px; font-weight: 700; color: #fff;
+        /* ── PERSISTENT MINI PLAYER ──────────────────────────────── */
+        #persistent-player {
+            position: fixed;
+            bottom: 24px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 48px); max-width: 320px;
+            background: var(--c-glass);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--c-glass-border);
+            border-radius: var(--r-pill);
+            padding: 12px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 99999;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.2s ease; white-space: nowrap; text-transform: uppercase;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translate(-50%, 20px);
         }
-        .dock-app:hover .app-tooltip { opacity: 1; }
-
-        .app-badge {
-            position: absolute; top: -4px; right: -8px;
-            background: rgba(20,20,25,0.92); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
-            padding: 3px 7px; display: flex; align-items: center; gap: 4px;
-            font-size: 8px; font-weight: 800; color: #fff;
-            opacity: 0; z-index: 20; pointer-events: none;
+        #persistent-player.visible {
+            opacity: 1; pointer-events: auto; transform: translate(-50%, 0);
         }
-        .app-badge.visible { opacity: 1; }
-        .recording-dot {
-            width: 5px; height: 5px; background: #ff3b30; border-radius: 50%;
-            animation: pulse-dot 2s ease-in-out infinite;
+        body.dark-mode #persistent-player {
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 1px rgba(208,115,41,0.08);
+            border-color: var(--c-amber-15);
         }
 
-        /* ── MOBILE ──────────────────────────────────────────────────── */
-        @media (max-width: 600px) {
-            .status-area { font-size: 11px; top: 20px; right: 16px; letter-spacing: 0.8px; }
-            body.banner-active .status-area { top: 72px; }
-            .track-right, .track-left { animation-duration: 60s; } 
-            .mobile-hide { display: none !important; }
-            img.cuceu-img { height: 4rem; margin-right: 4vw; }
-            .marquee-track { margin-top: -1vw; }
-            .mac-dock { gap: 8px; padding: 8px 12px; border-radius: 24px; }
-            .dock-app { width: 50px; height: 50px; }
-            .app-icon { width: 44px; height: 44px; border-radius: 10px; }
-            .icon-fm { font-size: 16px; }
-            .icon-bin { width: 48px; height: 48px; }
-            #now-playing-banner { height: 54px; }
-            .banner-btn { padding: 7px 12px; font-size: 9px; }
-            #banner-track { font-size: 11px; }
+        .pp-left {
+            display: flex; align-items: center; gap: 12px;
         }
+        .pp-play-btn {
+            background: var(--c-amber); color: #fff;
+            border: none; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+        }
+        .pp-play-btn:hover { transform: scale(1.1); background: #b8621e; }
+        .pp-play-btn:active { transform: scale(0.95); }
+        .pp-play-icon { width: 18px; height: 18px; fill: currentColor; }
 
-        /* ── DARK MODE OVERRIDES ─────────────────────── */
-        /* Body + container handled above */
+        .pp-info {
+            display: flex; flex-direction: column;
+        }
+        .pp-title {
+            font-size: 11px; font-weight: var(--fw-black); letter-spacing: 1px;
+            color: var(--c-text); text-transform: uppercase;
+        }
+        .pp-status {
+            font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 1.5px;
+            color: var(--c-amber); display: flex; align-items: center; gap: 4px;
+        }
+        .pp-dot {
+            width: 4px; height: 4px; border-radius: 50%; background: var(--c-amber);
+            box-shadow: 0 0 6px var(--c-amber);
+        }
+        .pp-dot.buffering {
+            background: #ffcc00; box-shadow: 0 0 6px #ffcc00;
+            animation: ppFlash 0.8s infinite alternate;
+        }
+        @keyframes ppFlash { from {opacity:0.4} to {opacity:1} }
 
-        /* Clock / status area */
-        body.dark-mode .status-area {
-            color: #fff;
-            text-shadow: 0 0 15px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3);
+        .pp-close-btn {
+            background: transparent; border: none; color: #888;
+            cursor: pointer; padding: 4px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.2s, background 0.2s;
         }
-
-        /* Settings */
-        body.dark-mode .settings-btn svg { fill: #fff; }
-        body.dark-mode .settings-dropdown {
-            background: rgba(30,30,30,0.92);
-            border-color: rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        body.dark-mode .settings-item { color: #fff; }
-        body.dark-mode .settings-item:hover { background: rgba(255,255,255,0.06); }
-        body.dark-mode .theme-toggle-track { background: rgba(255,255,255,0.15); }
-        body.dark-mode .theme-toggle-track.active { background: #fff; }
-        body.dark-mode .theme-toggle-track.active .theme-toggle-thumb { background: #111; }
-
-        /* Now Playing Banner */
-        body.dark-mode #now-playing-banner {
-            background: #111;
-            border-bottom-color: #333;
-        }
-        body.dark-mode #banner-track { color: #fff; }
-        body.dark-mode .banner-btn {
-            background: #fff; color: #000;
-            border-color: #fff;
-        }
-        body.dark-mode .banner-btn:hover { background: #ff3b30; border-color: #ff3b30; color: #fff; }
-        body.dark-mode #banner-art { border-color: #444; }
-
-        /* Dock */
-        body.dark-mode .mac-dock {
-            background: linear-gradient(170deg,
-                rgba(255,255,255,0.08) 0%,
-                rgba(255,255,255,0.03) 55%,
-                rgba(255,255,255,0.06) 100%
-            );
-            border-color: rgba(255,255,255,0.12);
-            border-top-color: rgba(255,255,255,0.18);
-            border-bottom-color: rgba(255,255,255,0.06);
-            box-shadow:
-                0 12px 48px rgba(0,0,0,0.35),
-                0 2px 8px rgba(0,0,0,0.2),
-                inset 0 1.5px 0 rgba(255,255,255,0.12),
-                inset 0 -1px 0 rgba(255,255,255,0.04);
-        }
-        body.dark-mode .mac-dock::before {
-            background: linear-gradient(180deg,
-                rgba(255,255,255,0.06) 0%,
-                rgba(255,255,255,0.02) 65%,
-                transparent 100%
-            );
-        }
+        .pp-close-btn:hover { color: var(--c-text); background: rgba(0,0,0,0.05); }
+        body.dark-mode .pp-close-btn:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="now-playing-banner">
-        <div class="banner-inner">
-            <span class="banner-live-dot"></span>
-            <img id="banner-art" alt="">
-            <div class="banner-info">
-                <span class="banner-label">Live Now</span>
-                <span id="banner-track">—</span>
-            </div>
-            <a href="/fm" class="banner-btn internal-link">Listen Now →</a>
-        </div>
-    </div>
+    <!-- Main Content loaded via iframe -->
+    <iframe id="app-frame" src=""></iframe>
 
-    <div class="status-area">
-        <span id="mac-clock">MONDAY | 12:00 AM</span>
-        <div style="margin-left: 12px; position: relative; display: flex; align-items: center;">
-            <button class="settings-btn" id="settings-btn" aria-label="Settings">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/>
-                </svg>
+    <!-- Persistent Global Audio Player -->
+    <div id="persistent-player">
+        <div class="pp-left">
+            <button class="pp-play-btn" id="pp-play-btn" aria-label="Play/Pause">
+                <svg class="pp-play-icon play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="pp-play-icon pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
-            <div class="settings-dropdown" id="settings-dropdown">
-                <div class="settings-item" id="theme-toggle-item">
-                    <span>Dark Mode</span>
-                    <div class="theme-toggle-track" id="theme-track">
-                        <div class="theme-toggle-thumb"></div>
-                    </div>
-                </div>
+            <div class="pp-info">
+                <span class="pp-title">cuceu.fm</span>
+                <span class="pp-status"><div class="pp-dot" id="pp-dot"></div> <span id="pp-status-text">LIVE</span></span>
             </div>
         </div>
+        <button class="pp-close-btn" id="pp-close-btn" aria-label="Hide Player">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
     </div>
 
-    <div class="main-content">
-        <div id="logo-wrapper">
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right mobile-hide">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left mobile-hide">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-        </div>
-    </div>
+    <audio id="global-player" preload="none" crossorigin="anonymous"></audio>
 
-    <div class="mac-dock-container">
-        <div class="mac-dock">
-
-            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
-                <div class="app-tooltip">Instagram</div >
-                <div class="app-icon squircle icon-ig">
-                    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                </div >
-            </a >
-
-            <a href="/td" class="dock-app internal-link">
-                <div class="app-tooltip">TouchDesigner</div >
-                <div class="app-icon squircle icon-td">
-                    <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0" y="0" width="100" height="100" fill="#919c7d" />
-                        <path d="M50 0L50 100M0 50L100 50" stroke="#111" stroke-width="5"/>
-                        <path d="M20 20L50 50M80 20L50 50M20 80L50 50M80 80L50 50" stroke="#111" stroke-width="5"/>
-                        <rect x="12" y="12" width="20" height="20" fill="#111"/>
-                        <rect x="68" y="12" width="20" height="20" fill="#111"/>
-                        <rect x="12" y="68" width="20" height="20" fill="#111"/>
-                        <rect x="68" y="68" width="20" height="20" fill="#111"/>
-                        <circle cx="50" cy="50" r="23" fill="#fff" stroke="#111" stroke-width="5"/>
-                        <rect x="43" y="43" width="14" height="14" fill="#111"/>
-                    </svg>
-                </div >
-            </a >
-
-            <a href="/fm" class="dock-app internal-link" id="fm-app">
-                <div class="app-tooltip">cuceuFM</div >
-                <div class="app-badge" id="fm-badge">
-                    <div class="recording-dot" style="display:none;"></div> 
-                    <span id="fm-badge-text">OFFLINE</span>
-                </div >
-                <div class="app-icon squircle icon-fm">.fm</div>
-            </a >
-
-            <a href="/bin" class="dock-app internal-link">
-                <div class="app-tooltip">Bin</div >
-                <div class="app-icon icon-bin">
-                    <svg viewBox="0 0 100 100" width="48" height="48">
-                        <defs>
-                            <linearGradient id="binFront" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#e0e0e0"/>
-                                <stop offset="20%" stop-color="#ffffff"/>
-                                <stop offset="80%" stop-color="#e0e0e0"/>
-                                <stop offset="100%" stop-color="#c0c0c0"/>
-                            </linearGradient>
-                            <linearGradient id="binBack" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#b0b0b0"/>
-                                <stop offset="100%" stop-color="#d0d0d0"/>
-                            </linearGradient>
-                        </defs>
-                        <ellipse cx="50" cy="25" rx="30" ry="8" fill="url(#binBack)"/>
-                        <path d="M20 25 L28 85 C28 90, 72 90, 72 85 L80 25 Z" fill="url(#binFront)"/>
-                        <ellipse cx="50" cy="25" rx="30" ry="8" fill="none" stroke="#f4f4f4" stroke-width="2"/>
-                        <ellipse cx="50" cy="25" rx="31" ry="9" fill="none" stroke="#c0c0c0" stroke-width="1"/>
-                        <line x1="33" y1="33" x2="38" y2="83" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="41" y1="34" x2="44" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="50" y1="34" x2="50" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="59" y1="34" x2="56" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="67" y1="33" x2="62" y2="83" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                </div >
-            </a >
-
-        </div >
-    </div>
-
+    <script src="/shared.js"></script>
     <script>
-        // ── PAGE TRANSITIONS ─────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.internal-link').forEach(link => {
-                link.addEventListener('click', e => {
-                    e.preventDefault();
-                    document.body.classList.add('is-exiting');
-                    setTimeout(() => window.location.href = link.href, 600); 
-                });
-            });
+        // ── INIT THEME ──
+        CuceuTheme.apply();
 
-            // ── MARQUEE ANIMATION RUNNING TRIGGER (Web Animations API) ──
-            const marqueeAnimations = [];
-            const tracks = document.querySelectorAll('.marquee-track');
-            let isSpinningUp = true;
-            
-            tracks.forEach((track, index) => {
-                const isRight = track.classList.contains('track-right');
-                const keyframes = isRight 
-                    ? [ { transform: 'translateX(-50%)' }, { transform: 'translateX(0%)' } ]
-                    : [ { transform: 'translateX(0%)' }, { transform: 'translateX(-50%)' } ];
-                
-                const anim = track.animate(keyframes, {
-                    duration: 30000,
-                    iterations: Infinity,
-                    easing: 'linear'
-                });
-                anim.pause();
-                // Stagger starting offsets so the rows are not perfectly aligned on load
-                anim.currentTime = (index * 4500) % 30000;
-                marqueeAnimations.push(anim);
-            });
-
-            function setMarqueeState(state) {
-                if (isSpinningUp) return;
-                marqueeAnimations.forEach(anim => {
-                    if (state === 'running') {
-                        anim.play();
-                    } else {
-                        anim.pause();
-                    }
-                });
-            }
-
-            // Spin-up initialization (Tape Deck acceleration)
-            setTimeout(() => {
-                marqueeAnimations.forEach(anim => {
-                    anim.play();
-                    anim.playbackRate = 0;
-                });
-                
-                let start = null;
-                const duration = 2500; // 2.5 seconds spin-up duration
-                
-                function step(timestamp) {
-                    if (!start) start = timestamp;
-                    const elapsed = timestamp - start;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    // Cubic ease-in for a realistic mechanical acceleration feel
-                    const easeIn = progress * progress * progress;
-                    
-                    marqueeAnimations.forEach(anim => {
-                        anim.playbackRate = easeIn;
-                    });
-                    
-                    if (progress < 1) {
-                        requestAnimationFrame(step);
-                    } else {
-                        marqueeAnimations.forEach(anim => {
-                            anim.playbackRate = 1;
-                        });
-                        isSpinningUp = false; // Spin-up complete, enable visibility event listeners
-                    }
-                }
-                requestAnimationFrame(step);
-            }, 1400);
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    setMarqueeState('running');
-                } else {
-                    setMarqueeState('paused'); 
-                }
-            });
-
-            window.addEventListener('pageshow', (e) => {
-                if (e.persisted) {
-                    document.body.classList.remove('is-exiting');
-                    setMarqueeState('running'); 
-                }
-            });
-        });
-
-        // ── CLOCK ─────────────────────────────────────
-        const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-        function updateClock() {
-            const n = new Date();
-            const h = n.getHours() % 12 || 12;
-            const m = n.getMinutes().toString().padStart(2,'0');
-            const ap = n.getHours() >= 12 ? 'PM' : 'AM';
-            document.getElementById('mac-clock').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
+        // ── IFRAME ROUTER ──
+        const frame = document.getElementById('app-frame');
+        
+        // Check if we arrived via a redirect like `/?path=/fm`
+        const urlParams = new URLSearchParams(window.location.search);
+        let targetPath = urlParams.get('path');
+        
+        // If there's a target path, strip it from the URL bar immediately so it looks clean
+        if (targetPath) {
+            // Clean up the URL bar
+            window.history.replaceState(null, '', targetPath);
+            // Fix trailing slashes / /index.html logic if needed
+            if (targetPath === '/' || targetPath === '') targetPath = '/home.html';
+            frame.src = targetPath;
+        } else {
+            // Normal load: check pathname
+            let path = window.location.pathname;
+            if (path === '/' || path === '') path = '/home.html';
+            frame.src = path;
         }
-        updateClock(); setInterval(updateClock, 1000);
 
-        // ── STREAM STATUS + NOW PLAYING BANNER ───────────────────────────
-        let bannerShown = false;
-
-        async function checkStream() {
-            const fmBadgeTextEl = document.getElementById('fm-badge-text');
-            const fmBadgeEl = document.getElementById('fm-badge');
-            const liveDot = fmBadgeEl.querySelector('.recording-dot');
-            const nowPlayingBanner = document.getElementById('now-playing-banner');
-
+        // Sync URL bar when iframe navigates internally
+        frame.addEventListener('load', () => {
             try {
-                const response = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("https://stream.cuceu.co.uk/status-json.xsl?t=" + Date.now()));
-                if (!response.ok) throw new Error('Network response was not ok.');
-
-                const data = await response.text();
-                const src  = data.match(/<title>(.*?)<\/title>/);
-
-                if (src && src[1] && src[1].toLowerCase() !== 'offline') {
-                    const title = src[1];
-                    
-                    fmBadgeTextEl.innerText = "ON AIR";
-                    fmBadgeEl.classList.add('visible');
-                    liveDot.style.display = 'block'; 
-
-                    document.getElementById('banner-track').textContent = title;
-                    if (!bannerShown) {
-                        bannerShown = true;
-                        try {
-                            const artUrlResponse = await fetch('https://stream.cuceu.co.uk/artwork.txt?t=' + Date.now());
-                            const artUrl = await artUrlResponse.text();
-
-                            if (artUrl && artUrl.startsWith('http')) {
-                                const img = document.getElementById('banner-art');
-                                img.onload = () => img.classList.add('has-art');
-                                img.src = artUrl;
-                            } else {
-                                document.getElementById('now-playing-banner').style.opacity = 1;
-                            }
-
-                        } catch (e) { }
-                        
-                        setTimeout(() => {
-                            nowPlayingBanner.classList.add('visible');
-                            document.body.classList.add('banner-active');
-                        }, 2500);
-                    }
-
-                } else {
-                    if (bannerShown) { 
-                         nowPlayingBanner.classList.remove('visible');
-                         document.body.classList.remove('banner-active');
-                         bannerShown = false;
-                    }
-
-                    fmBadgeTextEl.innerText = "OFFLINE";
-                    fmBadgeEl.classList.add('visible');
-                    liveDot.style.display = 'none'; 
+                const iframePath = frame.contentWindow.location.pathname;
+                // If the iframe is at /home.html, show / in the top URL bar
+                const displayPath = iframePath.replace(/\/home\.html$/, '/');
+                if (window.location.pathname !== displayPath) {
+                    window.history.pushState(null, '', displayPath);
                 }
-
             } catch (e) {
-                console.error("Stream check failed:", e);
-                 if (bannerShown) { 
-                         document.getElementById('now-playing-banner').classList.remove('visible');
-                         document.body.classList.remove('banner-active');
-                         bannerShown = false;
-                    }
-                fmBadgeTextEl.innerText = "OFFLINE"; 
-                fmBadgeEl.classList.add('visible');
-                liveDot.style.display = 'none'; 
+                // Cross-origin issues (should not happen since it's same domain)
+                console.warn("Could not sync URL due to cross-origin policies");
+            }
+        });
+
+        // Handle browser Back/Forward buttons
+        window.addEventListener('popstate', () => {
+            let path = window.location.pathname;
+            if (path === '/' || path === '') path = '/home.html';
+            frame.src = path;
+        });
+
+
+        // ── PERSISTENT PLAYER LOGIC ──
+        const STREAM_BASE = "https://stream.cuceu.co.uk";
+        const player = document.getElementById('global-player');
+        const pp = document.getElementById('persistent-player');
+        const playBtn = document.getElementById('pp-play-btn');
+        const closeBtn = document.getElementById('pp-close-btn');
+        const playIcon = playBtn.querySelector('.play');
+        const pauseIcon = playBtn.querySelector('.pause');
+        const statusText = document.getElementById('pp-status-text');
+        const dot = document.getElementById('pp-dot');
+        
+        let isPlaying = false;
+        let isManuallyClosed = false;
+
+        function updateUI() {
+            if (isPlaying) {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                pp.classList.add('visible');
+            } else {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
             }
         }
 
-        checkStream(); 
-        setInterval(checkStream, 15000); 
-
-        // ── SETTINGS & DARK MODE ──────────────────────────────────────
-        const settingsBtn  = document.getElementById('settings-btn');
-        const settingsDrop = document.getElementById('settings-dropdown');
-        const themeItem    = document.getElementById('theme-toggle-item');
-        const themeTrack   = document.getElementById('theme-track');
-
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = settingsDrop.classList.toggle('open');
-            settingsBtn.classList.toggle('open', isOpen);
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
+                player.play().catch(e => console.error(e));
+                statusText.innerText = 'BUFFERING';
+                dot.classList.add('buffering');
+                isPlaying = true;
+                isManuallyClosed = false;
+            } else {
+                player.pause();
+                player.src = '';
+                statusText.innerText = 'LIVE';
+                dot.classList.remove('buffering');
+                isPlaying = false;
+            }
+            updateUI();
         });
 
-        document.addEventListener('click', () => {
-            settingsDrop.classList.remove('open');
-            settingsBtn.classList.remove('open');
-        });
-        settingsDrop.addEventListener('click', (e) => e.stopPropagation());
+        player.onplaying = () => {
+            if (isPlaying) {
+                statusText.innerText = 'ON AIR';
+                dot.classList.remove('buffering');
+            }
+        };
 
-        function setDarkMode(on) {
-            document.body.classList.toggle('dark-mode', on);
-            themeTrack.classList.toggle('active', on);
-            localStorage.setItem('cuceu-fm-dark', on ? '1' : '0');
-        }
-
-        themeItem.addEventListener('click', () => {
-            setDarkMode(!document.body.classList.contains('dark-mode'));
+        closeBtn.addEventListener('click', () => {
+            pp.classList.remove('visible');
+            isManuallyClosed = true;
         });
 
-        if (localStorage.getItem('cuceu-fm-dark') === '1') {
-            setDarkMode(true);
-        }
+        // --- GLOBAL API FOR IFRAME PAGES ---
+        // Expose a global object so `fm/index.html` can control this player
+        window.CuceuGlobalPlayer = {
+            play: () => {
+                if (!isPlaying) playBtn.click();
+            },
+            pause: () => {
+                if (isPlaying) playBtn.click();
+            },
+            isPlaying: () => isPlaying,
+            getAudioElement: () => player,
+            showMiniPlayer: () => {
+                if (isPlaying && !isManuallyClosed) {
+                    pp.classList.add('visible');
+                }
+            },
+            hideMiniPlayer: () => {
+                pp.classList.remove('visible');
+            }
+        };
     </script>
 </body>
 </html>

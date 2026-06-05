@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trash</title>
+    <link rel="stylesheet" href="../shared.css">
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; overflow: hidden;
@@ -89,8 +90,16 @@
     </div>
 
     <script>
+        // Redirect to wrapper if loaded directly
+        if (window === window.parent) {
+            window.location.replace('/?path=' + window.location.pathname);
+        }
+
         const video = document.getElementById('camera-feed');
         const errorMsg = document.getElementById('error-msg');
+
+        // Store stream to stop it on exit
+        let currentStream = null;
 
         // --- THE GENIE ENTRANCE ANIMATION ---
         document.addEventListener("DOMContentLoaded", () => {
@@ -106,6 +115,11 @@
             // Add the class back so it sucks down into the dock
             document.getElementById('app-container').classList.add('genie-state');
             
+            // Stop camera to release the light indicator
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
             setTimeout(() => {
                 window.location.href = '/';
             }, 550);
@@ -114,6 +128,7 @@
         // Request front camera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
             .then(stream => {
+                currentStream = stream;
                 video.srcObject = stream;
                 video.play().catch(err => console.error("Video play error:", err));
             })
@@ -122,5 +137,6 @@
                 errorMsg.style.display = 'block';
             });
     </script>
+    <script src="../shared.js"></script>
 </body>
 </html>
