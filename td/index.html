@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cuceu.td</title>
+    <meta name="description" content="cuceu.td — TouchDesigner projects and visual experiments.">
     <link rel="icon" href="data:image/svg+xml,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><rect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><path d=%22M 50 0 L 50 100 M 0 50 L 100 50%22 stroke=%22%23111%22 stroke-width=%225%22/><path d=%22M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50%22 stroke=%22%23111%22 stroke-width=%225%22/><rect x=%2212%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2212%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><circle cx=%2250%22 cy=%2250%22 r=%2223%22 fill=%22%23ffffff%22 stroke=%22%23111%22 stroke-width=%225%22 /><rect x=%2243%22 y=%2243%22 width=%2214%22 height=%2214%22 fill=%22%23111%22 /></svg>">
+    <link rel="stylesheet" href="../shared.css">
     <style>
         * { box-sizing: border-box; user-select: none; }
 
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #ffffff; overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-            transition: background-color 0.8s ease;
+            width: 100%; height: 100%;
+            overflow: hidden;
         }
-        body.dark-mode { background-color: #0a0a0a; }
 
         /* ── PAGE TRANSITION ─────────────────────────────── */
         #page-transition-overlay {
@@ -43,101 +42,25 @@
         /* ── SEQUENCED ANIMATIONS ────────────────────────── */
         .logo-group    { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
         .td-window     { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; opacity:0; transform:translateY(40px); }
-        .back-btn-top  { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity:0; transform:translateY(-20px); }
-        .status-area   { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity:0; transform:translateY(-20px); }
+        .cuceu-nav     { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity:0; transform:translateY(-20px); }
 
-        body.is-exiting .back-btn-top  { animation: slideUpToTop  0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .status-area   { animation: slideUpToTop  0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting .td-window     { animation: breatheDown   0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
         body.is-exiting .logo-group    { animation: breatheDown   0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
 
         @keyframes breatheUp       { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
         @keyframes breatheDown     { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
         @keyframes slideDownFromTop { 0%{opacity:0;transform:translateY(-20px)} 100%{opacity:1;transform:none} }
-        @keyframes slideUpToTop    { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(-20px)} }
 
         /* ── BRAND HEADER ────────────────────────────────── */
         .brand-header {
-            background: #fff; padding: 24px 20px 18px;
+            background: transparent; padding: 24px 20px 18px;
             display: flex; flex-direction: column; align-items: center;
             position: relative; flex-shrink: 0;
+            margin-top: 20px;
         }
 
-        /* ROUND back button — td page style */
-        .back-btn-top {
-            position: absolute; left: 28px; top: 26px;
-            color: #000; text-decoration: none; font-weight: 900;
-            text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
-            border: 2px solid #000; padding: 8px 16px;
-            border-radius: 20px; /* round — td specific */
-            transition: background 0.2s, color 0.2s;
-        }
-        .back-btn-top:hover { background: #000; color: #fff; }
-
-        /* Clock — top right, matches main + fm format */
-        .status-area {
-            position: absolute; right: 28px; top: 26px;
-            font-size: clamp(11px,1.3vw,14px); font-weight: 900;
-            letter-spacing: 1.5px; text-transform: uppercase; color: #000;
-            display: flex; align-items: center;
-        }
-
-        /* ── SETTINGS ────────────────────────────────── */
-        .settings-btn {
-            background: none; border: none; cursor: pointer;
-            width: 28px; height: 28px; padding: 0;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0.5; transition: opacity 0.2s, transform 0.3s;
-        }
-        .settings-btn:hover { opacity: 1; }
-        .settings-btn.open { transform: rotate(60deg); opacity: 1; }
-        .settings-btn svg { 
-            transition: fill 0.8s ease; 
-        }
-        body.dark-mode .settings-btn svg { fill: #fff; }
-        .settings-dropdown {
-            position: absolute; top: calc(100% + 10px); right: 0;
-            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
-            border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
-            padding: 8px 0; min-width: 160px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            opacity: 0; transform: translateY(-6px); pointer-events: none;
-            transition: opacity 0.25s, transform 0.25s;
-            text-shadow: none;
-        }
-        .settings-dropdown.open {
-            opacity: 1; transform: translateY(0); pointer-events: auto;
-        }
-        .settings-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 16px; cursor: pointer;
-            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
-            text-transform: uppercase; color: #000;
-            transition: background 0.15s, color 0.8s;
-            text-shadow: none;
-        }
-        .settings-item:hover { background: rgba(0,0,0,0.04); }
-        .theme-toggle-track {
-            width: 36px; height: 20px; border-radius: 10px;
-            background: rgba(0,0,0,0.12); position: relative;
-            transition: background 0.3s;
-            flex-shrink: 0;
-        }
-        .theme-toggle-track.active { background: #000; }
-        .theme-toggle-thumb {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #fff; position: absolute; top: 2px; left: 2px;
-            transition: transform 0.3s, background 0.3s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .theme-toggle-track.active .theme-toggle-thumb { transform: translateX(16px); }
-
-        body.dark-mode .status-area { color: #fff; }
         body.dark-mode .td-text { color: #fff; }
         body.dark-mode .cuceu-header-img { filter: invert(1); }
-        body.dark-mode .brand-header { background: #0a0a0a; }
-        body.dark-mode .back-btn-top { color: #fff; border-color: #fff; }
-        body.dark-mode .back-btn-top:hover { background: #fff; color: #000; }
 
         /* Logo group: PNG + .td text */
         .logo-group {
@@ -191,6 +114,11 @@
                 linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
             background-size: 40px 40px; cursor: crosshair;
             overflow: hidden; touch-action: none;
+            animation: gridDrift 60s linear infinite;
+        }
+        @keyframes gridDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: -40px -40px; }
         }
         #network-canvas { position: absolute; top:0; left:0; width:0; height:0; transform-origin: 0 0; }
         #wire-layer { position: absolute; top:0; left:0; width:2000px; height:2000px; pointer-events: none; z-index:1; overflow:visible; }
@@ -289,8 +217,6 @@
             .cuceu-header-img { height: clamp(3rem, 10vw, 5rem); }
             .td-text { font-size: clamp(1.2rem, 4vw, 2.5rem); margin-left: -12px; }
             .td-window { margin: 0 10px 10px; }
-            .back-btn-top { left: 14px; top: 18px; padding: 6px 12px; font-size: 10px; }
-            .status-area  { right: 14px; top: 22px; font-size: 10px; }
             #project-node   { left: calc(50vw - 180px); top: calc(50vh - 260px); width: 210px; }
             #download-node  { left: calc(50vw + 50px);  top: calc(50vh - 190px); width: 110px; }
             #project-node-2  { left: calc(50vw - 150px); top: calc(50vh - 40px); width: 210px; }
@@ -304,28 +230,20 @@
     <div id="page-transition-overlay"></div>
 
     <div id="app-container" class="genie-state">
-        <div class="brand-header">
-            <a href="/" class="back-btn-top internal-link">← Home</a>
-
-            <!-- Clock — top right, same format as main + fm -->
-            <div class="status-area">
-                <span id="mac-clock">MONDAY | 12:00 AM</span>
-                <div style="margin-left: 12px; position: relative; display: flex; align-items: center;">
-                    <button class="settings-btn" id="settings-btn" aria-label="Settings">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/>
-                        </svg>
-                    </button>
-                    <div class="settings-dropdown" id="settings-dropdown">
-                        <div class="settings-item" id="theme-toggle-item">
-                            <span>Dark Mode</span>
-                            <div class="theme-toggle-track" id="theme-track">
-                                <div class="theme-toggle-thumb"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="cuceu-nav">
+            <div class="nav-left">
+                <a href="/" class="back-pill internal-link">← Home</a>
             </div>
+            <div class="nav-right">
+                <span class="cuceu-clock cuceu-clock-text">MONDAY | 12:00 AM</span>
+                <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme">
+                    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="brand-header">
 
             <div class="logo-group">
                 <!-- cuceugrta.png replaces the old plain text heading -->
@@ -428,19 +346,35 @@
         </div>
     </div>
 
+    <script src="../shared.js"></script>
     <script>
+        // Redirect to wrapper if loaded directly
+        if (window === window.parent) {
+            window.location.replace('/?path=' + window.location.pathname);
+        }
+
+        // ── INIT ─────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            CuceuTheme.bindToggle(document.getElementById('theme-toggle-btn'));
+        });
+
         // ── GENIE ENTRANCE & EXIT ────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('page-transition-overlay');
             requestAnimationFrame(() => overlay.classList.add('loaded'));
             setTimeout(() => document.getElementById('app-container').classList.remove('genie-state'), 50);
 
+            // Override shared transitions for genie exit
+            document.querySelectorAll('.internal-link').forEach(link => {
+                const clone = link.cloneNode(true);
+                link.replaceWith(clone);
+            });
             document.querySelectorAll('.internal-link').forEach(link => {
                 link.addEventListener('click', e => {
                     e.preventDefault();
                     document.body.classList.add('is-exiting');
                     setTimeout(() => document.getElementById('app-container').classList.add('genie-state'), 300);
-                    setTimeout(() => window.location.assign('/'), 850);
+                    setTimeout(() => window.location.assign(link.href), 850);
                 });
             });
         });
@@ -452,17 +386,6 @@
                 document.getElementById('app-container').classList.remove('genie-state');
             }
         });
-
-        // ── CLOCK — MONDAY | 1:24 AM ─────────────────────────────────
-        const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-        function updateClock() {
-            const n = new Date();
-            const h = n.getHours() % 12 || 12;
-            const m = n.getMinutes().toString().padStart(2,'0');
-            const ap = n.getHours() >= 12 ? 'PM' : 'AM';
-            document.getElementById('mac-clock').innerText = `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
-        }
-        updateClock(); setInterval(updateClock, 1000);
 
         // ── VIDEO MODAL ──────────────────────────────────────────────
         const videoNodes = document.querySelectorAll('.video-node');
@@ -487,8 +410,14 @@
 
         function updateTransform() {
             canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-            editor.style.backgroundPosition = `${panX}px ${panY}px`;
+            // Grid drift animation requires background-position to be animated via CSS,
+            // so we don't override it here for pan. Instead, we could use CSS variables:
+            editor.style.setProperty('--pan-x', `${panX}px`);
+            editor.style.setProperty('--pan-y', `${panY}px`);
+            // Actually, we can just let it drift visually and not strictly bind it to panX/Y
+            // to preserve the CSS animation.
             editor.style.backgroundSize = `${40*scale}px ${40*scale}px`;
+            drawWires();
         }
 
         window.panView  = (dx, dy)  => { panX += dx; panY += dy; updateTransform(); };
@@ -534,40 +463,8 @@
                 const ex = inN.offsetLeft,                     ey = inN.offsetTop  + inN.offsetHeight  / 2;
                 wire.setAttribute('d', `M ${sx} ${sy} C ${sx+c.stiff} ${sy+c.droop}, ${ex-c.stiff} ${ey+c.droop}, ${ex} ${ey}`);
             });
-        }
+        // drawWires is called in updateTransform
         drawWires(); window.addEventListener('resize', drawWires);
-
-        // ── SETTINGS & DARK MODE ──────────────────────────────────────
-        const settingsBtn  = document.getElementById('settings-btn');
-        const settingsDrop = document.getElementById('settings-dropdown');
-        const themeItem    = document.getElementById('theme-toggle-item');
-        const themeTrack   = document.getElementById('theme-track');
-
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = settingsDrop.classList.toggle('open');
-            settingsBtn.classList.toggle('open', isOpen);
-        });
-
-        document.addEventListener('click', () => {
-            settingsDrop.classList.remove('open');
-            settingsBtn.classList.remove('open');
-        });
-        settingsDrop.addEventListener('click', (e) => e.stopPropagation());
-
-        function setDarkMode(on) {
-            document.body.classList.toggle('dark-mode', on);
-            themeTrack.classList.toggle('active', on);
-            localStorage.setItem('cuceu-fm-dark', on ? '1' : '0');
-        }
-
-        themeItem.addEventListener('click', () => {
-            setDarkMode(!document.body.classList.contains('dark-mode'));
-        });
-
-        if (localStorage.getItem('cuceu-fm-dark') === '1') {
-            setDarkMode(true);
-        }
     </script>
 </body>
 </html>

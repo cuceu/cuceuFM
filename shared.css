@@ -1,0 +1,227 @@
+/* ═══════════════════════════════════════════════════════════════
+   CUCEU — Shared Design System
+   Single source of truth for brand tokens, components & utilities.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+    /* Brand palette */
+    --c-amber: #d07329;
+    --c-amber-soft: rgba(208, 115, 41, 0.08);
+    --c-amber-glow: rgba(208, 115, 41, 0.6);
+    --c-amber-15: rgba(208, 115, 41, 0.15);
+    --c-amber-20: rgba(208, 115, 41, 0.2);
+
+    /* Surfaces */
+    --c-bg: #faf8f5;
+    --c-bg-deep: #f5f0ea;
+    --c-text: #1a1a1a;
+    --c-text-muted: #888;
+    --c-text-inverse: #f0ebe5;
+
+    /* Glass surfaces */
+    --c-glass: rgba(250, 248, 245, 0.90);
+    --c-glass-border: rgba(0, 0, 0, 0.15);
+
+    /* Typography */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --fw-regular: 400;
+    --fw-bold: 700;
+    --fw-heavy: 800;
+    --fw-black: 900;
+    --ls-tight: -2px;
+    --ls-normal: 0.8px;
+    --ls-wide: 1.5px;
+    --ls-ultra: 2px;
+    --ls-mega: 3px;
+
+    /* Spacing */
+    --sp-2: 2px;
+    --sp-4: 4px;
+    --sp-8: 8px;
+    --sp-12: 12px;
+    --sp-16: 16px;
+    --sp-24: 24px;
+    --sp-32: 32px;
+
+    /* Radii */
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    --r-pill: 9999px;
+
+    /* Timing */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-snappy: cubic-bezier(0.5, 0, 0.1, 1);
+    --dur-fast: 0.3s;
+    --dur-medium: 0.55s;
+    --dur-slow: 0.8s;
+    --dur-glacial: 1.2s;
+}
+
+/* ── DARK MODE TOKEN OVERRIDES ─────────────────────────────── */
+body.dark-mode {
+    --c-bg: #0f0e0c;
+    --c-bg-deep: #161412;
+    --c-text: #f0ebe5;
+    --c-text-muted: #888;
+    --c-text-inverse: #1a1a1a;
+    --c-glass: rgba(25, 22, 18, 0.92);
+    --c-glass-border: rgba(208, 115, 41, 0.12);
+}
+
+/* ── RESET & BASE ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-primary);
+    background: var(--c-bg);
+    color: var(--c-text);
+    transition: background var(--dur-slow) ease, color var(--dur-slow) ease;
+}
+
+/* ── NOISE / GRAIN TEXTURE OVERLAY ─────────────────────────── */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0.028;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+}
+body.dark-mode::after {
+    mix-blend-mode: screen;
+    opacity: 0.04;
+}
+
+/* ── SHARED NAVIGATION BAR ─────────────────────────────────── */
+.cuceu-nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-12) var(--sp-24);
+    z-index: 100;
+}
+
+.cuceu-nav .nav-left,
+.cuceu-nav .nav-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-12);
+}
+
+/* ── BACK BUTTON ───────────────────────────────────────────── */
+.back-pill {
+    color: var(--c-text);
+    text-decoration: none;
+    font-weight: var(--fw-black);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: var(--ls-wide);
+    border: 2px solid var(--c-glass-border);
+    padding: var(--sp-8) var(--sp-16);
+    border-radius: var(--r-pill);
+    background: var(--c-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background var(--dur-fast) var(--ease-spring),
+                color var(--dur-fast),
+                border-color var(--dur-fast),
+                transform var(--dur-fast) var(--ease-spring);
+    white-space: nowrap;
+}
+.back-pill:hover {
+    background: var(--c-amber);
+    color: #fff;
+    border-color: var(--c-amber);
+    transform: scale(1.04);
+}
+.back-pill:active { transform: scale(0.96); }
+
+/* ── CLOCK DISPLAY ─────────────────────────────────────────── */
+.cuceu-clock {
+    font-size: clamp(11px, 1.3vw, 14px);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-text);
+    text-shadow: 0 0 8px rgba(250, 248, 245, 0.9),
+                 0 0 14px var(--c-amber-soft);
+    transition: color var(--dur-slow) ease,
+                text-shadow var(--dur-slow) ease;
+}
+body.dark-mode .cuceu-clock {
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5),
+                 0 0 14px var(--c-amber-soft);
+}
+
+/* ── THEME TOGGLE BUTTON (Sun / Moon) ──────────────────────── */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--sp-4);
+    color: var(--c-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--dur-fast),
+                transform var(--dur-fast) var(--ease-spring);
+    opacity: 0.6;
+}
+.theme-toggle:hover {
+    color: var(--c-amber);
+    transform: scale(1.15);
+    opacity: 1;
+}
+.theme-toggle:active { transform: scale(0.9); }
+
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon {
+    width: 18px;
+    height: 18px;
+}
+.theme-toggle .icon-moon { display: none; }
+body.dark-mode .theme-toggle .icon-sun { display: none; }
+body.dark-mode .theme-toggle .icon-moon { display: block; }
+
+/* ── SHARED ENTRY / EXIT ANIMATIONS ────────────────────────── */
+@keyframes fadeBlurIn {
+    0%   { opacity: 0; transform: translateY(12px); filter: blur(6px); }
+    100% { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+}
+@keyframes fadeBlurOut {
+    0%   { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+    100% { opacity: 0; transform: translateY(12px); filter: blur(6px); }
+}
+@keyframes slideUp {
+    0%   { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(20px); }
+}
+
+/* Page exit state */
+body.is-exiting .cuceu-nav { animation: fadeBlurOut 0.3s var(--ease-smooth) forwards; }
+
+/* ── MOBILE DEFAULTS ───────────────────────────────────────── */
+@media (max-width: 600px) {
+    .cuceu-nav { padding: 10px 16px; }
+    .back-pill { padding: 6px 12px; font-size: 10px; }
+    .cuceu-clock { font-size: 11px; }
+    .mobile-hide { display: none !important; }
+}
