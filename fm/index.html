@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="../shared.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/4.0.0/simplex-noise.min.js"></script>
     <style>
         html, body {
             height: 100dvh; overflow: hidden;
@@ -251,7 +252,10 @@
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 1.2s ease;
         }
-        #bg-layer.mode-td #td-container { opacity: 1; }
+        #bg-layer.mode-td #td-container,
+        #bg-layer.mode-pulse #td-container,
+        #bg-layer.mode-waves #td-container,
+        #bg-layer.mode-flow #td-container { opacity: 1; }
         .td-placeholder {
             font-size: 0.65rem; font-weight: 900; letter-spacing: 3px;
             text-transform: uppercase; color: rgba(255,255,255,0.25);
@@ -268,31 +272,51 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(208, 115, 41, 0.08);
             transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            max-width: calc(100vw - 40px);
+            flex-wrap: nowrap;
         }
+        .mode-toggle::-webkit-scrollbar { display: none; }
         .mode-btn {
             background: transparent; border: none;
             padding: 6px 16px; font-size: 9px; font-weight: 900;
             letter-spacing: 2px; text-transform: uppercase;
             color: rgba(0,0,0,0.35); cursor: pointer;
             border-radius: 21px; white-space: nowrap;
+            flex-shrink: 0;
             transition: color 0.3s, background 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .mode-btn:hover { color: rgba(0,0,0,0.7); transform: scale(1.04); }
         .mode-btn.active { background: #000; color: #fff; }
+        
+        body:not(.dark-mode) .mode-btn[data-mode="td"],
+        body:not(.dark-mode) .mode-btn[data-mode="pulse"],
+        body:not(.dark-mode) .mode-btn[data-mode="waves"],
+        body:not(.dark-mode) .mode-btn[data-mode="flow"] {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
 
-        .td-settings-btn {
+        .viz-settings-btn {
             background: transparent; border: none; color: inherit;
             font-size: 14px; cursor: pointer;
             border-radius: 50%; opacity: 0; pointer-events: none;
             width: 0; padding: 0; transition: width 0.3s, opacity 0.3s, padding 0.3s;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
         }
-        body[data-active-mode="td"] .td-settings-btn {
+        body[data-active-mode="pulse"] .viz-settings-btn,
+        body[data-active-mode="waves"] .viz-settings-btn,
+        body[data-active-mode="flow"] .viz-settings-btn,
+        body[data-active-mode="td"] .viz-settings-btn {
             width: 28px; padding: 4px; opacity: 1; pointer-events: auto; margin-left: 2px;
         }
-        .td-settings-btn:hover { background: rgba(208, 115, 41, 0.2); }
+        .viz-settings-btn:hover { background: rgba(208, 115, 41, 0.2); }
 
-        .td-settings-popup {
+        .viz-settings-popup {
             position: absolute; bottom: calc(100% + 12px); right: -20px;
             background: rgba(15,15,15,0.92); backdrop-filter: blur(16px);
             border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
@@ -302,7 +326,7 @@
             color: rgba(255,255,255,0.6); font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
             width: 180px; transform-origin: bottom right; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-        .td-settings-popup.visible {
+        .viz-settings-popup.visible {
             opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
         }
         .settings-section { display: flex; flex-direction: column; gap: 10px; }
@@ -311,15 +335,23 @@
             color: #fff; font-size: 9px; margin-bottom: 2px;
             border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;
         }
-        .td-settings-popup label { display: flex; flex-direction: column; gap: 6px; }
-        .td-settings-popup input[type="range"] {
+        .viz-settings-popup label { display: flex; flex-direction: column; gap: 6px; }
+        .viz-settings-popup input[type="range"] {
             -webkit-appearance: none; width: 100%; height: 2px; background: rgba(255,255,255,0.2);
             outline: none; border-radius: 2px;
         }
-        .td-settings-popup input[type="range"]::-webkit-slider-thumb {
+        .viz-settings-popup input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%;
             background: var(--c-amber); cursor: pointer;
             box-shadow: 0 0 6px rgba(208,115,41,0.5);
+        }
+        .viz-settings-popup select {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            padding: 4px; border-radius: 4px; outline: none; font-size: 8px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+        }
+        .viz-settings-popup select option {
+            background: #222; color: #fff;
         }
 
         /* Dark mode OR forced-dark (DVD always has black bg) */
@@ -351,7 +383,7 @@
             .fm-text { margin-left:-16px; }
             #app-container { margin:0 6px; width:calc(100vw - 12px); }
             .mode-toggle  { bottom: 66px; }
-            .mode-btn     { padding: 5px 12px; font-size: 8px; letter-spacing: 1.5px; }
+            .mode-btn     { padding: 4px 8px; font-size: 7px; letter-spacing: 1.5px; }
             #dvd-artwork  { width: clamp(100px, 30vw, 160px); }
         }
     </style>
@@ -422,21 +454,67 @@
         <div class="mode-toggle" id="mode-toggle">
             <button class="mode-btn active" data-mode="clean">Clean</button>
             <button class="mode-btn" data-mode="dvd">DVD</button>
-            <button class="mode-btn" data-mode="td">Stars</button>
-            <button class="td-settings-btn" id="td-settings-btn" aria-label="Visualizer Settings">
+            <button class="mode-btn" data-mode="td" data-bg="dark">Stars 🌙</button>
+            <button class="mode-btn" data-mode="pulse" data-bg="dark">Pulse</button>
+            <button class="mode-btn" data-mode="waves" data-bg="dark">Waves</button>
+            <button class="mode-btn" data-mode="flow" data-bg="dark">Flow</button>
+            <button class="viz-settings-btn" id="viz-settings-btn" aria-label="Visualizer Settings">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
-            <div class="td-settings-popup" id="td-settings-popup">
-                <div class="settings-section">
-                    <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Visuals</div>
-                    <label>Star Size <input type="range" id="star-size-slider" min="0" max="8" step="0.5" value="1.0"></label>
-                    <label>Nebula <input type="range" id="nebula-opacity-slider" min="0" max="2" step="0.1" value="1.0"></label>
+            <div class="viz-settings-popup" id="viz-settings-popup">
+                
+                <div id="settings-stars" class="viz-settings-panel">
+                    <div class="settings-section">
+                        <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Visuals</div>
+                        <label>Star Size <input type="range" id="star-size-slider" min="0" max="8" step="0.5" value="1.0"></label>
+                    </div>
+                    <div class="settings-section">
+                        <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Audio React</div>
+                        <label>Sensitivity <input type="range" id="audio-sense-slider" min="0" max="3" step="0.1" value="1.0"></label>
+                        <label>Twinkle Speed <input type="range" id="audio-speed-slider" min="0.1" max="3" step="0.1" value="1.0"></label>
+                    </div>
                 </div>
-                <div class="settings-section">
-                    <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Audio React</div>
-                    <label>Sensitivity <input type="range" id="audio-sense-slider" min="0" max="3" step="0.1" value="1.0"></label>
-                    <label>Reaction Speed <input type="range" id="audio-speed-slider" min="0.1" max="3" step="0.1" value="1.0"></label>
-                    <label>Camera Shake <input type="range" id="audio-shake-slider" min="0" max="3" step="0.1" value="1.0"></label>
+
+                <div id="settings-pulse" class="viz-settings-panel" style="display:none">
+                    <div class="settings-section">
+                        <label>Bar Count <input type="range" id="pulse-count-slider" min="64" max="256" step="32" value="128"></label>
+                        <label>Height Scale <input type="range" id="pulse-height-slider" min="0.5" max="5" step="0.1" value="1.5"></label>
+                        <label>Ring Radius <input type="range" id="pulse-radius-slider" min="80" max="300" step="10" value="160"></label>
+                        <label>Rotation Speed <input type="range" id="pulse-rotation-slider" min="0" max="2" step="0.05" value="0.3"></label>
+                        <label>Color Mode 
+                            <select id="pulse-color-select">
+                                <option value="warm">Warm</option>
+                                <option value="cold">Cold</option>
+                                <option value="mono">Mono</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="settings-waves" class="viz-settings-panel" style="display:none">
+                    <div class="settings-section">
+                        <label>Grid Detail <input type="range" id="waves-detail-slider" min="20" max="100" step="10" value="50"></label>
+                        <label>Wave Height <input type="range" id="waves-height-slider" min="0.5" max="5" step="0.1" value="1.5"></label>
+                        <label>Scroll Speed <input type="range" id="waves-scroll-slider" min="0" max="3" step="0.1" value="0.8"></label>
+                        <label>Camera Tilt <input type="range" id="waves-tilt-slider" min="20" max="80" step="5" value="45"></label>
+                        <label>Color Palette 
+                            <select id="waves-color-select">
+                                <option value="heat">Heat</option>
+                                <option value="ocean">Ocean</option>
+                                <option value="mono">Mono</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="settings-flow" class="viz-settings-panel" style="display:none">
+                    <div class="settings-section">
+                        <label>Particle Count <input type="range" id="flow-count-slider" min="2000" max="15000" step="1000" value="8000"></label>
+                        <label>Flow Speed <input type="range" id="flow-speed-slider" min="0.1" max="3" step="0.1" value="1"></label>
+                        <label>Turbulence <input type="range" id="flow-turbulence-slider" min="0.1" max="3" step="0.1" value="1"></label>
+                        <label>Bass Burst <input type="range" id="flow-burst-slider" min="0" max="3" step="0.1" value="1"></label>
+                        <label>Trail Length <input type="range" id="flow-trail-slider" min="1" max="8" step="1" value="3"></label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -472,7 +550,12 @@ window.addEventListener('pageshow', e => {
 // ── THEME TOGGLE (unified via shared.js) ─────────────────────
 const themeToggle = document.getElementById('direct-theme-toggle');
 CuceuTheme.bindToggle(themeToggle, (isDark) => {
-    if (currentMode === 'td' && typeof updateVizTheme === 'function') updateVizTheme();
+    if (!isDark && (currentMode === 'td' || currentMode === 'pulse' || currentMode === 'waves' || currentMode === 'flow')) {
+        setMode('clean');
+    }
+    if (isDark && typeof updateVizTheme === 'function') {
+        updateVizTheme();
+    }
 });
 
 // ── CLOCK (unified via shared.js) ────────────────────────────
@@ -568,14 +651,21 @@ btn.onclick = () => {
         playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; 
         btn.classList.add('playing');
         setStatus('BUFFERING', 'buffering');
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
+        else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         if (currentMode === 'td') startVisualizer();
+        if (currentMode === 'pulse') startPulse();
+        if (currentMode === 'waves') startWaves();
+        if (currentMode === 'flow') startFlow();
     } else {
         player.pause(); player.src = ''; 
         playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; 
         btn.classList.remove('playing');
         setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : '');
         if (currentMode === 'td') stopVisualizer();
+        if (currentMode === 'pulse') stopPulse();
+        if (currentMode === 'waves') stopWaves();
+        if (currentMode === 'flow') stopFlow();
     }
     playing = !playing;
 };
@@ -596,9 +686,15 @@ document.addEventListener("visibilitychange", () => {
         clearInterval(fetchInterval);
         fetchInterval = setInterval(fetchSongData, 4000);
         if (currentMode === 'td' && playing) startVisualizer();
+        if (currentMode === 'pulse' && playing) startPulse();
+        if (currentMode === 'waves' && playing) startWaves();
+        if (currentMode === 'flow' && playing) startFlow();
     } else {
         clearInterval(fetchInterval);
         if (currentMode === 'td') stopVisualizer();
+        if (currentMode === 'pulse') stopPulse();
+        if (currentMode === 'waves') stopWaves();
+        if (currentMode === 'flow') stopFlow();
     }
 });
 
@@ -654,9 +750,24 @@ function startDvd() {
     if (dvdArt.complete && dvdArt.naturalWidth > 0) { initDvdPosition(); dvdFrame(); } else { dvdArt.onload = () => { initDvdPosition(); dvdFrame(); }; }
 }
 function stopDvd() { if (dvdAnimId) { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; } }
+function hideAllVisualizerCanvases() {
+    if (typeof vizRenderer !== 'undefined' && vizRenderer) vizRenderer.domElement.style.display = 'none';
+    if (typeof pulseRenderer !== 'undefined' && pulseRenderer) pulseRenderer.domElement.style.display = 'none';
+    if (typeof wavesRenderer !== 'undefined' && wavesRenderer) wavesRenderer.domElement.style.display = 'none';
+    if (typeof flowRenderer !== 'undefined' && flowRenderer) flowRenderer.domElement.style.display = 'none';
+}
+
 function setMode(mode) {
+    if ((mode === 'td' || mode === 'pulse' || mode === 'waves' || mode === 'flow') && !document.body.classList.contains('dark-mode')) return;
     if (mode === currentMode) return;
-    stopDvd(); stopVisualizer();
+    stopDvd(); 
+    if (typeof stopVisualizer === 'function') stopVisualizer();
+    if (typeof stopPulse === 'function') stopPulse();
+    if (typeof stopWaves === 'function') stopWaves();
+    if (typeof stopFlow === 'function') stopFlow();
+
+    hideAllVisualizerCanvases();
+
     bgLayer.className = '';
     container.classList.remove('viz-mode');
     modeToggle.classList.remove('on-dark');
@@ -674,14 +785,33 @@ function setMode(mode) {
     } else if (mode === 'td') {
         bgLayer.classList.add('mode-td');
         container.classList.add('viz-mode');
-        // Only force dark toggle styling in dark mode
         if (document.body.classList.contains('dark-mode')) {
             modeToggle.classList.add('on-dark');
         }
         fadeUI(false);
-        startVisualizer();
-        updateVizTheme();
+        if (typeof startVisualizer === 'function') startVisualizer();
+        if (typeof updateVizTheme === 'function') updateVizTheme();
+    } else if (mode === 'pulse') {
+        bgLayer.classList.add('mode-pulse');
+        container.classList.add('viz-mode');
+        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
+        fadeUI(false);
+        if (typeof startPulse === 'function') startPulse();
+    } else if (mode === 'waves') {
+        bgLayer.classList.add('mode-waves');
+        container.classList.add('viz-mode');
+        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
+        fadeUI(false);
+        if (typeof startWaves === 'function') startWaves();
+    } else if (mode === 'flow') {
+        bgLayer.classList.add('mode-flow');
+        container.classList.add('viz-mode');
+        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
+        fadeUI(false);
+        if (typeof startFlow === 'function') startFlow();
     }
+    
+    if (typeof showSettingsPanelFor === 'function') showSettingsPanelFor(mode);
 }
 
 // Toggle button clicks
@@ -690,37 +820,36 @@ modeBtns.forEach(b => {
 });
 
 // TD Settings Logic
-const tdSettingsBtn = document.getElementById('td-settings-btn');
-const tdSettingsPopup = document.getElementById('td-settings-popup');
-tdSettingsBtn.addEventListener('click', (e) => {
+function showSettingsPanelFor(modeName) {
+    const panels = document.querySelectorAll('.viz-settings-panel');
+    panels.forEach(p => p.style.display = 'none');
+    const target = document.getElementById('settings-' + modeName);
+    if (target) target.style.display = 'block';
+}
+
+const vizSettingsBtn = document.getElementById('viz-settings-btn');
+const vizSettingsPopup = document.getElementById('viz-settings-popup');
+vizSettingsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    tdSettingsPopup.classList.toggle('visible');
+    vizSettingsPopup.classList.toggle('visible');
 });
 document.addEventListener('click', (e) => {
-    if (!tdSettingsPopup.contains(e.target) && e.target !== tdSettingsBtn) {
-        tdSettingsPopup.classList.remove('visible');
+    if (!vizSettingsPopup.contains(e.target) && e.target !== vizSettingsBtn) {
+        vizSettingsPopup.classList.remove('visible');
     }
 });
 
-window.tdNebulaOpacity = 1.0;
 window.tdSensitivity = 1.0;
 window.tdSpeedMult = 1.0;
-window.tdShakeMult = 1.0;
 
 document.getElementById('star-size-slider').addEventListener('input', (e) => {
     if (outerField) outerField.material.uniforms.uSizeMult.value = parseFloat(e.target.value);
-});
-document.getElementById('nebula-opacity-slider').addEventListener('input', (e) => {
-    window.tdNebulaOpacity = parseFloat(e.target.value);
 });
 document.getElementById('audio-sense-slider').addEventListener('input', (e) => {
     window.tdSensitivity = parseFloat(e.target.value);
 });
 document.getElementById('audio-speed-slider').addEventListener('input', (e) => {
     window.tdSpeedMult = parseFloat(e.target.value);
-});
-document.getElementById('audio-shake-slider').addEventListener('input', (e) => {
-    window.tdShakeMult = parseFloat(e.target.value);
 });
 
 // Update DVD artwork when track changes
@@ -739,31 +868,13 @@ fetchArtwork = async function() {
 // ══════════════════════════════════════════════════════════════
 let audioCtx, analyser, audioSource, dataArray;
 let vizScene, vizCamera, vizRenderer;
-let coreCluster, outerField;
-let nebulaLayers = [];    // multiple nebula groups for depth
-let dustTrails;           // gold/cyan dust
+let outerField;
 let vizAnimId = null;
 
 // Smoothed audio values for less jittery reactivity
-let smoothBass = 0, smoothMid = 0, smoothTreble = 0;
-let bassEnvelope = 0; // exponential decay envelope for bass transients
-let prevBass = 0;     // for transient detection
-let shakeX = 0, shakeY = 0; // spring-damped camera shake
+let smoothTreble = 0;
 
 // ── Sprite texture generators ────────────────────────────────
-function makeGlowTexture(size, innerR, outerR) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(size/2, size/2, innerR, size/2, size/2, outerR);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-    g.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(c);
-}
 
 function makeSoftBokehTexture(size) {
     const c = document.createElement('canvas');
@@ -779,33 +890,24 @@ function makeSoftBokehTexture(size) {
     return new THREE.CanvasTexture(c);
 }
 
-function makeNebulaTexture(size) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size * 0.48);
-    g.addColorStop(0, 'rgba(255,255,255,0.6)');
-    g.addColorStop(0.3, 'rgba(255,255,255,0.15)');
-    g.addColorStop(0.7, 'rgba(255,255,255,0.03)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(c);
-}
-
 // ── Web Audio ────────────────────────────────────────────────
 function initWebAudio() {
-    if (audioCtx) return;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AC();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 1024;   // more frequency resolution
-    analyser.smoothingTimeConstant = 0.8;
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    if (isWrapper) {
+        window.parent.CuceuGlobalPlayer.resumeAudioContext();
+        if (!dataArray) dataArray = new Uint8Array(512);
+    } else {
+        if (audioCtx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;   // more frequency resolution
+        analyser.smoothingTimeConstant = 0.8;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    audioSource = audioCtx.createMediaElementSource(player);
-    audioSource.connect(analyser);
-    analyser.connect(audioCtx.destination);
+        audioSource = audioCtx.createMediaElementSource(player);
+        audioSource.connect(analyser);
+        analyser.connect(audioCtx.destination);
+    }
 }
 
 // ── Three.js Scene ───────────────────────────────────────────
@@ -832,67 +934,6 @@ function initThreeJS() {
     vizRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     vizRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;';
     tdContainer.appendChild(vizRenderer.domElement);
-
-    // ── CORE CLUSTER (Bass reactive) ─────────────────────────
-    const coreTexture = makeGlowTexture(128, 0, 56);
-    const coreCount = 2200;
-    const coreGeom = new THREE.BufferGeometry();
-    const corePositions = new Float32Array(coreCount * 3);
-    const coreSizes = new Float32Array(coreCount);
-
-    for (let i = 0; i < coreCount; i++) {
-        // Gaussian-ish distribution: denser at center
-        const u = Math.random();
-        const r = Math.pow(u, 0.5) * 220;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        corePositions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-        corePositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-        corePositions[i*3+2] = r * Math.cos(phi);
-        coreSizes[i] = 1.5 + Math.random() * 4;
-    }
-    coreGeom.setAttribute('position', new THREE.BufferAttribute(corePositions, 3));
-    coreGeom.setAttribute('size', new THREE.BufferAttribute(coreSizes, 1));
-
-    // Custom shader: per-particle sizing + warm color
-    const isDark = document.body.classList.contains('dark-mode');
-    const coreShaderMat = new THREE.ShaderMaterial({
-        uniforms: {
-            uTexture: { value: coreTexture },
-            uScale: { value: 1.0 },
-            uBrightness: { value: 1.0 },
-            uIsDark: { value: isDark ? 1.0 : 0.0 },
-            uPixelRatio: { value: vizRenderer.getPixelRatio() }
-        },
-        vertexShader: `
-            attribute float size;
-            uniform float uScale;
-            uniform float uPixelRatio;
-            void main() {
-                vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-                gl_PointSize = size * uScale * uPixelRatio * (300.0 / -mvPos.z);
-                gl_Position = projectionMatrix * mvPos;
-            }
-        `,
-        fragmentShader: `
-            uniform sampler2D uTexture;
-            uniform float uBrightness;
-            uniform float uIsDark;
-            void main() {
-                vec4 tex = texture2D(uTexture, gl_PointCoord);
-                // Dark mode: warm white stars. Light mode: dark charcoal/amber stars
-                vec3 darkColor = vec3(1.0, 0.96, 0.85) * uBrightness;
-                vec3 lightColor = vec3(0.15, 0.12, 0.08) * uBrightness;
-                vec3 col = mix(lightColor, darkColor, uIsDark);
-                gl_FragColor = vec4(col * tex.r, tex.a * 0.9);
-            }
-        `,
-        transparent: true,
-        blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
-        depthWrite: false
-    });
-    coreCluster = new THREE.Points(coreGeom, coreShaderMat);
-    vizScene.add(coreCluster);
 
     // ── OUTER STAR FIELD (Treble reactive, per-particle twinkle) ──
     const bokehTexture = makeSoftBokehTexture(64);
@@ -971,73 +1012,6 @@ function initThreeJS() {
     outerField = new THREE.Points(outerGeom, outerShaderMat);
     vizScene.add(outerField);
 
-    // ── NEBULA LAYERS (Mid-range reactive) ───────────────────
-    const nebulaTexture = makeNebulaTexture(256);
-    const nebulaConfigs = [
-        { count: 120, spread: 1200, depthSpread: 800, baseSize: 350, color: new THREE.Color(0.886, 0.475, 0.173), opacity: 0.04 },  // #e2792c Bright Orange
-        { count: 100, spread: 1400, depthSpread: 900, baseSize: 400, color: new THREE.Color(0.016, 0.180, 0.0),   opacity: 0.045 }, // #042e00 Deep Forest Green
-        { count: 80,  spread: 1000, depthSpread: 600, baseSize: 280, color: new THREE.Color(0.816, 0.451, 0.161), opacity: 0.035 }, // #d07329 Warm Amber
-        { count: 60,  spread: 1100, depthSpread: 700, baseSize: 300, color: new THREE.Color(0.141, 0.220, 0.024), opacity: 0.03 },  // #243806 Dark Olive Green
-    ];
-
-    nebulaConfigs.forEach(cfg => {
-        const geom = new THREE.BufferGeometry();
-        const positions = new Float32Array(cfg.count * 3);
-        for (let i = 0; i < cfg.count; i++) {
-            positions[i*3]   = (Math.random() - 0.5) * cfg.spread;
-            positions[i*3+1] = (Math.random() - 0.5) * cfg.spread;
-            positions[i*3+2] = (Math.random() - 0.5) * cfg.depthSpread;
-        }
-        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-        const mat = new THREE.PointsMaterial({
-            size: cfg.baseSize,
-            map: nebulaTexture,
-            color: cfg.color,
-            transparent: true,
-            opacity: cfg.opacity,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        const points = new THREE.Points(geom, mat);
-        // Stagger initial rotation for variety
-        points.rotation.x = Math.random() * Math.PI;
-        points.rotation.y = Math.random() * Math.PI;
-        points.rotation.z = Math.random() * Math.PI;
-        vizScene.add(points);
-        nebulaLayers.push({ mesh: points, baseColor: cfg.color.clone(), baseOpacity: cfg.opacity });
-    });
-
-    // ── DUST TRAILS (subtle gold + cyan scattered particles) ─
-    const dustCount = 1200;
-    const dustGeom = new THREE.BufferGeometry();
-    const dustPositions = new Float32Array(dustCount * 3);
-    const dustColors = new Float32Array(dustCount * 3);
-    for (let i = 0; i < dustCount; i++) {
-        dustPositions[i*3]   = (Math.random() - 0.5) * 3200;
-        dustPositions[i*3+1] = (Math.random() - 0.5) * 3200;
-        dustPositions[i*3+2] = (Math.random() - 0.5) * 3200;
-        // Alternate warm amber (#b66a23) and dark olive (#43430d)
-        if (Math.random() > 0.5) {
-            dustColors[i*3] = isDark ? 0.714 : 0.5; dustColors[i*3+1] = isDark ? 0.416 : 0.3; dustColors[i*3+2] = isDark ? 0.137 : 0.08;
-        } else {
-            dustColors[i*3] = isDark ? 0.263 : 0.15; dustColors[i*3+1] = isDark ? 0.263 : 0.18; dustColors[i*3+2] = isDark ? 0.051 : 0.03;
-        }
-    }
-    dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-    dustGeom.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
-    const dustMat = new THREE.PointsMaterial({
-        size: 1.5,
-        vertexColors: true,
-        transparent: true,
-        opacity: isDark ? 0.25 : 0.4,
-        blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
-        depthWrite: false
-    });
-    dustTrails = new THREE.Points(dustGeom, dustMat);
-    vizScene.add(dustTrails);
-
     // ── Resize handler (ResizeObserver catches zoom, layout shifts, everything) ──
     const vizResizeObserver = new ResizeObserver(() => onVizResize());
     vizResizeObserver.observe(tdContainer);
@@ -1076,105 +1050,30 @@ function getBandPeak(data, minHz, maxHz) {
 }
 
 // ── Render Loop ──────────────────────────────────────────────
-let vizStartTime = 0;
-let nebulaRotAccum = [];
-
 function renderVisualizer(timestamp) {
     vizAnimId = requestAnimationFrame(renderVisualizer);
     if (!vizStartTime) vizStartTime = timestamp;
     const elapsed = (timestamp - vizStartTime) * 0.001; // seconds
 
-    let bass = 0, mid = 0, treble = 0, bassPeak = 0;
+    let treble = 0;
 
-    if (analyser && dataArray) {
-        analyser.getByteFrequencyData(dataArray);
-
-        bass     = getBandEnergy(dataArray, 20, 250);
-        mid      = getBandEnergy(dataArray, 250, 4000);
+    if (dataArray) {
+        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
+        else if (analyser) analyser.getByteFrequencyData(dataArray);
         treble   = getBandEnergy(dataArray, 4000, 20000);
-        bassPeak = getBandPeak(dataArray, 20, 120);
 
-        // Smooth values (exponential moving average — lower = smoother)
         const speedMult = window.tdSpeedMult !== undefined ? window.tdSpeedMult : 1.0;
-        const bassSmooth = Math.min(1, 0.07 * speedMult), midSmooth = Math.min(1, 0.09 * speedMult), trebleSmooth = Math.min(1, 0.14 * speedMult);
-        smoothBass   += (bass - smoothBass)     * bassSmooth;
-        smoothMid    += (mid - smoothMid)       * midSmooth;
+        const trebleSmooth = Math.min(1, 0.14 * speedMult);
         smoothTreble += (treble - smoothTreble) * trebleSmooth;
-
-        // Bass transient envelope (fast attack, slow decay — 0.96 = very smooth)
-        const bassTransient = Math.max(0, bass - prevBass);
-        if (bassTransient > 25) {
-            bassEnvelope = Math.max(bassEnvelope, bassTransient / 255);
-        }
-        bassEnvelope *= 0.96; // slow decay for smooth breathing
-        prevBass = bass;
     }
 
     const sensitivity = window.tdSensitivity !== undefined ? window.tdSensitivity : 1.0;
-    const bassNorm   = (smoothBass / 255) * sensitivity;
-    const midNorm    = (smoothMid / 255) * sensitivity;
     const trebleNorm = (smoothTreble / 255) * sensitivity;
-
-    // ── A. BASS → Core Cluster ───────────────────────────────
-    const pulseScale = 1.0 + bassNorm * 0.4 + bassEnvelope * 0.8;
-    coreCluster.scale.set(pulseScale, pulseScale, pulseScale);
-    coreCluster.material.uniforms.uBrightness.value = 0.6 + bassNorm * 0.3 + bassEnvelope * 0.6;
-    coreCluster.material.uniforms.uScale.value = 1.0 + bassEnvelope * 0.35;
-    coreCluster.rotation.y = elapsed * 0.06;
-
-    // Camera shake — spring-damped (gentler)
-    if (bassEnvelope > 0.2) {
-        const shakeStrength = bassEnvelope * 8 * (window.tdShakeMult !== undefined ? window.tdShakeMult : 1.0);
-        shakeX += ((Math.random() - 0.5) * shakeStrength - shakeX) * 0.25;
-        shakeY += ((Math.random() - 0.5) * shakeStrength - shakeY) * 0.25;
-    } else {
-        shakeX *= 0.92;
-        shakeY *= 0.92;
-    }
-    vizCamera.position.x = shakeX;
-    vizCamera.position.y = shakeY;
-
-    // ── B. MID-RANGE → Nebula Layers ─────────────────────────
-    const rotSpeed = 0.0002 + midNorm * 0.003;
-    nebulaLayers.forEach((layer, i) => {
-        const dir = (i % 2 === 0) ? 1 : -1;
-        // Audio-reactive accumulator (wraps to prevent float overflow)
-        if (nebulaRotAccum[i] === undefined) nebulaRotAccum[i] = 0;
-        nebulaRotAccum[i] += rotSpeed * dir * (0.6 + i * 0.2);
-        if (Math.abs(nebulaRotAccum[i]) > 628) nebulaRotAccum[i] %= (Math.PI * 2);
-        // Combine time-based base rotation + audio accumulator
-        layer.mesh.rotation.y = elapsed * 0.008 * dir + nebulaRotAccum[i];
-        layer.mesh.rotation.x = elapsed * 0.004 * dir * (0.5 + i * 0.1);
-        layer.mesh.rotation.z = elapsed * 0.002 * (i % 3 === 0 ? 1 : -1);
-
-        // Hue shift: oscillate between magenta and blue driven by mid energy
-        const hueBase = (elapsed * 0.02 + i * 0.25 + midNorm * 0.5) % 1;
-        const hsl = {};
-        layer.baseColor.getHSL(hsl);
-        const shiftedHue = (hsl.h + Math.sin(hueBase * Math.PI * 2) * 0.08 * midNorm) % 1;
-        layer.mesh.material.color.setHSL(
-            shiftedHue,
-            hsl.s + midNorm * 0.15,
-            hsl.l + midNorm * 0.05
-        );
-
-        // Turbulence: boost opacity slightly with mid energy
-        layer.mesh.material.opacity = layer.baseOpacity * (1 + midNorm * 2.5) * (window.tdNebulaOpacity !== undefined ? window.tdNebulaOpacity : 1.0);
-    });
 
     // ── C. TREBLE → Outer Star Field Twinkling ───────────────
     outerField.material.uniforms.uTime.value = elapsed;
     outerField.material.uniforms.uTrebleEnergy.value = trebleNorm;
     outerField.rotation.y = elapsed * -0.005;
-
-    // ── Dust trails — slow orbit ─────────────────────────────
-    dustTrails.rotation.y = elapsed * 0.008;
-    dustTrails.rotation.x = elapsed * 0.003;
-    dustTrails.material.opacity = 0.15 + bassNorm * 0.15;
-
-    // ── Scene global rotation (parallax) ─────────────────────
-    vizScene.rotation.y = elapsed * 0.012;
-    vizScene.rotation.x = elapsed * 0.003;
 
     vizRenderer.render(vizScene, vizCamera);
 }
@@ -1186,32 +1085,11 @@ function updateVizTheme() {
     const darkVal = isDark ? 1.0 : 0.0;
     const blendMode = isDark ? THREE.AdditiveBlending : THREE.NormalBlending;
 
-    // Core cluster shader
-    if (coreCluster) {
-        coreCluster.material.uniforms.uIsDark.value = darkVal;
-        coreCluster.material.blending = blendMode;
-        coreCluster.material.needsUpdate = true;
-    }
-
     // Outer field shader
     if (outerField) {
         outerField.material.uniforms.uIsDark.value = darkVal;
         outerField.material.blending = blendMode;
         outerField.material.needsUpdate = true;
-    }
-
-    // Nebula layers
-    nebulaLayers.forEach(layer => {
-        layer.mesh.material.blending = blendMode;
-        layer.mesh.material.opacity = isDark ? layer.baseOpacity : layer.baseOpacity * 3.5;
-        layer.mesh.material.needsUpdate = true;
-    });
-
-    // Dust trails
-    if (dustTrails) {
-        dustTrails.material.blending = blendMode;
-        dustTrails.material.opacity = isDark ? 0.25 : 0.45;
-        dustTrails.material.needsUpdate = true;
     }
 }
 
@@ -1222,16 +1100,14 @@ function startVisualizer() {
     initWebAudio();
     initThreeJS();
 
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
+    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
     if (!vizAnimId) {
         vizStartTime = 0;
-        smoothBass = smoothMid = smoothTreble = 0;
-        bassEnvelope = 0;
-        prevBass = 0;
-        shakeX = shakeY = 0;
-        nebulaRotAccum = [];
+        smoothTreble = 0;
         updateVizTheme();
+        vizRenderer.domElement.style.display = 'block';
         renderVisualizer(performance.now());
     }
 }
@@ -1244,6 +1120,525 @@ function stopVisualizer() {
     // We do NOT close or suspend audioCtx.
     // The MediaElementSource is permanently tied to this context;
     // suspending it would mute audio in other modes.
+}
+
+// ══════════════════════════════════════════════════════════════
+// PULSE VISUALIZER
+// ══════════════════════════════════════════════════════════════
+let pulseScene, pulseCamera, pulseRenderer;
+let pulseBars = [];         // array of THREE.Mesh (BoxGeometry)
+let pulseBarCount = 128;    // synced from slider
+let pulseAnimId = null;
+
+// Settings globals:
+window.pulseHeightScale = 1.5;
+window.pulseRadius = 160;
+window.pulseRotationSpeed = 0.3;
+window.pulseColorMode = 'warm';
+
+document.getElementById('pulse-count-slider').addEventListener('input', e => {
+    pulseBarCount = parseInt(e.target.value);
+    if (pulseScene) buildPulseBars();
+});
+document.getElementById('pulse-height-slider').addEventListener('input', e => {
+    window.pulseHeightScale = parseFloat(e.target.value);
+});
+document.getElementById('pulse-radius-slider').addEventListener('input', e => {
+    window.pulseRadius = parseInt(e.target.value);
+    if (pulseScene) buildPulseBars();
+});
+document.getElementById('pulse-rotation-slider').addEventListener('input', e => {
+    window.pulseRotationSpeed = parseFloat(e.target.value);
+});
+document.getElementById('pulse-color-select').addEventListener('change', e => {
+    window.pulseColorMode = e.target.value;
+});
+
+function initPulse() {
+    if (pulseScene) return;
+    const tdContainer = document.getElementById('td-container');
+    
+    pulseScene = new THREE.Scene();
+    pulseCamera = new THREE.PerspectiveCamera(65, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
+    pulseCamera.position.set(0, 0, 400);
+
+    pulseRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    pulseRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
+    pulseRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    pulseRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
+    tdContainer.appendChild(pulseRenderer.domElement);
+
+    buildPulseBars();
+
+    const resizeObserver = new ResizeObserver(() => {
+        if (!pulseCamera || !pulseRenderer) return;
+        const w = tdContainer.clientWidth || window.innerWidth;
+        const h = tdContainer.clientHeight || window.innerHeight;
+        if (w === 0 || h === 0) return;
+        pulseCamera.aspect = w / h;
+        pulseCamera.updateProjectionMatrix();
+        pulseRenderer.setSize(w, h);
+    });
+    resizeObserver.observe(tdContainer);
+}
+
+function buildPulseBars() {
+    pulseBars.forEach(bar => pulseScene.remove(bar));
+    pulseBars = [];
+    
+    const barWidth = (window.pulseRadius * 2 * Math.PI) / pulseBarCount * 0.7;
+    const barDepth = 4;
+    
+    for (let i = 0; i < pulseBarCount; i++) {
+        const geom = new THREE.BoxGeometry(barWidth, 1, barDepth);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const mesh = new THREE.Mesh(geom, mat);
+        
+        const angle = (i / pulseBarCount) * Math.PI * 2;
+        mesh.position.x = Math.cos(angle) * window.pulseRadius;
+        mesh.position.z = Math.sin(angle) * window.pulseRadius;
+        mesh.position.y = 0;
+        
+        mesh.rotation.y = -angle;
+        
+        pulseBars.push(mesh);
+        pulseScene.add(mesh);
+    }
+}
+
+function renderPulse(timestamp) {
+    pulseAnimId = requestAnimationFrame(renderPulse);
+    
+    if (dataArray) {
+        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
+        else if (analyser) analyser.getByteFrequencyData(dataArray);
+        
+        // Group bins into buckets for each bar
+        const binsPerBar = Math.floor((dataArray.length * 0.5) / pulseBarCount); // use lower half of spectrum mostly
+        
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        for (let i = 0; i < pulseBarCount; i++) {
+            let sum = 0;
+            for (let j = 0; j < binsPerBar; j++) {
+                sum += dataArray[i * binsPerBar + j];
+            }
+            const avg = sum / binsPerBar;
+            const norm = avg / 255;
+            
+            const targetHeight = norm * window.pulseHeightScale * 200 + 2;
+            const bar = pulseBars[i];
+            
+            bar.scale.y += (targetHeight - bar.scale.y) * 0.25;
+            bar.position.y = bar.scale.y / 2;
+            
+            // Coloring
+            const progress = i / pulseBarCount; // 0 to 1
+            const c = new THREE.Color();
+            if (window.pulseColorMode === 'warm') {
+                if (isDark) {
+                    c.lerpColors(new THREE.Color(0xd07329), new THREE.Color(0xffffff), progress);
+                } else {
+                    c.lerpColors(new THREE.Color(0x331100), new THREE.Color(0x884400), progress);
+                }
+            } else if (window.pulseColorMode === 'cold') {
+                if (isDark) {
+                    c.lerpColors(new THREE.Color(0x00aaff), new THREE.Color(0xffffff), progress);
+                } else {
+                    c.lerpColors(new THREE.Color(0x002244), new THREE.Color(0x005588), progress);
+                }
+            } else {
+                c.setHex(isDark ? 0xffffff : 0x222222);
+            }
+            // Add brightness based on energy
+            c.multiplyScalar(0.5 + norm * 0.5);
+            bar.material.color.copy(c);
+        }
+    }
+    
+    pulseScene.rotation.y -= window.pulseRotationSpeed * 0.003;
+    pulseRenderer.render(pulseScene, pulseCamera);
+}
+
+function startPulse() {
+    if (!playing || currentMode !== 'pulse') return;
+    initWebAudio();
+    initPulse();
+    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
+    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (!pulseAnimId) {
+        pulseRenderer.domElement.style.display = 'block';
+        renderPulse(performance.now());
+    }
+}
+
+function stopPulse() {
+    if (pulseAnimId) {
+        cancelAnimationFrame(pulseAnimId);
+        pulseAnimId = null;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// WAVES VISUALIZER
+// ══════════════════════════════════════════════════════════════
+let wavesScene, wavesCamera, wavesRenderer;
+let wavesPlane;
+let wavesGeom;
+let wavesAnimId = null;
+let wavesScrollOffset = 0;
+
+window.wavesDetail = 50;
+window.wavesHeight = 1.5;
+window.wavesScrollSpeed = 0.8;
+window.wavesColorPalette = 'heat';
+window.wavesCameraTilt = 45;
+
+document.getElementById('waves-detail-slider').addEventListener('input', e => {
+    window.wavesDetail = parseInt(e.target.value);
+    if (wavesScene) buildWavesGeometry();
+});
+document.getElementById('waves-height-slider').addEventListener('input', e => {
+    window.wavesHeight = parseFloat(e.target.value);
+});
+document.getElementById('waves-scroll-slider').addEventListener('input', e => {
+    window.wavesScrollSpeed = parseFloat(e.target.value);
+});
+document.getElementById('waves-tilt-slider').addEventListener('input', e => {
+    window.wavesCameraTilt = parseFloat(e.target.value);
+    if (wavesCamera) {
+        wavesCamera.position.set(0, 100 + window.wavesCameraTilt * 2, 300);
+        wavesCamera.lookAt(0, -50, 0);
+    }
+});
+document.getElementById('waves-color-select').addEventListener('change', e => {
+    window.wavesColorPalette = e.target.value;
+});
+
+function initWaves() {
+    if (wavesScene) return;
+    const tdContainer = document.getElementById('td-container');
+    
+    wavesScene = new THREE.Scene();
+    wavesCamera = new THREE.PerspectiveCamera(60, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
+    wavesCamera.position.set(0, 100 + window.wavesCameraTilt * 2, 300);
+    wavesCamera.lookAt(0, -50, 0);
+
+    wavesRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    wavesRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
+    wavesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    wavesRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
+    tdContainer.appendChild(wavesRenderer.domElement);
+
+    buildWavesGeometry();
+
+    const resizeObserver = new ResizeObserver(() => {
+        if (!wavesCamera || !wavesRenderer) return;
+        const w = tdContainer.clientWidth || window.innerWidth;
+        const h = tdContainer.clientHeight || window.innerHeight;
+        if (w === 0 || h === 0) return;
+        wavesCamera.aspect = w / h;
+        wavesCamera.updateProjectionMatrix();
+        wavesRenderer.setSize(w, h);
+    });
+    resizeObserver.observe(tdContainer);
+}
+
+function buildWavesGeometry() {
+    if (wavesPlane) wavesScene.remove(wavesPlane);
+    
+    wavesGeom = new THREE.PlaneGeometry(600, 600, window.wavesDetail, window.wavesDetail);
+    wavesGeom.rotateX(-Math.PI / 2);
+    
+    const mat = new THREE.MeshBasicMaterial({ color: 0xd07329, wireframe: true, transparent: true, opacity: 0.6 });
+    wavesPlane = new THREE.Mesh(wavesGeom, mat);
+    wavesScene.add(wavesPlane);
+}
+
+function renderWaves(timestamp) {
+    wavesAnimId = requestAnimationFrame(renderWaves);
+    
+    if (dataArray) {
+        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
+        else if (analyser) analyser.getByteFrequencyData(dataArray);
+        wavesScrollOffset -= window.wavesScrollSpeed * 0.02; // scroll towards camera
+        
+        const posAttr = wavesGeom.attributes.position;
+        let avgAmp = 0;
+        
+        for (let i = 0; i < posAttr.count; i++) {
+            const z = posAttr.getZ(i); // depth away from camera
+            // plane is 600x600, centered at 0. so z goes from -300 to 300.
+            const u = 1.0 - (z + 300) / 600; // 0 near camera, 1 far away
+            
+            const binIndex = Math.max(0, Math.min(dataArray.length - 1, Math.floor(u * dataArray.length * 0.4))); 
+            const val = dataArray[binIndex] || 0;
+            avgAmp += val;
+            
+            const targetY = (val / 255) * window.wavesHeight * 80 + Math.sin(u * 20 + wavesScrollOffset) * 10;
+            posAttr.setY(i, targetY);
+        }
+        avgAmp /= posAttr.count;
+        posAttr.needsUpdate = true;
+        
+        const isDark = document.body.classList.contains('dark-mode');
+        const c = new THREE.Color();
+        const intensity = avgAmp / 255;
+        
+        if (window.wavesColorPalette === 'heat') {
+            c.lerpColors(new THREE.Color(isDark ? 0xaa2200 : 0x551100), new THREE.Color(0xffaa00), intensity * 2);
+        } else if (window.wavesColorPalette === 'ocean') {
+            c.lerpColors(new THREE.Color(isDark ? 0x0044aa : 0x002255), new THREE.Color(0x00ffff), intensity * 2);
+        } else {
+            c.lerpColors(new THREE.Color(isDark ? 0x444444 : 0x222222), new THREE.Color(0xffffff), intensity * 2);
+        }
+        wavesPlane.material.color.copy(c);
+    }
+    
+    wavesRenderer.render(wavesScene, wavesCamera);
+}
+
+function startWaves() {
+    if (!playing || currentMode !== 'waves') return;
+    initWebAudio();
+    initWaves();
+    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
+    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (!wavesAnimId) {
+        wavesRenderer.domElement.style.display = 'block';
+        renderWaves(performance.now());
+    }
+}
+
+function stopWaves() {
+    if (wavesAnimId) {
+        cancelAnimationFrame(wavesAnimId);
+        wavesAnimId = null;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// FLOW VISUALIZER
+// ══════════════════════════════════════════════════════════════
+let flowScene, flowCamera, flowRenderer;
+let flowParticleSystems = []; // array of THREE.Points for trails
+let flowPositions;
+let flowVelocities;
+let flowTrailHistory = [];
+let flowNoise;
+let flowAnimId = null;
+
+let flowParticleCount = 8000;
+window.flowSpeed = 1;
+window.flowTurbulence = 1;
+window.flowBurst = 1;
+window.flowTrailLength = 3;
+
+document.getElementById('flow-count-slider').addEventListener('input', e => {
+    flowParticleCount = parseInt(e.target.value);
+    if (flowScene) buildFlowField();
+});
+document.getElementById('flow-speed-slider').addEventListener('input', e => {
+    window.flowSpeed = parseFloat(e.target.value);
+});
+document.getElementById('flow-turbulence-slider').addEventListener('input', e => {
+    window.flowTurbulence = parseFloat(e.target.value);
+});
+document.getElementById('flow-burst-slider').addEventListener('input', e => {
+    window.flowBurst = parseFloat(e.target.value);
+});
+document.getElementById('flow-trail-slider').addEventListener('input', e => {
+    window.flowTrailLength = parseInt(e.target.value);
+    if (flowScene) buildFlowField();
+});
+
+function initFlow() {
+    if (flowScene) return;
+    const tdContainer = document.getElementById('td-container');
+    
+    flowScene = new THREE.Scene();
+    flowCamera = new THREE.PerspectiveCamera(70, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
+    flowCamera.position.set(0, 0, 500);
+
+    flowRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'high-performance' });
+    flowRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
+    flowRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    flowRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
+    tdContainer.appendChild(flowRenderer.domElement);
+
+    flowNoise = typeof createNoise3D === 'function' ? createNoise3D() : new SimplexNoise();
+
+    buildFlowField();
+
+    const resizeObserver = new ResizeObserver(() => {
+        if (!flowCamera || !flowRenderer) return;
+        const w = tdContainer.clientWidth || window.innerWidth;
+        const h = tdContainer.clientHeight || window.innerHeight;
+        if (w === 0 || h === 0) return;
+        flowCamera.aspect = w / h;
+        flowCamera.updateProjectionMatrix();
+        flowRenderer.setSize(w, h);
+    });
+    resizeObserver.observe(tdContainer);
+}
+
+function buildFlowField() {
+    flowParticleSystems.forEach(sys => flowScene.remove(sys));
+    flowParticleSystems = [];
+    
+    let count = flowParticleCount;
+    if (window.innerWidth < 600) count = Math.floor(count / 2); // mobile limit
+    
+    flowPositions = new Float32Array(count * 3);
+    flowVelocities = new Float32Array(count * 3);
+    
+    for (let i = 0; i < count; i++) {
+        flowPositions[i*3] = (Math.random() - 0.5) * 600;
+        flowPositions[i*3+1] = (Math.random() - 0.5) * 600;
+        flowPositions[i*3+2] = (Math.random() - 0.5) * 600;
+    }
+    
+    flowTrailHistory = [];
+    for (let t = 0; t < window.flowTrailLength; t++) {
+        flowTrailHistory.push(new Float32Array(flowPositions));
+    }
+    
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    for (let t = 0; t < window.flowTrailLength; t++) {
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute('position', new THREE.BufferAttribute(flowTrailHistory[t], 3));
+        
+        const colors = new Float32Array(count * 3);
+        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const opacity = Math.max(0.05, 0.8 - (t / window.flowTrailLength) * 0.7);
+        const mat = new THREE.PointsMaterial({ 
+            size: 1.5, vertexColors: true, transparent: true, 
+            opacity: opacity, blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
+            depthWrite: false
+        });
+        
+        const points = new THREE.Points(geom, mat);
+        flowParticleSystems.push(points);
+        flowScene.add(points);
+    }
+}
+
+let flowStartTime = 0;
+function renderFlow(timestamp) {
+    flowAnimId = requestAnimationFrame(renderFlow);
+    if (!flowStartTime) flowStartTime = timestamp;
+    const elapsed = timestamp - flowStartTime;
+    
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    if (dataArray) {
+        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
+        else if (analyser) analyser.getByteFrequencyData(dataArray);
+        const bassNorm = getBandEnergy(dataArray, 20, 250) / 255;
+        const midNorm = getBandEnergy(dataArray, 250, 4000) / 255;
+        const trebleNorm = getBandEnergy(dataArray, 4000, 20000) / 255;
+        
+        const burstActive = bassNorm > 0.6;
+        
+        const currentPos = flowTrailHistory[0];
+        const nextPos = new Float32Array(currentPos);
+        const colors = flowParticleSystems[0].geometry.attributes.color.array;
+        
+        const count = currentPos.length / 3;
+        for (let i = 0; i < count; i++) {
+            let px = currentPos[i*3];
+            let py = currentPos[i*3+1];
+            let pz = currentPos[i*3+2];
+            
+            let noiseValX = 0, noiseValY = 0, noiseValZ = 0;
+            if (typeof flowNoise === 'function') {
+                noiseValX = flowNoise(px * 0.004, py * 0.004, elapsed * 0.0005);
+                noiseValY = flowNoise(px * 0.004 + 100, py * 0.004 + 100, elapsed * 0.0005);
+                noiseValZ = flowNoise(px * 0.004 + 200, py * 0.004 + 200, elapsed * 0.0005);
+            } else if (flowNoise.noise3D) {
+                noiseValX = flowNoise.noise3D(px * 0.004, py * 0.004, elapsed * 0.0005);
+                noiseValY = flowNoise.noise3D(px * 0.004 + 100, py * 0.004 + 100, elapsed * 0.0005);
+                noiseValZ = flowNoise.noise3D(px * 0.004 + 200, py * 0.004 + 200, elapsed * 0.0005);
+            }
+            
+            let vx = flowVelocities[i*3] + noiseValX * window.flowTurbulence * (1 + midNorm * 2);
+            let vy = flowVelocities[i*3+1] + noiseValY * window.flowTurbulence * (1 + midNorm * 2);
+            let vz = flowVelocities[i*3+2] + noiseValZ * window.flowTurbulence * (1 + midNorm * 2);
+            
+            if (burstActive) {
+                const dist = Math.sqrt(px*px + py*py + pz*pz) || 1;
+                vx += (px/dist) * window.flowBurst * bassNorm * 5;
+                vy += (py/dist) * window.flowBurst * bassNorm * 5;
+                vz += (pz/dist) * window.flowBurst * bassNorm * 5;
+            }
+            
+            const speed = Math.sqrt(vx*vx + vy*vy + vz*vz);
+            const cap = window.flowSpeed * 2 * (1 + trebleNorm);
+            if (speed > cap) {
+                vx = (vx/speed)*cap; vy = (vy/speed)*cap; vz = (vz/speed)*cap;
+            }
+            
+            flowVelocities[i*3] = vx; flowVelocities[i*3+1] = vy; flowVelocities[i*3+2] = vz;
+            
+            px += vx; py += vy; pz += vz;
+            
+            if (Math.abs(px) > 500 || Math.abs(py) > 500 || Math.abs(pz) > 500) {
+                px = (Math.random() - 0.5) * 100;
+                py = (Math.random() - 0.5) * 100;
+                pz = (Math.random() - 0.5) * 100;
+                flowVelocities[i*3] = flowVelocities[i*3+1] = flowVelocities[i*3+2] = 0;
+            }
+            
+            nextPos[i*3] = px; nextPos[i*3+1] = py; nextPos[i*3+2] = pz;
+            
+            const speedNorm = Math.min(1, speed / 3);
+            const r = isDark ? 0.8 + trebleNorm : 0.1 + trebleNorm;
+            const g = isDark ? 0.4 + speedNorm*0.5 : 0.2 + speedNorm*0.3;
+            const b = isDark ? speedNorm : 0.4 + speedNorm*0.5;
+            colors[i*3] = r; colors[i*3+1] = g; colors[i*3+2] = b;
+        }
+        
+        flowTrailHistory.unshift(nextPos);
+        flowTrailHistory.pop();
+        
+        for (let t = 0; t < flowParticleSystems.length; t++) {
+            const sys = flowParticleSystems[t];
+            sys.geometry.attributes.position.array.set(flowTrailHistory[t]);
+            sys.geometry.attributes.position.needsUpdate = true;
+            if (t === 0) {
+                sys.geometry.attributes.color.needsUpdate = true;
+            } else {
+                sys.geometry.attributes.color.array.set(colors);
+                sys.geometry.attributes.color.needsUpdate = true;
+            }
+        }
+    }
+    
+    flowScene.rotation.y = elapsed * 0.0001;
+    flowScene.rotation.z = elapsed * 0.00005;
+    
+    flowRenderer.render(flowScene, flowCamera);
+}
+
+function startFlow() {
+    if (!playing || currentMode !== 'flow') return;
+    initWebAudio();
+    initFlow();
+    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
+    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (!flowAnimId) {
+        flowRenderer.domElement.style.display = 'block';
+        renderFlow(performance.now());
+    }
+}
+
+function stopFlow() {
+    if (flowAnimId) {
+        cancelAnimationFrame(flowAnimId);
+        flowAnimId = null;
+    }
 }
 
 </script>
