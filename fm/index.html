@@ -23,7 +23,8 @@
         #app-container {
             width: 100vw; height: 100dvh;
             position: relative; overflow: hidden;
-            background-color: var(--c-bg);
+            /* transparent so the body aurora wash shows through */
+            background-color: transparent;
             transition: background-color var(--dur-slow) ease;
         }
         /* Visualizers always run on strict black, both themes */
@@ -476,8 +477,8 @@
         </div>
 
         <!-- Mode dock -->
-        <div class="mode-dock-wrap a-slideup" style="--d:.45s" id="mode-dock-wrap">
-            <div class="mode-toggle aero-panel" id="mode-toggle">
+        <div class="mode-dock-wrap" id="mode-dock-wrap">
+            <div class="mode-toggle aero-panel a-slideup" style="--d:.45s" id="mode-toggle">
                 <button class="mode-btn active" data-mode="clean">Clean</button>
                 <button class="mode-btn" data-mode="dvd">DVD</button>
                 <button class="mode-btn" data-mode="starlight">Starlight</button>
