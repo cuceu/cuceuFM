@@ -29,41 +29,35 @@
             transition: background-color var(--dur-slow) ease;
         }
 
+        /* Floating Aero glass capsule, detached from the top edge */
         #now-playing-banner {
-            position: absolute; top: 0; left: 0; right: 0;
+            position: absolute; top: 16px; left: 50%;
+            width: min(560px, calc(100vw - 32px));
             height: 62px;
-            background: linear-gradient(135deg, var(--c-bg) 0%, var(--c-bg-deep) 100%);
-            border-bottom: 2px solid rgba(0,0,0,0.1);
-            border-radius: 0 0 18px 18px;
+            border-radius: var(--r-pill);
             z-index: 120;
-            transform: translateY(-100%);
+            transform: translate(-50%, calc(-100% - 20px));
             transition: transform var(--dur-medium) var(--ease-spring);
-            box-shadow: 0 4px 24px var(--c-amber-soft);
         }
-        #now-playing-banner.visible { transform: translateY(0); }
+        #now-playing-banner.visible { transform: translate(-50%, 0); }
         body.is-exiting #now-playing-banner {
             transition: transform 0.30s var(--ease-smooth);
-            transform: translateY(-100%);
+            transform: translate(-50%, calc(-100% - 20px));
         }
         .banner-inner {
             display: flex; align-items: center;
-            height: 100%; padding: 0 var(--sp-24); gap: 14px;
+            height: 100%; padding: 0 var(--sp-16) 0 var(--sp-24); gap: 14px;
+            position: relative; z-index: 1;
         }
         .banner-live-dot {
-            width: 8px; height: 8px; flex-shrink: 0;
-            background: var(--c-amber);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--c-amber-glow);
-            animation: pulse-dot 1.2s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%,100% { transform: scale(0.8); opacity: 0.7; }
-            50%      { transform: scale(1.3); opacity: 1; }
+            width: 9px; height: 9px;
+            --dot-c: var(--c-amber-bright);
+            animation: aero-pulse 1.4s ease-in-out infinite;
         }
         #banner-art {
-            width: 40px; height: 40px; border-radius: 3px;
-            border: 1.5px solid var(--c-text);
+            width: 40px; height: 40px; border-radius: 10px;
             object-fit: cover; flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
             opacity: 0; transition: opacity 0.35s ease;
         }
         #banner-art.has-art { opacity: 1; }
@@ -80,45 +74,23 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .banner-btn {
-            flex-shrink: 0; background: var(--c-text); color: var(--c-bg);
+            flex-shrink: 0; color: #fff;
             font-size: 10px; font-weight: var(--fw-black);
             letter-spacing: var(--ls-wide);
             text-transform: uppercase; text-decoration: none;
-            padding: 9px 18px; border: 2px solid var(--c-text);
-            white-space: nowrap; border-radius: var(--r-pill);
-            transition: background var(--dur-fast) var(--ease-spring),
-                        color 0.2s, border-color var(--dur-fast),
-                        transform var(--dur-fast) var(--ease-spring);
+            padding: 9px 18px;
+            white-space: nowrap;
+            display: inline-flex; align-items: center;
         }
-        .banner-btn:hover {
-            background: var(--c-amber);
-            border-color: var(--c-amber);
-            color: #fff;
-            transform: scale(1.04);
-        }
-        .banner-btn:active { transform: scale(0.96); }
 
         /* ── STATUS AREA (clock + theme toggle) ──────────── */
         .status-area {
             position: absolute; top: 25px; right: 30px;
             display: flex; align-items: center; gap: var(--sp-12);
             z-index: 100;
-            opacity: 0; transform: translateX(15px);
-            animation: clockIn var(--dur-glacial) var(--ease-smooth) 0.1s forwards;
             transition: top var(--dur-medium) var(--ease-smooth);
         }
-        body.banner-active .status-area { top: 78px; }
-        body.is-exiting .status-area {
-            animation: clockOut 0.5s var(--ease-smooth) forwards;
-        }
-        @keyframes clockIn {
-            0%   { opacity: 0; transform: translateX(15px); filter: blur(3px); }
-            100% { opacity: 1; transform: none; filter: none; }
-        }
-        @keyframes clockOut {
-            0%   { opacity: 1; transform: none; }
-            100% { opacity: 0; transform: translateX(15px); filter: blur(3px); }
-        }
+        body.banner-active .status-area { top: 92px; }
 
         /* ── TAGLINE ─────────────────────────────────────── */
         .tagline {
@@ -130,14 +102,9 @@
             letter-spacing: var(--ls-mega);
             text-transform: uppercase;
             color: var(--c-text-muted);
-            opacity: 0;
-            animation: clockIn var(--dur-glacial) var(--ease-smooth) 0.3s forwards;
             transition: top var(--dur-medium) var(--ease-smooth);
         }
-        body.banner-active .tagline { top: 78px; }
-        body.is-exiting .tagline {
-            animation: clockOut 0.5s var(--ease-smooth) forwards;
-        }
+        body.banner-active .tagline { top: 92px; }
 
         /* ── MARQUEE BACKGROUND ──────────────────────────── */
         .main-content {
@@ -150,17 +117,6 @@
             width: 100vw; height: calc(100dvh - 160px);
             display: flex; flex-direction: column; justify-content: center;
             overflow: hidden; pointer-events: none;
-            animation: blurSlideIn var(--dur-glacial) var(--ease-smooth) 0.1s both;
-        }
-        body.is-exiting #logo-wrapper {
-            animation: glideOut 0.6s var(--ease-smooth) forwards;
-        }
-        @keyframes glideOut {
-            to { opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(10px); }
-        }
-        @keyframes blurSlideIn {
-            0%   { transform: translateY(35px); filter: blur(15px); opacity: 0; }
-            100% { transform: translateY(0);    filter: blur(0px);  opacity: 1; }
         }
 
         .marquee-track {
@@ -187,49 +143,10 @@
         }
 
         .mac-dock {
-            background: linear-gradient(170deg,
-                rgba(255,255,255,0.35) 0%,
-                rgba(255,248,240,0.12) 55%,
-                rgba(255,255,255,0.22) 100%
-            );
-            backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
-            -webkit-backdrop-filter: blur(55px) saturate(200%) brightness(1.08);
-            border: 1px solid rgba(255,255,255,0.60);
-            border-top-color: rgba(255,255,255,0.85);
-            border-bottom-color: rgba(255,255,255,0.30);
             border-radius: 32px;
             padding: 10px 16px;
             display: flex; gap: 12px; align-items: center;
-            box-shadow:
-                0 12px 48px var(--c-amber-soft),
-                0 2px 8px rgba(0,0,0,0.05),
-                inset 0 1.5px 0 rgba(255,255,255,0.85),
-                inset 0 -1px 0 rgba(255,255,255,0.18),
-                inset 1px 0 0 rgba(255,255,255,0.25),
-                inset -1px 0 0 rgba(255,255,255,0.25);
-            opacity: 0;
-            animation: dockSlideUp var(--dur-glacial) var(--ease-spring) 0.1s forwards;
-            position: relative;
         }
-
-        .mac-dock::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 50%;
-            background: linear-gradient(180deg,
-                rgba(255,255,255,0.32) 0%,
-                rgba(255,255,255,0.06) 65%,
-                transparent 100%
-            );
-            border-radius: 30px 30px 50% 50% / 28px 28px 18px 18px;
-            pointer-events: none; z-index: 0;
-        }
-
-        body.is-exiting .mac-dock {
-            animation: dockSlideDown 0.5s var(--ease-smooth) forwards;
-        }
-        @keyframes dockSlideUp   { 0% { opacity:0; transform:translateY(40px); } 100% { opacity:1; transform:none; } }
-        @keyframes dockSlideDown { 0% { opacity:1; transform:none; } 100% { opacity:0; transform:translateY(40px); } }
 
         .dock-app {
             text-decoration: none; display: flex; flex-direction: column;
@@ -278,9 +195,16 @@
         .icon-ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
         .icon-td { background: transparent; }
         .icon-fm {
-            background: #000; color: #fff;
+            background: var(--g-gel); color: #fff;
             font-size: 20px; font-weight: var(--fw-heavy);
             letter-spacing: -0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .icon-fm::before {
+            content: ''; position: absolute; inset: 1px 1px 50% 1px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.08));
+            border-radius: 13px 13px 40% 40%;
+            pointer-events: none;
         }
         .icon-bin {
             background: transparent; box-shadow: none;
@@ -310,15 +234,16 @@
         .app-badge.visible { opacity: 1; }
         .recording-dot {
             width: 5px; height: 5px; background: var(--c-amber); border-radius: 50%;
-            animation: pulse-dot 2s ease-in-out infinite;
+            box-shadow: 0 0 6px var(--c-amber-glow);
+            animation: aero-pulse 2s ease-in-out infinite;
         }
 
         /* ── MOBILE ──────────────────────────────────────── */
         @media (max-width: 600px) {
             .status-area { font-size: 11px; top: 20px; right: 16px; letter-spacing: 0.8px; }
-            body.banner-active .status-area { top: 72px; }
+            body.banner-active .status-area { top: 82px; }
             .tagline { top: 20px; left: 16px; }
-            body.banner-active .tagline { top: 72px; }
+            body.banner-active .tagline { top: 82px; }
             img.cuceu-img { height: 4rem; margin-right: 4vw; }
             .marquee-track { margin-top: -1vw; }
             .mac-dock { gap: 8px; padding: 8px 12px; border-radius: 24px; }
@@ -330,56 +255,25 @@
             .banner-btn { padding: 7px 12px; font-size: 9px; }
             #banner-track { font-size: 11px; }
         }
-
-        /* ── DARK MODE OVERRIDES ─────────────────────────── */
-        body.dark-mode #now-playing-banner {
-            background: linear-gradient(135deg, var(--c-bg-deep) 0%, #1a1714 100%);
-            border-bottom-color: var(--c-amber-15);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-        }
-        body.dark-mode #banner-art { border-color: var(--c-amber-20); }
-
-        body.dark-mode .mac-dock {
-            background: linear-gradient(170deg,
-                rgba(208, 115, 41, 0.06) 0%,
-                rgba(255,255,255,0.03) 55%,
-                rgba(208, 115, 41, 0.04) 100%
-            );
-            border-color: rgba(208, 115, 41, 0.1);
-            border-top-color: rgba(255,255,255,0.12);
-            border-bottom-color: rgba(208, 115, 41, 0.06);
-            box-shadow:
-                0 12px 48px rgba(0,0,0,0.35),
-                0 2px 8px rgba(0,0,0,0.2),
-                inset 0 1.5px 0 rgba(255,255,255,0.1),
-                inset 0 -1px 0 rgba(208, 115, 41, 0.04);
-        }
-        body.dark-mode .mac-dock::before {
-            background: linear-gradient(180deg,
-                rgba(255,255,255,0.05) 0%,
-                rgba(208, 115, 41, 0.02) 65%,
-                transparent 100%
-            );
-        }
     </style>
 </head>
 <body>
 
-    <div id="now-playing-banner">
+    <div id="now-playing-banner" class="aero-panel">
         <div class="banner-inner">
-            <span class="banner-live-dot"></span>
+            <span class="banner-live-dot aero-dot"></span>
             <img id="banner-art" alt="">
             <div class="banner-info">
                 <span class="banner-label">Live Now</span>
                 <span id="banner-track">—</span>
             </div>
-            <a href="/fm" class="banner-btn internal-link">Listen Now →</a>
+            <a href="/fm" class="banner-btn aero-gel internal-link">Listen Now →</a>
         </div>
     </div>
 
-    <div class="tagline">Music × Visuals</div>
+    <div class="tagline a-drop" style="--d:.3s">Music × Visuals</div>
 
-    <div class="status-area">
+    <div class="status-area a-drop" style="--d:.1s">
         <span class="cuceu-clock-text">MONDAY | 12:00 AM</span>
         <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme">
             <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -388,7 +282,7 @@
     </div>
 
     <div class="main-content">
-        <div id="logo-wrapper">
+        <div id="logo-wrapper" class="a-rise" style="--d:.1s">
             <div class="marquee-track track-right">
                 <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
             </div>
@@ -417,7 +311,7 @@
     </div>
 
     <div class="mac-dock-container">
-        <div class="mac-dock">
+        <div class="mac-dock aero-panel a-slideup" style="--d:.1s">
 
             <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
                 <div class="app-tooltip">Instagram</div>
@@ -577,6 +471,19 @@
         // BUG FIX: Parses JSON instead of regex on text
         const STREAM_BASE = "https://stream.cuceu.co.uk";
         let bannerShown = false;
+        let lastBannerTitle = '';
+
+        async function refreshBannerArt() {
+            try {
+                const artUrlResponse = await fetch(`${STREAM_BASE}/artwork.txt?t=${Date.now()}`);
+                const artUrl = (await artUrlResponse.text()).trim();
+                if (artUrl && artUrl.startsWith('http')) {
+                    const img = document.getElementById('banner-art');
+                    img.onload = () => img.classList.add('has-art');
+                    img.src = artUrl;
+                }
+            } catch (e) { /* artwork fetch failed, no big deal */ }
+        }
 
         async function checkStream() {
             const fmBadgeTextEl = document.getElementById('fm-badge-text');
@@ -601,19 +508,13 @@
                     liveDot.style.display = 'block';
 
                     document.getElementById('banner-track').textContent = title;
+                    // Refetch artwork whenever the track changes, not just on first show
+                    if (title !== lastBannerTitle) {
+                        lastBannerTitle = title;
+                        refreshBannerArt();
+                    }
                     if (!bannerShown) {
                         bannerShown = true;
-                        try {
-                            const artUrlResponse = await fetch(`${STREAM_BASE}/artwork.txt?t=${Date.now()}`);
-                            const artUrl = (await artUrlResponse.text()).trim();
-
-                            if (artUrl && artUrl.startsWith('http')) {
-                                const img = document.getElementById('banner-art');
-                                img.onload = () => img.classList.add('has-art');
-                                img.src = artUrl;
-                            }
-                        } catch (e) { /* artwork fetch failed, no big deal */ }
-
                         setTimeout(() => {
                             nowPlayingBanner.classList.add('visible');
                             document.body.classList.add('banner-active');
