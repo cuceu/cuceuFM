@@ -17,9 +17,9 @@
 
         /* ── PAGE TRANSITION ─────────────────────────────── */
         #page-transition-overlay {
-            position: fixed; inset: 0; background: #fff;
+            position: fixed; inset: 0; background: var(--c-bg);
             z-index: 99999; pointer-events: none; opacity: 1;
-            transition: opacity 0.4s cubic-bezier(0.25,1,0.5,1);
+            transition: opacity 0.4s var(--ease-smooth);
         }
         #page-transition-overlay.loaded { opacity: 0; }
 
@@ -27,9 +27,9 @@
         #app-container {
             width: 100vw; height: 100vh;
             display: flex; flex-direction: column;
-            background-color: #ffffff;
+            background-color: transparent;
             transform-origin: 40% 100%;
-            transition: all 0.6s cubic-bezier(0.5,0,0.1,1);
+            transition: all 0.6s var(--ease-snappy);
             transform: scale(1) translateY(0);
             opacity: 1; border-radius: 0;
             position: relative; overflow: hidden;
@@ -39,18 +39,6 @@
             opacity: 0 !important; border-radius: 100px !important;
         }
 
-        /* ── SEQUENCED ANIMATIONS ────────────────────────── */
-        .logo-group    { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) forwards; }
-        .td-window     { animation: breatheUp 0.8s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; opacity:0; transform:translateY(40px); }
-        .cuceu-nav     { animation: slideDownFromTop 0.6s cubic-bezier(0.25,1,0.5,1) 0.5s forwards; opacity:0; transform:translateY(-20px); }
-
-        body.is-exiting .td-window     { animation: breatheDown   0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .logo-group    { animation: breatheDown   0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-
-        @keyframes breatheUp       { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:none} }
-        @keyframes breatheDown     { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateY(40px)} }
-        @keyframes slideDownFromTop { 0%{opacity:0;transform:translateY(-20px)} 100%{opacity:1;transform:none} }
-
         /* ── BRAND HEADER ────────────────────────────────── */
         .brand-header {
             background: transparent; padding: 24px 20px 18px;
@@ -59,7 +47,6 @@
             margin-top: 20px;
         }
 
-        body.dark-mode .td-text { color: #fff; }
         body.dark-mode .cuceu-header-img { filter: invert(1); }
 
         /* Logo group: PNG + .td text */
@@ -79,18 +66,20 @@
         .td-text {
             font-size: clamp(1.4rem, 4.5vw, 3.8rem);
             font-weight: 400; text-transform: lowercase;
-            color: #000; letter-spacing: -2px;
+            color: var(--c-text); letter-spacing: -2px;
             /* Pull left to close the gap from the PNG's transparent right edge */
             margin-left: -14px;
             padding-bottom: clamp(0.2rem, 0.6vw, 0.5rem);
         }
 
         /* ── TOUCHDESIGNER WINDOW ────────────────────────── */
+        /* Aero glass shell around the (intentionally un-Aero) TD UI */
         .td-window {
             flex-grow: 1; margin: 0 28px 28px;
-            border-radius: 12px; background: #1a1a1a; color: #d0d0d0;
+            border-radius: 16px; background: #1a1a1a; color: #d0d0d0;
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid #333;
+            box-shadow: var(--sh-float), 0 0 0 1px var(--c-glass-edge);
+            border: 1px solid var(--c-glass-border);
             position: relative;
         }
         .top-bar {
@@ -230,7 +219,7 @@
     <div id="page-transition-overlay"></div>
 
     <div id="app-container" class="genie-state">
-        <div class="cuceu-nav">
+        <div class="cuceu-nav a-drop" style="--d:.5s">
             <div class="nav-left">
                 <a href="/" class="back-pill internal-link">← Home</a>
             </div>
@@ -245,14 +234,14 @@
 
         <div class="brand-header">
 
-            <div class="logo-group">
+            <div class="logo-group a-rise">
                 <!-- cuceugrta.png replaces the old plain text heading -->
                 <img src="cuceugrta.png" alt="CUCEU" class="cuceu-header-img">
                 <span class="td-text">.td</span>
             </div>
         </div>
 
-        <div class="td-window">
+        <div class="td-window a-rise" style="--d:.2s">
             <div class="top-bar">
                 <div class="menu-items">
                     <span>File</span><span>Edit</span><span>Dialogs</span><span>View</span><span>Window</span><span>Help</span>
@@ -463,7 +452,7 @@
                 const ex = inN.offsetLeft,                     ey = inN.offsetTop  + inN.offsetHeight  / 2;
                 wire.setAttribute('d', `M ${sx} ${sy} C ${sx+c.stiff} ${sy+c.droop}, ${ex-c.stiff} ${ey+c.droop}, ${ex} ${ey}`);
             });
-        // drawWires is called in updateTransform
+        }
         drawWires(); window.addEventListener('resize', drawWires);
     </script>
 </body>
