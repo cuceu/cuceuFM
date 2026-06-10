@@ -30,7 +30,7 @@
         g.fillStyle = grad;
         g.fillRect(0, 0, size, size);
         const tex = new THREE.CanvasTexture(cv);
-        tex.userData.shared = true;
+        tex.userData = { shared: true };
         texCache.set(name, tex);
         return tex;
     }
@@ -231,8 +231,10 @@
         init(ctx) {
             const { scene, settings } = ctx;
             ctx.camera = new THREE.PerspectiveCamera(60, ctx.width / ctx.height, 1, 3000);
-            ctx.camera.position.set(0, 190, 430);
-            ctx.camera.lookAt(0, 20, 0);
+            // Frame scales with ring size so big radii still fit in view
+            const dist = settings.radius * 2.6 + 170;
+            ctx.camera.position.set(0, settings.radius * 1.5, dist);
+            ctx.camera.lookAt(0, 30, 0);
 
             const root = new THREE.Group();
             root.position.y = -50;
@@ -296,7 +298,7 @@
 
             for (let i = 0; i < n; i++) {
                 const v = spec[i];
-                const target = 4 + v * 175;
+                const target = 4 + v * 150;
                 st.heights[i] += (target - st.heights[i]) * 0.35;
                 const h = st.heights[i];
                 const bar = st.bars[i], mirror = st.mirrors[i];
@@ -304,7 +306,8 @@
                 bar.position.y = h / 2;
                 mirror.scale.y = h;
                 mirror.position.y = -h / 2;
-                lerpC(st.tmp, st.colA, st.colB, v * (0.6 + s.glow * 0.55));
+                // Quadratic bias keeps mids amber; pale tips only on true peaks
+                lerpC(st.tmp, st.colA, st.colB, v * v * (0.6 + s.glow * 0.55));
                 bar.material.color.copy(st.tmp);
                 mirror.material.color.copy(st.tmp);
             }
@@ -380,6 +383,7 @@
                         uniform float uPhase;
                         uniform float uAmp;
                         varying vec2 vUv;
+                        varying float vWave;
                         void main() {
                             vUv = uv;
                             vec3 p = position;
@@ -387,8 +391,9 @@
                             float w = sin(x * 1.7) * 0.55
                                     + sin(x * 3.1 + uTime * 0.35) * 0.3
                                     + sin(x * 5.3 - uTime * 0.21) * 0.15;
+                            vWave = w;
                             p.y += w * uAmp;
-                            p.z += sin(x * 2.3 + uTime * 0.25) * 36.0;
+                            p.z += sin(x * 2.3 + uTime * 0.25) * 22.0;
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
                         }`,
                     fragmentShader: `
@@ -399,12 +404,18 @@
                         uniform float uTime;
                         uniform float uHue;
                         varying vec2 vUv;
+                        varying float vWave;
                         void main() {
-                            float band = pow(sin(vUv.y * 3.14159), 1.6);
+                            float d = abs(vUv.y - 0.5) * 2.0;
+                            float glowBand = exp(-d * d * 7.0) * 0.30;     // soft halo
+                            float core    = exp(-d * d * 60.0) * 0.55;    // crisp curtain core
                             float edge = smoothstep(0.0, 0.07, vUv.x) * smoothstep(1.0, 0.93, vUv.x);
-                            float shimmer = 1.0 + uShimmer * 0.35 * sin(vUv.x * 120.0 + uTime * 6.0);
+                            // Fold lighting: curtain brightens where the wave crests
+                            float fold = 0.55 + 0.45 * vWave;
+                            float shimmer = 1.0 + uShimmer * 0.25 * sin(vUv.x * 42.0 + uTime * 6.0);
                             vec3 col = mix(uColorA, uColorB, vUv.x) + uHue * vec3(0.3, 0.15, 0.0);
-                            gl_FragColor = vec4(col * uGlow * shimmer, band * edge * 0.55);
+                            gl_FragColor = vec4(col * uGlow * shimmer * (0.7 + fold * 0.6),
+                                                (glowBand + core) * edge * fold);
                         }`,
                     transparent: true,
                     blending: THREE.AdditiveBlending,
@@ -429,10 +440,10 @@
                 const u = r.mat.uniforms;
                 u.uTime.value = elapsed;
                 u.uScroll.value += dt * s.drift * 0.18;
-                const target = 25 + audio[r.band] * 230 * s.height;
+                const target = 18 + audio[r.band] * 130 * s.height;
                 r.amp += (target - r.amp) * 0.12;
                 u.uAmp.value = r.amp;
-                u.uGlow.value = 0.45 + audio.level * 0.85;
+                u.uGlow.value = 0.32 + audio.level * 0.55;
                 u.uShimmer.value = audio.treble * s.shimmer;
                 u.uHue.value = audio.beatEnv * 0.6;
                 const [a, b] = palette[i % palette.length];
@@ -610,9 +621,9 @@
        ═══════════════════════════════════════════════════════ */
 
     const PRISM_PALETTES = {
-        ember: ['#8f4a14', '#ffb066'],
-        heat:  ['#aa2200', '#ffd23f'],
-        ghost: ['#445566', '#ffffff']
+        ember: ['#b35f1d', '#ffb066'],
+        heat:  ['#cc3300', '#ffd23f'],
+        ghost: ['#5c7185', '#ffffff']
     };
 
     CuceuViz.register({
@@ -637,7 +648,10 @@
             const S = quality < 1 ? 64 : 96;
             const SPACING = 38;
 
-            const verts = R * S * 2;
+            // Rings + longitudinal spokes (every 6th vertex) for tunnel depth
+            const LONG_STEP = 6;
+            const LSEG = Math.ceil(S / LONG_STEP);
+            const verts = (R * S + (R - 1) * LSEG) * 2;
             const positions = new Float32Array(verts * 3);
             const colors = new Float32Array(verts * 3);
             const geom = new THREE.BufferGeometry();
@@ -650,7 +664,7 @@
             scene.add(new THREE.LineSegments(geom, mat));
 
             ctx.state = {
-                R, S, SPACING,
+                R, S, SPACING, LONG_STEP,
                 positions, colors, geom,
                 radii: new Float32Array(R * S).fill(130),
                 energy: new Float32Array(R * S),
@@ -697,9 +711,34 @@
                     positions[p++] = Math.cos(a1) * r1; positions[p++] = Math.sin(a1) * r1; positions[p++] = z;
                     positions[p++] = Math.cos(a2) * r2; positions[p++] = Math.sin(a2) * r2; positions[p++] = z;
 
-                    lerpC(st.tmp, st.colA, st.colB, energy[row + i] * (0.5 + s.glow * 0.6));
+                    // Floor of 0.2 keeps quiet sections faintly glowing
+                    lerpC(st.tmp, st.colA, st.colB, 0.2 + energy[row + i] * (0.5 + s.glow * 0.6));
                     if (j < 2) st.tmp.lerp(st.white, audio.beatEnv * 0.8);
-                    st.tmp.multiplyScalar(fade * (0.55 + s.glow * 0.45));
+                    st.tmp.multiplyScalar(fade * (0.85 + s.glow * 0.5));
+                    colors[c++] = st.tmp.r; colors[c++] = st.tmp.g; colors[c++] = st.tmp.b;
+                    colors[c++] = st.tmp.r; colors[c++] = st.tmp.g; colors[c++] = st.tmp.b;
+                }
+            }
+
+            // Longitudinal spokes between consecutive rings
+            for (let j = 0; j < R - 1; j++) {
+                const rowA = ((st.head + j) % R) * S;
+                const rowB = ((st.head + j + 1) % R) * S;
+                const zA = -j * SPACING + st.zOff - 40;
+                const zB = zA - SPACING;
+                const twistA = s.twist * j * 0.06 + elapsed * 0.15;
+                const twistB = s.twist * (j + 1) * 0.06 + elapsed * 0.15;
+                const fade = Math.pow(1 - j / R, 1.5);
+                for (let i = 0; i < S; i += st.LONG_STEP) {
+                    const aA = (i / S) * Math.PI * 2 + twistA;
+                    const aB = (i / S) * Math.PI * 2 + twistB;
+                    const rA = radii[rowA + i];
+                    const rB = radii[rowB + i];
+                    positions[p++] = Math.cos(aA) * rA; positions[p++] = Math.sin(aA) * rA; positions[p++] = zA;
+                    positions[p++] = Math.cos(aB) * rB; positions[p++] = Math.sin(aB) * rB; positions[p++] = zB;
+
+                    lerpC(st.tmp, st.colA, st.colB, 0.2 + energy[rowA + i] * (0.5 + s.glow * 0.6));
+                    st.tmp.multiplyScalar(fade * 0.8);
                     colors[c++] = st.tmp.r; colors[c++] = st.tmp.g; colors[c++] = st.tmp.b;
                     colors[c++] = st.tmp.r; colors[c++] = st.tmp.g; colors[c++] = st.tmp.b;
                 }
