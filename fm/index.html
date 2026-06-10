@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared.css">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/4.0.0/simplex-noise.min.js"></script>
     <style>
@@ -26,27 +25,48 @@
             position: relative; overflow: hidden;
             background-color: var(--c-bg);
             transition: background-color var(--dur-slow) ease;
-            animation: appIn 0.65s var(--ease-smooth) forwards;
         }
-        #app-container.viz-mode { background-color: var(--c-bg); transition: background-color var(--dur-slow) ease; }
-        body.dark-mode #app-container.viz-mode { background-color: #000; }
-        body.is-exiting #app-container { animation: appOut 0.5s var(--ease-smooth) forwards; }
-        @keyframes appIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:none} }
-        @keyframes appOut { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.97)} }
+        /* Visualizers always run on strict black, both themes */
+        #app-container.viz-mode { background-color: #000; }
+        #viz-canvas { z-index: 2; }
 
         /* ── TICKERS ─────────────────────────────────── */
         .ticker-tape {
             position: absolute; left: 0; right: 0;
-            height: 58px; z-index: 60;
-            background: #000; color: #fff;
+            height: 54px; z-index: 60;
+            background: linear-gradient(180deg, rgba(255,252,246,0.88), rgba(255,252,246,0.72));
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            color: var(--c-text);
             overflow: hidden; display: flex; align-items: center;
+            transition: background var(--dur-slow) ease, color var(--dur-slow) ease;
         }
-        .ticker-top    { top: 0;    border-bottom: 3px solid #000; }
-        .ticker-bottom { bottom: 0; border-top:    3px solid #000; }
-        .ticker-top    { transform: translateY(-100%); animation: stIn  0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        .ticker-bottom { transform: translateY( 100%); animation: sbIn  0.55s cubic-bezier(0.25,1,0.5,1) 0.2s forwards; }
-        body.is-exiting .ticker-top    { animation: stOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        body.is-exiting .ticker-bottom { animation: sbOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
+        body.dark-mode .ticker-tape,
+        body.viz-active .ticker-tape {
+            background: linear-gradient(180deg, rgba(8,5,2,0.82), rgba(8,5,2,0.68));
+            color: #f4ede3;
+        }
+        /* Amber accent hairline on the inner edge */
+        .ticker-tape::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--c-amber-bright), var(--c-amber-hot), var(--c-amber-bright), transparent);
+            opacity: 0.8;
+        }
+        .ticker-top::after    { bottom: 0; }
+        .ticker-bottom::after { top: 0; }
+        /* Periodic gloss sweep */
+        .ticker-tape::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: var(--g-shine); background-size: 50% 100%; background-repeat: no-repeat;
+            animation: aero-shine 14s linear infinite;
+            opacity: 0.5; z-index: 1;
+        }
+        .ticker-top    { top: 0; }
+        .ticker-bottom { bottom: 0; }
+        .ticker-top    { transform: translateY(-100%); animation: stIn 0.55s var(--ease-smooth) 0.2s forwards; }
+        .ticker-bottom { transform: translateY( 100%); animation: sbIn 0.55s var(--ease-smooth) 0.2s forwards; }
+        body.is-exiting .ticker-top    { animation: stOut 0.3s var(--ease-smooth) forwards; }
+        body.is-exiting .ticker-bottom { animation: sbOut 0.3s var(--ease-smooth) forwards; }
         @keyframes stIn  { to{transform:translateY(0)} }
         @keyframes sbIn  { to{transform:translateY(0)} }
         @keyframes stOut { to{transform:translateY(-100%)} }
@@ -54,389 +74,392 @@
         .marquee-wrapper { display:flex; white-space:nowrap; align-items:center; width:fit-content; animation:tickerScroll linear infinite; transition: opacity 0.4s ease; }
         @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         .ticker-item  { display:inline-flex; align-items:center; }
-        .ticker-art   { height:44px; width:44px; object-fit:cover; margin:0 20px; border-radius:3px; opacity:0; transition: opacity 0.4s ease, width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .ticker-art   {
+            height:40px; width:40px; object-fit:cover; margin:0 20px; border-radius:8px; opacity:0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
+            transition: opacity 0.4s ease, width 0.5s var(--ease-spring), margin 0.5s var(--ease-spring);
+        }
         .ticker-art.has-art { opacity:1; }
         body.is-dvd .ticker-art { opacity: 0; width: 0; margin: 0; }
-        .song-display { font-size:1.65rem; font-weight:900; text-transform:uppercase; letter-spacing:4px; padding:0 10px; }
+        .song-display { font-size:1.5rem; font-weight:900; text-transform:uppercase; letter-spacing:4px; padding:0 10px; }
 
         /* ── NAV ─────────────────────────────────────── */
         .top-nav-bar {
-            position: absolute; top: 66px; left: 0; right: 0;
+            position: absolute; top: 62px; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 24px; z-index: 50;
-            animation: navIn 0.55s cubic-bezier(0.25,1,0.5,1) 0.2s both;
-            transition: opacity 1.6s cubic-bezier(0.25,1,0.5,1);
+            transition: opacity 1.2s var(--ease-smooth);
         }
-        body.is-exiting .top-nav-bar { animation: navOut 0.3s cubic-bezier(0.25,1,0.5,1) forwards; }
-        @keyframes navIn  { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
-        @keyframes navOut { from{opacity:1;transform:none} to{opacity:0;transform:translateY(-10px)} }
-        .back-btn-top {
-            color: var(--c-text); text-decoration: none; font-weight: var(--fw-black);
-            text-transform: uppercase; font-size: 12px; letter-spacing: var(--ls-wide);
-            border: 2px solid var(--c-glass-border); padding: 8px 16px;
-            border-radius: var(--r-pill);
-            background: var(--c-glass);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            transition: background var(--dur-fast) var(--ease-spring), color var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast) var(--ease-spring);
-        }
-        .back-btn-top:hover { background: var(--c-amber); color: #fff; border-color: var(--c-amber); transform: scale(1.04); }
-        .back-btn-top:active { transform: scale(0.96); }
-        .nav-right {
-            display: flex; align-items: center; gap: 12px;
-            position: relative;
-        }
-        .date-time-display {
-            font-size: clamp(11px,1.3vw,14px); font-weight: var(--fw-black);
-            letter-spacing: var(--ls-wide); text-transform: uppercase; color: var(--c-text);
-            text-shadow: 0 0 8px rgba(250,248,245,0.9), 0 0 14px var(--c-amber-soft);
-            transition: color var(--dur-slow) ease, text-shadow var(--dur-slow) ease;
-        }
-
-        /* ── THEME TOGGLE ────────────────────────────── */
-        .theme-toggle-btn {
-            background: none; border: none; cursor: pointer; padding: 4px;
-            color: #111; display: flex; align-items: center; justify-content: center;
-            transition: color 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .theme-toggle-btn:hover { color: #d07329; transform: scale(1.1); }
-        .theme-toggle-btn:active { transform: scale(0.9); }
-        body.dark-mode .theme-toggle-btn { color: #fff; }
-        body.dark-mode .theme-toggle-btn:hover { color: #d07329; }
-        .theme-toggle-btn .moon-icon { display: none; }
-        body.dark-mode .theme-toggle-btn .sun-icon { display: none; }
-        body.dark-mode .theme-toggle-btn .moon-icon { display: block; }
-
-        /* ── DARK MODE OVERRIDES ─────────────────────── */
-        body.dark-mode .fm-text { color: #fff; }
-        body.dark-mode .cuceu-logo-img { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15)); }
-        body.dark-mode .back-btn-top:hover { background: var(--c-amber); color: #fff; border-color: var(--c-amber); }
-        body.dark-mode .date-time-display {
-            text-shadow: 0 0 8px rgba(0,0,0,0.5), 0 0 14px var(--c-amber-soft);
-        }
+        body.viz-active .cuceu-clock { color: #f4ede3; text-shadow: 0 0 8px rgba(0,0,0,0.5), 0 0 14px var(--c-amber-soft); }
+        body.viz-active .theme-toggle { color: #f4ede3; }
+        .nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
 
         /* ── MAIN CLUSTER ──────────────────────────── */
         #main-cluster {
             position: absolute; top: 50%; left: 50%; z-index: 10;
             transform: translate(-50%, -50%);
-            display: flex; flex-direction: column; align-items: center; gap: 32px;
-            animation: logoIn 0.85s cubic-bezier(0.34,1.35,0.64,1) 0.4s both;
-            transition: opacity 1.6s ease;
+            width: min(420px, calc(100vw - 40px));
+            transition: opacity 1.2s ease;
         }
-        body.is-exiting #main-cluster { animation: logoOut 0.3s forwards; }
-        @keyframes logoIn  { from{opacity:0;transform:translate(-50%,calc(-50% + 22px)) scale(0.84)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
-        @keyframes logoOut { from{opacity:1;transform:translate(-50%,-50%)} to{opacity:0;transform:translate(-50%,calc(-50% + 12px)) scale(0.9)} }
+        .cluster-inner {
+            display: flex; flex-direction: column; align-items: center; gap: 28px;
+            width: 100%;
+        }
 
         #bg-logo-layer {
             display: flex; flex-direction: column; align-items: center;
             user-select: none; pointer-events: none;
-            transition: opacity 1.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 1.6s ease, transform 0.6s var(--ease-spring);
         }
         .logo-row { display:flex; align-items:flex-end; gap:0; }
         .cuceu-logo-img {
-            height: clamp(5.5rem,20vw,11rem); width: auto;
+            height: clamp(4.5rem,16vw,8.5rem); width: auto;
             filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
             transition: filter 1.8s ease;
         }
-        #app-container.viz-mode .cuceu-logo-img { filter: drop-shadow(0 4px 16px rgba(255,255,255,0.15)); }
+        body.dark-mode .cuceu-logo-img,
+        body.viz-active .cuceu-logo-img { filter: drop-shadow(0 4px 16px rgba(255,176,102,0.25)); }
         .fm-text {
-            font-size: clamp(1.9rem,7vw,4rem); font-weight: 900; letter-spacing: -2px; color: #111;
-            padding-bottom: clamp(0.25rem,0.8vw,0.55rem); margin-left: -18px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: color 1.8s ease, text-shadow 1.8s ease;
-        }
-        #app-container.viz-mode .fm-text { color: #fff; text-shadow: 0 2px 8px rgba(255,255,255,0.2); }
-        body.dark-mode .fm-text { color: #fff; }
-        /* ── CLEAN ISLAND ──────────────────────────── */
-        #clean-island {
-            width: 300px;
-            background: rgba(250,248,245,0.65); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
-            border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 40px; padding: 24px 16px 16px 16px;
-            box-shadow: 0 16px 40px var(--c-amber-soft), 0 4px 12px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.5);
-            display: flex; flex-direction: column; align-items: center; gap: 16px;
-            transition: background 1.8s ease, box-shadow 1.8s ease, border-color 1.8s ease, transform 0.4s ease;
-        }
-        body.dark-mode #clean-island {
-            background: rgba(25, 22, 18, 0.65);
-            border-color: var(--c-amber-15);
-            box-shadow: 0 16px 40px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.1), inset 0 1px 1px rgba(208,115,41,0.08);
-        }
-
-        .ci-live-status {
-            display: inline-flex; align-items: center; gap: 8px;
-        }
-        .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; }
-        .pulse-dot.live { background: #34c759; box-shadow: 0 0 8px rgba(52,199,89,0.5); }
-        .pulse-dot.buffering { background: #ffcc00; animation: ciFlash 0.8s infinite alternate; }
-        .pulse-dot.on-air { background: #d07329; box-shadow: 0 0 12px rgba(208,115,41,0.6); }
-        @keyframes ciFlash { from {opacity:0.4; transform:scale(0.8)} to {opacity:1; transform:scale(1.2)} }
-        
-        .ci-status-text {
-            font-size: 0.65rem; font-weight: 800; letter-spacing: 3px;
-            color: #888; text-transform: uppercase;
+            font-size: clamp(1.6rem,5.5vw,3.2rem); font-weight: 900; letter-spacing: -2px; color: var(--c-text);
+            padding-bottom: clamp(0.2rem,0.7vw,0.5rem); margin-left: -16px;
             transition: color 1.2s ease;
         }
+        body.viz-active .fm-text { color: #fff; text-shadow: 0 2px 8px rgba(255,255,255,0.2); }
 
-        .ci-main-control {
-            display: flex; justify-content: center; width: 100%;
+        /* ── PLAYER DECK ───────────────────────────── */
+        #player-deck {
+            width: 100%;
+            border-radius: 28px;
+            padding: 18px;
+            display: flex; flex-direction: column; gap: 16px;
+            transition: background var(--dur-slow) ease, box-shadow var(--dur-slow) ease;
         }
-        
-        .ci-play-btn {
-            background: transparent; border: none;
-            width: 140px; height: 56px; border-radius: 28px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: #111; cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s, text-shadow 0.3s, background 0.3s;
-        }
-        .ci-play-btn:hover {
-            color: #d07329; transform: scale(1.08);
-            text-shadow: 0 6px 20px rgba(208,115,41,0.4);
-            background: rgba(208,115,41,0.06);
-        }
-        .ci-play-btn:active { transform: scale(0.94); }
-        .ci-play-btn.playing { color: #d07329; }
-
-        .ci-history-btn {
-            background: transparent; border: none; padding: 8px;
-            font-size: 0.55rem; font-weight: 800; letter-spacing: 2px;
-            color: #aaa; text-transform: uppercase; cursor: pointer;
-            display: flex; align-items: center; gap: 6px;
-            transition: color 0.3s, transform 0.3s;
-        }
-        .ci-history-btn:hover { color: #111; }
-        #main-cluster.expanded .ci-history-btn { color: #d07329; }
-        .ci-history-btn .chevron { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        #main-cluster.expanded .ci-history-btn .chevron { transform: rotate(180deg); }
-
-        .ci-history-drawer-wrapper {
-            width: 100%; display: grid; grid-template-rows: 0fr;
-            transition: grid-template-rows 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        #main-cluster.expanded .ci-history-drawer-wrapper { grid-template-rows: 1fr; }
-        .ci-history-drawer {
-            width: 100%; min-height: 0; overflow: hidden;
-        }
-        #history-list {
-            list-style: none; padding: 0; margin: 0; width: 100%;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .history-item {
-            font-size: 0.75rem; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase; text-align: center;
-            color: #888;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            transition: color 1.2s ease;
+        body.viz-active #player-deck {
+            background: rgba(18, 12, 6, 0.55);
+            border-color: rgba(255, 176, 102, 0.22);
         }
 
-        /* ── BACKGROUND MODES ────────────────────────── */
-        #bg-layer {
-            position: absolute; inset: 0; z-index: 1;
-            pointer-events: none; overflow: hidden;
-            transition: background-color 1.2s ease;
+        .deck-top { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .deck-art-wrap {
+            position: relative; width: 76px; height: 76px; flex-shrink: 0;
+            border-radius: 14px; overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
+            transition: box-shadow 0.8s ease;
         }
-        #bg-layer.mode-dvd { background: transparent; }
-        #bg-layer.mode-td  { background: transparent; }
-
-        #dvd-artwork {
-            position: absolute;
-            width: clamp(120px, 22vw, 220px); height: auto;
-            border-radius: 0;
-            opacity: 0;
-            transition: opacity 0.8s ease;
-            will-change: transform;
+        .deck-art-wrap.playing {
+            box-shadow: 0 0 0 2px var(--c-amber-bright), 0 0 22px var(--c-amber-glow),
+                        0 4px 14px rgba(0,0,0,0.25);
         }
-        #bg-layer.mode-dvd #dvd-artwork { opacity: 1; }
-
-        #td-container {
-            position: absolute; inset: 0;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 1.2s ease;
-        }
-        #bg-layer.mode-td #td-container,
-        #bg-layer.mode-pulse #td-container,
-        #bg-layer.mode-waves #td-container,
-        #bg-layer.mode-flow #td-container { opacity: 1; }
-        .td-placeholder {
-            font-size: 0.65rem; font-weight: 900; letter-spacing: 3px;
-            text-transform: uppercase; color: rgba(255,255,255,0.25);
-        }
-
-        /* ── MODE TOGGLE ────────────────────────────── */
-        .mode-toggle {
-            position: absolute; bottom: 72px; left: 50%;
-            transform: translateX(-50%);
-            z-index: 70;
-            display: flex; gap: 0;
-            background: rgba(0,0,0,0.05);
-            border-radius: 24px; padding: 3px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(208, 115, 41, 0.08);
-            transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
-            overflow-x: auto;
-            overflow-y: visible;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            max-width: calc(100vw - 40px);
-            flex-wrap: nowrap;
-        }
-        .mode-toggle::-webkit-scrollbar { display: none; }
-        .mode-btn {
-            background: transparent; border: none;
-            padding: 6px 16px; font-size: 9px; font-weight: 900;
-            letter-spacing: 2px; text-transform: uppercase;
-            color: rgba(0,0,0,0.35); cursor: pointer;
-            border-radius: 21px; white-space: nowrap;
-            flex-shrink: 0;
-            transition: color 0.3s, background 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .mode-btn:hover { color: rgba(0,0,0,0.7); transform: scale(1.04); }
-        .mode-btn.active { background: #000; color: #fff; }
-        
-        body:not(.dark-mode) .mode-btn[data-mode="td"],
-        body:not(.dark-mode) .mode-btn[data-mode="pulse"],
-        body:not(.dark-mode) .mode-btn[data-mode="waves"],
-        body:not(.dark-mode) .mode-btn[data-mode="flow"] {
-            opacity: 0.3;
-            cursor: not-allowed;
+        #deck-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .deck-art-wrap::after {
+            content: ''; position: absolute; inset: 0 0 50% 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.02));
             pointer-events: none;
         }
 
+        .deck-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+        .deck-status {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 2.5px;
+            color: var(--c-text-muted); text-transform: uppercase;
+        }
+        body.viz-active .deck-status { color: #9a8d7c; }
+        .deck-status .aero-dot { width: 8px; height: 8px; animation: aero-pulse 1.6s ease-in-out infinite; }
+        .deck-status .aero-dot.buffering { animation: aero-blink 0.8s infinite alternate; }
+        .deck-title {
+            font-size: 0.92rem; font-weight: 800; letter-spacing: 0.5px;
+            color: var(--c-text); text-transform: uppercase;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        body.viz-active .deck-title { color: #f4ede3; }
+        .deck-artist {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px;
+            color: var(--c-text-muted); text-transform: uppercase;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .deck-controls { display: flex; align-items: center; gap: 14px; }
+        .deck-play {
+            width: 54px; height: 54px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .deck-play svg { width: 22px; height: 22px; fill: #fff; position: relative; z-index: 1; }
+        .deck-play.playing { box-shadow: var(--sh-gloss), var(--sh-glow); }
+        .deck-volume { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .deck-volume svg { flex-shrink: 0; color: var(--c-text-muted); }
+        .deck-volume .aero-slider { flex: 1; min-width: 0; }
+        .deck-history-btn {
+            background: transparent; border: none; padding: 8px; cursor: pointer;
+            color: var(--c-text-muted); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.3s, transform 0.4s var(--ease-spring);
+        }
+        .deck-history-btn:hover { color: var(--c-amber); }
+        #player-deck.expanded .deck-history-btn { color: var(--c-amber); transform: rotate(180deg); }
+
+        .deck-drawer-wrap {
+            display: grid; grid-template-rows: 0fr;
+            transition: grid-template-rows 0.6s var(--ease-spring);
+        }
+        #player-deck.expanded .deck-drawer-wrap { grid-template-rows: 1fr; }
+        .deck-drawer { min-height: 0; overflow: hidden; }
+        .deck-drawer-head {
+            font-size: 0.55rem; font-weight: 800; letter-spacing: 2.5px;
+            color: var(--c-text-muted); text-transform: uppercase;
+            padding: 4px 4px 8px;
+            border-bottom: 1px solid var(--c-glass-edge);
+        }
+        #history-list { list-style: none; padding: 6px 0 0; margin: 0; display: flex; flex-direction: column; }
+        .history-item {
+            display: flex; align-items: baseline; gap: 10px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+            color: var(--c-text-muted);
+            padding: 7px 4px;
+            border-bottom: 1px solid var(--c-glass-edge);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: color 0.3s, background 0.3s;
+            border-radius: 6px;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-item:hover { color: var(--c-amber-bright); background: var(--c-amber-soft); }
+        .history-num { font-size: 0.58rem; font-weight: 900; color: var(--c-amber); flex-shrink: 0; }
+        body.viz-active .history-item { color: #9a8d7c; }
+        body.viz-active .deck-title, body.viz-active .history-item:hover { color: var(--c-amber-hot); }
+
+        /* ── BACKGROUND MODES (DVD) ──────────────────── */
+        #bg-layer {
+            position: absolute; inset: 0; z-index: 1;
+            pointer-events: none; overflow: hidden;
+        }
+        #dvd-box {
+            position: absolute; top: 0; left: 0;
+            width: clamp(120px, 22vw, 220px);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            will-change: transform;
+            border-radius: 8px;
+        }
+        #bg-layer.mode-dvd #dvd-box { opacity: 1; }
+        #dvd-artwork { display: block; width: 100%; height: auto; border-radius: 8px; }
+        .dvd-tint {
+            position: absolute; inset: 0; border-radius: 8px;
+            mix-blend-mode: color; opacity: 0.45;
+            pointer-events: none;
+            transition: background 0.15s ease;
+        }
+        #dvd-box::after {
+            content: ''; position: absolute; inset: 0 0 55% 0; border-radius: 8px 8px 0 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.02));
+            pointer-events: none;
+        }
+        #dvd-box.corner-pop { animation: dvdPop 0.7s var(--ease-spring); }
+        @keyframes dvdPop {
+            0% { scale: 1; } 35% { scale: 1.18; } 100% { scale: 1; }
+        }
+        .dvd-burst {
+            position: absolute; inset: -30%;
+            border: 3px solid var(--c-amber-hot); border-radius: 50%;
+            opacity: 0; pointer-events: none;
+            transform: scale(0.4);
+        }
+        .dvd-burst.go { animation: dvdBurst 0.7s var(--ease-smooth) forwards; }
+        @keyframes dvdBurst {
+            0%   { opacity: 0.9; transform: scale(0.4); }
+            100% { opacity: 0;   transform: scale(1.6); }
+        }
+        .dvd-badge {
+            position: absolute; top: -10px; right: -10px;
+            min-width: 22px; height: 22px; padding: 0 6px;
+            border-radius: 11px; background: var(--g-gel);
+            color: #fff; font-size: 11px; font-weight: 900;
+            display: none; align-items: center; justify-content: center;
+            box-shadow: var(--sh-gloss), 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .dvd-badge.show { display: flex; }
+
+        /* ── MODE DOCK ──────────────────────────────── */
+        .mode-dock-wrap {
+            position: absolute; bottom: 70px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 70;
+            max-width: calc(100vw - 32px);
+            transition: opacity 1.2s var(--ease-smooth);
+        }
+        .mode-toggle {
+            display: flex; gap: 0;
+            border-radius: var(--r-pill); padding: 4px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            max-width: 100%;
+            flex-wrap: nowrap;
+        }
+        .mode-toggle::-webkit-scrollbar { display: none; }
+        body.viz-active .mode-toggle {
+            background: rgba(18, 12, 6, 0.6);
+            border-color: rgba(255, 176, 102, 0.22);
+        }
+        .mode-btn {
+            position: relative;
+            background: transparent; border: none;
+            padding: 7px 14px; font-size: 9px; font-weight: 900;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--c-text-muted); cursor: pointer;
+            border-radius: var(--r-pill); white-space: nowrap;
+            flex-shrink: 0; overflow: hidden;
+            transition: color 0.3s, background 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
+        }
+        .mode-btn:hover { color: var(--c-text); transform: scale(1.05); }
+        body.viz-active .mode-btn { color: #9a8d7c; }
+        body.viz-active .mode-btn:hover { color: #f4ede3; }
+        .mode-btn.active { background: var(--g-gel); color: #fff; box-shadow: var(--sh-gloss), 0 2px 10px rgba(143,74,20,0.35); }
+        .mode-btn.active::before {
+            content: ''; position: absolute; inset: 1px 1px 55% 1px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.06));
+            border-radius: inherit; pointer-events: none;
+        }
+
         .viz-settings-btn {
-            background: transparent; border: none; color: inherit;
-            font-size: 14px; cursor: pointer;
+            background: transparent; border: none; color: var(--c-text-muted);
+            cursor: pointer;
             border-radius: 50%; opacity: 0; pointer-events: none;
-            width: 0; padding: 0; transition: width 0.3s, opacity 0.3s, padding 0.3s;
+            width: 0; padding: 0; transition: width 0.3s, opacity 0.3s, padding 0.3s, color 0.3s;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
-        body[data-active-mode="pulse"] .viz-settings-btn,
-        body[data-active-mode="waves"] .viz-settings-btn,
-        body[data-active-mode="flow"] .viz-settings-btn,
-        body[data-active-mode="td"] .viz-settings-btn {
-            width: 28px; padding: 4px; opacity: 1; pointer-events: auto; margin-left: 2px;
+        body.viz-active .viz-settings-btn {
+            width: 30px; padding: 4px; opacity: 1; pointer-events: auto; margin-left: 2px;
+            color: #9a8d7c;
         }
-        .viz-settings-btn:hover { background: rgba(208, 115, 41, 0.2); }
+        .viz-settings-btn:hover { color: var(--c-amber-bright); background: var(--c-amber-soft); }
 
         .viz-settings-popup {
-            position: absolute; bottom: calc(100% + 12px); right: -20px;
-            background: rgba(15,15,15,0.92); backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
-            padding: 16px; display: flex; flex-direction: column; gap: 14px;
+            position: absolute; bottom: calc(100% + 12px); right: 0;
+            border-radius: var(--r-lg);
+            padding: 16px; display: flex; flex-direction: column; gap: 6px;
             opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95);
-            transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            color: rgba(255,255,255,0.6); font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
-            width: 180px; transform-origin: bottom right; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transition: opacity 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
+            width: 210px; transform-origin: bottom right;
+            max-height: min(420px, calc(100dvh - 220px)); overflow-y: auto;
+            background: rgba(18, 12, 6, 0.85);
+            border-color: rgba(255, 176, 102, 0.22);
         }
-        .viz-settings-popup.visible {
-            opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
-        }
-        .settings-section { display: flex; flex-direction: column; gap: 10px; }
-        .section-title { 
-            display: flex; align-items: center; gap: 6px; 
-            color: #fff; font-size: 9px; margin-bottom: 2px;
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;
-        }
-        .viz-settings-popup label { display: flex; flex-direction: column; gap: 6px; }
-        .viz-settings-popup input[type="range"] {
-            -webkit-appearance: none; width: 100%; height: 2px; background: rgba(255,255,255,0.2);
-            outline: none; border-radius: 2px;
-        }
-        .viz-settings-popup input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%;
-            background: var(--c-amber); cursor: pointer;
-            box-shadow: 0 0 6px rgba(208,115,41,0.5);
-        }
-        .viz-settings-popup select {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;
-            padding: 4px; border-radius: 4px; outline: none; font-size: 8px; font-weight: 800; text-transform: uppercase;
-            cursor: pointer; font-family: 'Inter', sans-serif;
-        }
-        .viz-settings-popup select option {
-            background: #222; color: #fff;
-        }
+        .viz-settings-popup.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 
-        /* Dark mode OR forced-dark (DVD always has black bg) */
-        body.dark-mode .mode-toggle,
-        .mode-toggle.on-dark {
-            background: rgba(208, 115, 41, 0.06);
-            border-color: rgba(208, 115, 41, 0.12);
+        .viz-set-section {
+            color: var(--c-amber-hot); font-size: 9px; font-weight: 900;
+            letter-spacing: 2px; text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,176,102,0.15);
+            padding: 8px 0 6px; margin-bottom: 4px;
         }
-        body.dark-mode .mode-btn,
-        .mode-toggle.on-dark .mode-btn { color: rgba(240,235,229,0.35); }
-        body.dark-mode .mode-btn:hover,
-        .mode-toggle.on-dark .mode-btn:hover { color: rgba(240,235,229,0.7); }
-        body.dark-mode .mode-btn.active,
-        .mode-toggle.on-dark .mode-btn.active {
-            background: rgba(208, 115, 41, 0.2); color: #f0ebe5;
+        .viz-set-section:first-child { padding-top: 0; }
+        .viz-set-row {
+            display: flex; flex-direction: column; gap: 6px; padding: 4px 0;
+            color: rgba(244, 237, 227, 0.65);
+            font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .viz-set-range { width: 100%; height: 4px; }
+        .viz-set-select {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,176,102,0.25);
+            color: #f4ede3; padding: 5px; border-radius: 6px; outline: none;
+            font-size: 8px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; font-family: var(--font-primary);
+        }
+        .viz-set-select option { background: #1a120a; color: #f4ede3; }
+        .viz-set-reset {
+            margin-top: 8px; padding: 6px;
+            background: rgba(255,176,102,0.1); border: 1px solid rgba(255,176,102,0.25);
+            border-radius: var(--r-pill); color: var(--c-amber-hot);
+            font-size: 8px; font-weight: 900; letter-spacing: 2px; cursor: pointer;
+            font-family: var(--font-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+        .viz-set-reset:hover { background: var(--c-amber); color: #fff; }
+
+        /* ── IDLE FADE (viz modes) ───────────────────── */
+        body.viz-active.ui-idle .top-nav-bar,
+        body.viz-active.ui-idle #main-cluster,
+        body.viz-active.ui-idle .mode-dock-wrap {
+            opacity: 0; pointer-events: none;
         }
 
         /* ── MOBILE ──────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar  { top:58px; padding:10px 16px; }
-            .ticker-tape  { height:50px; }
-            .song-display { font-size:1.3rem; letter-spacing:3px; }
-            .ticker-art   { height:38px; width:38px; }
-            #clean-island { width: 260px; padding: 20px 12px 12px 12px; gap: 12px; border-radius: 32px; }
-            .ci-play-btn { width: 120px; height: 48px; border-radius: 24px; font-size: 24px; }
-            .ci-status-text { font-size: 0.55rem; }
-            #main-cluster { gap: 24px; }
-            #main-cluster.expanded #bg-logo-layer { transform: translateY(-80px); }
-            .fm-text { margin-left:-16px; }
-            #app-container { margin:0 6px; width:calc(100vw - 12px); }
-            .mode-toggle  { bottom: 66px; }
-            .mode-btn     { padding: 4px 8px; font-size: 7px; letter-spacing: 1.5px; }
-            #dvd-artwork  { width: clamp(100px, 30vw, 160px); }
+            .top-nav-bar  { top:50px; padding:10px 16px; }
+            .ticker-tape  { height:48px; }
+            .song-display { font-size:1.2rem; letter-spacing:3px; }
+            .ticker-art   { height:34px; width:34px; }
+            #player-deck  { padding: 14px; gap: 12px; border-radius: 24px; }
+            .deck-art-wrap { width: 60px; height: 60px; }
+            .deck-play    { width: 48px; height: 48px; }
+            .cluster-inner { gap: 20px; }
+            .fm-text { margin-left:-12px; }
+            .mode-dock-wrap { bottom: 60px; }
+            .mode-btn     { padding: 6px 9px; font-size: 7.5px; letter-spacing: 1.5px; }
+            #dvd-box      { width: clamp(100px, 30vw, 160px); }
         }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
+    <div id="app-container" class="a-pop">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
-        <div class="top-nav-bar">
-            <a href="/" class="back-btn-top internal-link">Home</a>
+        <div class="top-nav-bar a-drop" style="--d:.2s">
+            <a href="/" class="back-pill internal-link">Home</a>
             <div class="nav-right">
-                <div class="date-time-display"><span id="live-single-line">MONDAY | 00:00 AM</span></div>
-                <button class="theme-toggle-btn" id="direct-theme-toggle" aria-label="Toggle Theme">
-                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <div class="cuceu-clock"><span class="cuceu-clock-text">MONDAY | 00:00 AM</span></div>
+                <button class="theme-toggle" id="direct-theme-toggle" aria-label="Toggle Theme">
+                    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
             </div>
         </div>
 
-        <!-- FOREGROUND CONTROLS & LOGO -->
+        <!-- FOREGROUND: LOGO + PLAYER DECK -->
         <div id="main-cluster">
-            <div id="bg-logo-layer">
-                <div class="logo-row">
-                    <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
-                    <span class="fm-text">.fm</span>
-                </div>
-            </div>
-            
-            <div id="clean-island">
-                <div class="ci-live-status">
-                    <div class="pulse-dot" id="pulse-indicator"></div>
-                    <span id="center-status" class="ci-status-text">CHECKING...</span>
-                </div>
-                
-                <div class="ci-main-control">
-                    <button id="btn" class="ci-play-btn" aria-label="Play/Pause">
-                        <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M8 5v14l11-7z"/></svg>
-                        <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" width="28" height="28" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                    </button>
+            <div class="cluster-inner a-rise" style="--d:.35s">
+                <div id="bg-logo-layer">
+                    <div class="logo-row">
+                        <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
+                        <span class="fm-text">.fm</span>
+                    </div>
                 </div>
 
-                <div class="ci-volume-control" style="width: 100%; padding: 0 16px; display: flex; align-items: center; gap: 8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" style="flex-grow: 1; height: 4px; accent-color: var(--c-amber); cursor: pointer;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                </div>
+                <div id="player-deck" class="aero-panel">
+                    <div class="deck-top">
+                        <div class="deck-art-wrap" id="deck-art-wrap">
+                            <img id="deck-art" src="cuceugrta.png" alt="Album artwork">
+                        </div>
+                        <div class="deck-meta">
+                            <div class="deck-status">
+                                <div class="aero-dot" id="deck-dot" style="--dot-c:#9a9a9a"></div>
+                                <span id="deck-status-text">CHECKING...</span>
+                            </div>
+                            <div class="deck-title" id="deck-title">CUCEU.FM</div>
+                            <div class="deck-artist" id="deck-artist">INTERNET RADIO</div>
+                        </div>
+                    </div>
 
-                <button id="history-toggle" class="ci-history-btn" aria-label="Toggle History">RECENTLY PLAYED <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                    <div class="deck-controls">
+                        <button id="btn" class="deck-play aero-gel" aria-label="Play/Pause">
+                            <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="pause-icon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="deck-volume">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            <input type="range" id="volume-slider" class="aero-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
+                        </div>
+                        <button id="history-toggle" class="deck-history-btn" aria-label="Toggle recently played">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                    </div>
 
-                <div class="ci-history-drawer-wrapper">
-                    <div class="ci-history-drawer" id="island-content">
-                        <ul id="history-list"><li class="history-item">Loading...</li></ul>
+                    <div class="deck-drawer-wrap">
+                        <div class="deck-drawer">
+                            <div class="deck-drawer-head">Recently Played</div>
+                            <ul id="history-list"><li class="history-item">Loading...</li></ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -444,78 +467,30 @@
 
         <!-- Background mode layers -->
         <div id="bg-layer">
-            <img id="dvd-artwork" src="" alt="">
-            <div id="td-container">
-                <span class="td-placeholder">TouchDesigner Visualiser — Coming Soon</span>
+            <div id="dvd-box">
+                <img id="dvd-artwork" src="" alt="">
+                <div class="dvd-tint"></div>
+                <div class="dvd-burst" id="dvd-burst"></div>
+                <span class="dvd-badge" id="dvd-badge">0</span>
             </div>
         </div>
 
-        <!-- Mode toggle -->
-        <div class="mode-toggle" id="mode-toggle">
-            <button class="mode-btn active" data-mode="clean">Clean</button>
-            <button class="mode-btn" data-mode="dvd">DVD</button>
-            <button class="mode-btn" data-mode="td" data-bg="dark">Stars 🌙</button>
-            <button class="mode-btn" data-mode="pulse" data-bg="dark">Pulse</button>
-            <button class="mode-btn" data-mode="waves" data-bg="dark">Waves</button>
-            <button class="mode-btn" data-mode="flow" data-bg="dark">Flow</button>
-            <button class="viz-settings-btn" id="viz-settings-btn" aria-label="Visualizer Settings">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </button>
-            <div class="viz-settings-popup" id="viz-settings-popup">
-                
-                <div id="settings-stars" class="viz-settings-panel">
-                    <div class="settings-section">
-                        <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Visuals</div>
-                        <label>Star Size <input type="range" id="star-size-slider" min="0" max="8" step="0.5" value="1.0"></label>
-                    </div>
-                    <div class="settings-section">
-                        <div class="section-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Audio React</div>
-                        <label>Sensitivity <input type="range" id="audio-sense-slider" min="0" max="3" step="0.1" value="1.0"></label>
-                        <label>Twinkle Speed <input type="range" id="audio-speed-slider" min="0.1" max="3" step="0.1" value="1.0"></label>
-                    </div>
-                </div>
-
-                <div id="settings-pulse" class="viz-settings-panel" style="display:none">
-                    <div class="settings-section">
-                        <label>Bar Count <input type="range" id="pulse-count-slider" min="64" max="256" step="32" value="128"></label>
-                        <label>Height Scale <input type="range" id="pulse-height-slider" min="0.5" max="5" step="0.1" value="1.5"></label>
-                        <label>Ring Radius <input type="range" id="pulse-radius-slider" min="80" max="300" step="10" value="160"></label>
-                        <label>Rotation Speed <input type="range" id="pulse-rotation-slider" min="0" max="2" step="0.05" value="0.3"></label>
-                        <label>Color Mode 
-                            <select id="pulse-color-select">
-                                <option value="warm">Warm</option>
-                                <option value="cold">Cold</option>
-                                <option value="mono">Mono</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="settings-waves" class="viz-settings-panel" style="display:none">
-                    <div class="settings-section">
-                        <label>Grid Detail <input type="range" id="waves-detail-slider" min="20" max="100" step="10" value="50"></label>
-                        <label>Wave Height <input type="range" id="waves-height-slider" min="0.5" max="5" step="0.1" value="1.5"></label>
-                        <label>Scroll Speed <input type="range" id="waves-scroll-slider" min="0" max="3" step="0.1" value="0.8"></label>
-                        <label>Camera Tilt <input type="range" id="waves-tilt-slider" min="20" max="80" step="5" value="45"></label>
-                        <label>Color Palette 
-                            <select id="waves-color-select">
-                                <option value="heat">Heat</option>
-                                <option value="ocean">Ocean</option>
-                                <option value="mono">Mono</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="settings-flow" class="viz-settings-panel" style="display:none">
-                    <div class="settings-section">
-                        <label>Particle Count <input type="range" id="flow-count-slider" min="2000" max="15000" step="1000" value="8000"></label>
-                        <label>Flow Speed <input type="range" id="flow-speed-slider" min="0.1" max="3" step="0.1" value="1"></label>
-                        <label>Turbulence <input type="range" id="flow-turbulence-slider" min="0.1" max="3" step="0.1" value="1"></label>
-                        <label>Bass Burst <input type="range" id="flow-burst-slider" min="0" max="3" step="0.1" value="1"></label>
-                        <label>Trail Length <input type="range" id="flow-trail-slider" min="1" max="8" step="1" value="3"></label>
-                    </div>
-                </div>
+        <!-- Mode dock -->
+        <div class="mode-dock-wrap a-slideup" style="--d:.45s" id="mode-dock-wrap">
+            <div class="mode-toggle aero-panel" id="mode-toggle">
+                <button class="mode-btn active" data-mode="clean">Clean</button>
+                <button class="mode-btn" data-mode="dvd">DVD</button>
+                <button class="mode-btn" data-mode="starlight">Starlight</button>
+                <button class="mode-btn" data-mode="halo">Halo</button>
+                <button class="mode-btn" data-mode="aurora">Aurora</button>
+                <button class="mode-btn" data-mode="nebula">Nebula</button>
+                <button class="mode-btn" data-mode="prism">Prism</button>
+                <button class="viz-settings-btn" id="viz-settings-btn" aria-label="Visualizer Settings">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+            <div class="viz-settings-popup aero-panel" id="viz-settings-popup">
+                <div id="viz-settings-mount"></div>
             </div>
         </div>
 
@@ -524,68 +499,64 @@
     </div>
 
 <script src="../shared.js"></script>
+<script src="viz-core.js"></script>
+<script src="visualizers.js"></script>
 <script>
 // Redirect to wrapper if loaded directly
 if (window === window.parent) {
     window.location.replace('/?path=' + window.location.pathname);
 }
 
-// ── PAGE TRANSITIONS ──────────────────────────────────────────
-// (Handled by shared.js mostly, but we keep the custom ones just in case)
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.internal-link').forEach(link => {
-        link.addEventListener('click', e => {
-            e.preventDefault();
-            document.body.classList.add('is-exiting');
-            setTimeout(() => window.location.assign(link.href), 600);
-        });
-    });
-});
-window.addEventListener('pageshow', e => {
-    if (e.persisted) {
-        document.body.classList.remove('is-exiting');
-    }
-});
-
-// ── THEME TOGGLE (unified via shared.js) ─────────────────────
-const themeToggle = document.getElementById('direct-theme-toggle');
-CuceuTheme.bindToggle(themeToggle, (isDark) => {
-    if (!isDark && (currentMode === 'td' || currentMode === 'pulse' || currentMode === 'waves' || currentMode === 'flow')) {
-        setMode('clean');
-    }
-    if (isDark && typeof updateVizTheme === 'function') {
-        updateVizTheme();
-    }
-});
-
-// ── CLOCK (unified via shared.js) ────────────────────────────
-const DAYS = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-function updateDateTime() {
-    const n = new Date(), h = n.getHours() % 12 || 12;
-    const m = n.getMinutes().toString().padStart(2,'0');
-    document.getElementById('live-single-line').innerText =
-        `${DAYS[n.getDay()]} | ${h}:${m} ${n.getHours() >= 12 ? 'PM' : 'AM'}`;
-}
-updateDateTime(); setInterval(updateDateTime, 1000);
+// ── THEME TOGGLE (shared.js; visualizers run on black in both themes) ──
+CuceuTheme.bindToggle(document.getElementById('direct-theme-toggle'));
 
 // ── STREAM ────────────────────────────────────────────────────
 const STREAM_BASE    = "https://stream.cuceu.co.uk";
 const btn            = document.getElementById('btn');
-// Use the global wrapper player if available, else fallback
+// Use the global wrapper player if available, else fall back to the local element
 const isWrapper      = window !== window.parent && window.parent.CuceuGlobalPlayer;
 const player         = isWrapper ? window.parent.CuceuGlobalPlayer.getAudioElement() : document.getElementById('radioPlayer');
 
-// Hide wrapper player when on FM page, since FM page has its own controls
+// FM page has its own controls — hide the wrapper mini player here
 if (isWrapper) {
     window.parent.CuceuGlobalPlayer.hideMiniPlayer();
 }
-const centerStatus   = document.getElementById('center-status');
-const pulseIndicator = document.getElementById('pulse-indicator');
+
+const deckStatusText = document.getElementById('deck-status-text');
+const deckDot        = document.getElementById('deck-dot');
+const deckTitle      = document.getElementById('deck-title');
+const deckArtist     = document.getElementById('deck-artist');
+const deckArt        = document.getElementById('deck-art');
+const deckArtWrap    = document.getElementById('deck-art-wrap');
+const playerDeck     = document.getElementById('player-deck');
 const historyList    = document.getElementById('history-list');
 const historyToggle  = document.getElementById('history-toggle');
 const topMarquee     = document.getElementById('top-marquee');
 const bottomMarquee  = document.getElementById('bottom-marquee');
 let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '', currentTickerBase = '';
+
+const DOT_COLORS = {
+    live: '#4ade80', buffering: '#ffcc00', 'on-air': '#f0913c',
+    offline: '#777777', checking: '#9a9a9a'
+};
+function setStatus(text, kind) {
+    deckStatusText.textContent = text;
+    deckDot.style.setProperty('--dot-c', DOT_COLORS[kind] || DOT_COLORS.checking);
+    deckDot.classList.toggle('buffering', kind === 'buffering');
+}
+
+function setDeckSong(title) {
+    // Titles usually arrive as "Artist - Track"
+    const sep = title.indexOf(' - ');
+    if (sep > 0) {
+        deckArtist.textContent = title.slice(0, sep);
+        deckTitle.textContent = title.slice(sep + 3);
+    } else {
+        deckArtist.textContent = 'CUCEU.FM';
+        deckTitle.textContent = title;
+    }
+    deckTitle.title = title;
+}
 
 function updateTicker(base) {
     const art = currentArtUrl ? `<img class="ticker-art has-art" src="${currentArtUrl}" alt="">` : `<span style="display:inline-block;width:10px"></span>`;
@@ -603,13 +574,13 @@ function updateTicker(base) {
     }, 400);
 }
 
-historyToggle.onclick = () => {
-    document.getElementById('main-cluster').classList.toggle('expanded');
-};
+historyToggle.addEventListener('click', () => playerDeck.classList.toggle('expanded'));
+
 async function fetchGlobalHistory() {
     try {
         const d = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
-        if (d) historyList.innerHTML = d.filter(Boolean).map(t => `<li class="history-item">${t}</li>`).join('');
+        if (d) historyList.innerHTML = d.filter(Boolean).map((t, i) =>
+            `<li class="history-item"><span class="history-num">${String(i + 1).padStart(2, '0')}</span>${t}</li>`).join('');
     } catch(_) {}
 }
 async function fetchArtwork() {
@@ -617,8 +588,9 @@ async function fetchArtwork() {
         const u = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
         if (u && u.startsWith('http')) currentArtUrl = u;
     } catch(_) { currentArtUrl = ''; }
+    deckArt.src = currentArtUrl || 'cuceugrta.png';
+    if (currentMode === 'dvd') setDvdArt(currentArtUrl || 'cuceugrta.png');
 }
-function setStatus(t, c) { centerStatus.innerText = t; pulseIndicator.className = 'pulse-dot ' + c; }
 async function fetchSongData() {
     try {
         const data = await fetch(`${STREAM_BASE}/status-json.xsl?t=` + Date.now()).then(r => r.json());
@@ -628,56 +600,53 @@ async function fetchSongData() {
         if (!playing) setStatus('LIVE', 'live');
         if (t !== currentTitle) {
             currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
+            setDeckSong(t);
             currentTickerBase = `NOW PLAYING: ${t}`;
             updateTicker(currentTickerBase);
         }
     } catch(_) {
         isOnline = false;
         if (!playing) {
-            setStatus('OFFLINE', '');
+            setStatus('OFFLINE', 'offline');
             if (currentTickerBase !== 'STANDBY') { currentTickerBase = 'STANDBY'; updateTicker('STANDBY'); }
         }
     }
 }
 player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
-player.onplaying  = () => { if (playing) setStatus('ON AIR', 'on-air'); };
-player.onpause = () => { if (isOnline) setStatus('LIVE', 'live'); };
+player.onplaying = () => { if (playing) setStatus('ON AIR', 'on-air'); };
+player.onpause   = () => { if (isOnline) setStatus('LIVE', 'live'); };
+
 const playIcon = btn.querySelector('.play-icon');
 const pauseIcon = btn.querySelector('.pause-icon');
-btn.onclick = () => {
+btn.addEventListener('click', () => {
     if (!playing) {
         player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
-        player.play(); 
-        playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; 
+        player.play().catch(() => {});
+        playIcon.style.display = 'none'; pauseIcon.style.display = 'block';
         btn.classList.add('playing');
+        deckArtWrap.classList.add('playing');
         setStatus('BUFFERING', 'buffering');
-        if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
-        else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        if (currentMode === 'td') startVisualizer();
-        if (currentMode === 'pulse') startPulse();
-        if (currentMode === 'waves') startWaves();
-        if (currentMode === 'flow') startFlow();
+        resumeAudioGraph();
     } else {
-        player.pause(); player.src = ''; 
-        playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; 
+        player.pause(); player.src = '';
+        playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
         btn.classList.remove('playing');
-        setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : '');
-        if (currentMode === 'td') stopVisualizer();
-        if (currentMode === 'pulse') stopPulse();
-        if (currentMode === 'waves') stopWaves();
-        if (currentMode === 'flow') stopFlow();
+        deckArtWrap.classList.remove('playing');
+        setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : 'offline');
     }
     playing = !playing;
-};
+});
 
-// Volume control
+// Volume — persisted across visits
 const volumeSlider = document.getElementById('volume-slider');
-if (volumeSlider) {
-    player.volume = volumeSlider.value;
-    volumeSlider.addEventListener('input', (e) => {
-        player.volume = e.target.value;
-    });
-}
+const savedVolume = CuceuStore.get('cuceu-volume', 0.5);
+volumeSlider.value = savedVolume;
+player.volume = savedVolume;
+volumeSlider.addEventListener('input', (e) => {
+    player.volume = e.target.value;
+    CuceuStore.set('cuceu-volume', parseFloat(e.target.value));
+});
+
 updateTicker('STANDBY'); fetchSongData(); fetchGlobalHistory();
 let fetchInterval = setInterval(fetchSongData, 4000);
 document.addEventListener("visibilitychange", () => {
@@ -685,962 +654,228 @@ document.addEventListener("visibilitychange", () => {
         fetchSongData();
         clearInterval(fetchInterval);
         fetchInterval = setInterval(fetchSongData, 4000);
-        if (currentMode === 'td' && playing) startVisualizer();
-        if (currentMode === 'pulse' && playing) startPulse();
-        if (currentMode === 'waves' && playing) startWaves();
-        if (currentMode === 'flow' && playing) startFlow();
+        if (currentMode === 'dvd') resumeDvd();
     } else {
         clearInterval(fetchInterval);
-        if (currentMode === 'td') stopVisualizer();
-        if (currentMode === 'pulse') stopPulse();
-        if (currentMode === 'waves') stopWaves();
-        if (currentMode === 'flow') stopFlow();
     }
 });
 
+// ── AUDIO GRAPH (analyser lives in the wrapper when framed) ──
+let localCtx = null, localAnalyser = null;
+function ensureLocalAudio() {
+    if (localCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    localCtx = new AC();
+    localAnalyser = localCtx.createAnalyser();
+    localAnalyser.fftSize = 1024;
+    localAnalyser.smoothingTimeConstant = 0.8;
+    const src = localCtx.createMediaElementSource(player);
+    src.connect(localAnalyser);
+    localAnalyser.connect(localCtx.destination);
+}
+function resumeAudioGraph() {
+    if (isWrapper) {
+        window.parent.CuceuGlobalPlayer.resumeAudioContext();
+    } else {
+        ensureLocalAudio();
+        if (localCtx.state === 'suspended') localCtx.resume();
+    }
+}
+
+const audioProvider = isWrapper ? {
+    getFrequencyData: (a) => window.parent.CuceuGlobalPlayer.getFrequencyData(a),
+    getSampleRate: () => window.parent.CuceuGlobalPlayer.getSampleRate(),
+    getFrequencyBinCount: () => window.parent.CuceuGlobalPlayer.getFrequencyBinCount()
+} : {
+    getFrequencyData: (a) => { if (localAnalyser) localAnalyser.getByteFrequencyData(a); },
+    getSampleRate: () => localCtx ? localCtx.sampleRate : 44100,
+    getFrequencyBinCount: () => localAnalyser ? localAnalyser.frequencyBinCount : 512
+};
+
 // ══════════════════════════════════════════════════════════════
-// BACKGROUND MODE SYSTEM (Clean / DVD / TD)
+// MODE SYSTEM (Clean / DVD / 5 visualizers)
 // ══════════════════════════════════════════════════════════════
-const bgLayer      = document.getElementById('bg-layer');
-const dvdArt       = document.getElementById('dvd-artwork');
-const modeToggle   = document.getElementById('mode-toggle');
-const modeBtns     = modeToggle.querySelectorAll('.mode-btn');
-const container    = document.getElementById('app-container');
+const bgLayer    = document.getElementById('bg-layer');
+const container  = document.getElementById('app-container');
+const modeToggle = document.getElementById('mode-toggle');
+const modeBtns   = modeToggle.querySelectorAll('.mode-btn');
+const VIZ_MODES  = ['starlight', 'halo', 'aurora', 'nebula', 'prism'];
 let currentMode = 'clean';
-let dvdAnimId   = null;
-let dvdX = 100, dvdY = 100, dvdVx = 1.5, dvdVy = 1.2;
-let dvdW = 180, dvdH = 180;
-const fadeEls = () => [document.querySelector('.top-nav-bar'), document.getElementById('main-cluster')];
-function fadeUI(out) {
-    fadeEls().forEach(el => {
-        if (!el) return;
-        el.style.transition = 'opacity 1.2s cubic-bezier(0.25,1,0.5,1)';
-        el.style.opacity = out ? '0' : '1';
-        el.style.pointerEvents = out ? 'none' : '';
-    });
-}
-function initDvdPosition() {
-    const cw = container.offsetWidth;
-    const ch = container.offsetHeight;
-    const tickerH = 61;
-    dvdW = dvdArt.offsetWidth || 180;
-    dvdH = dvdArt.offsetHeight || 180;
-    dvdX = Math.random() * (cw - dvdW);
-    dvdY = tickerH + Math.random() * (ch - dvdH - tickerH * 2);
-    const angle = Math.random() * Math.PI * 2;
-    dvdVx = Math.cos(angle) * 1.5;
-    dvdVy = Math.sin(angle) * 1.5;
-}
-function dvdFrame() {
-    if (currentMode !== 'dvd') return;
-    const cw = container.offsetWidth;
-    const ch = container.offsetHeight;
-    const tickerH = 61;
-    dvdX += dvdVx; dvdY += dvdVy;
-    if (dvdX <= 0) { dvdX = 0; dvdVx = Math.abs(dvdVx); }
-    if (dvdX + dvdW >= cw) { dvdX = cw - dvdW; dvdVx = -Math.abs(dvdVx); }
-    if (dvdY <= tickerH) { dvdY = tickerH; dvdVy = Math.abs(dvdVy); }
-    if (dvdY + dvdH >= ch - tickerH) { dvdY = ch - tickerH - dvdH; dvdVy = -Math.abs(dvdVy); }
-    dvdArt.style.transform = `translate(${dvdX}px, ${dvdY}px)`;
-    dvdAnimId = requestAnimationFrame(dvdFrame);
-}
-function startDvd() {
-    const artSrc = currentArtUrl || 'cuceugrta.png';
-    dvdArt.src = artSrc;
-    if (dvdArt.complete && dvdArt.naturalWidth > 0) { initDvdPosition(); dvdFrame(); } else { dvdArt.onload = () => { initDvdPosition(); dvdFrame(); }; }
-}
-function stopDvd() { if (dvdAnimId) { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; } }
-function hideAllVisualizerCanvases() {
-    if (typeof vizRenderer !== 'undefined' && vizRenderer) vizRenderer.domElement.style.display = 'none';
-    if (typeof pulseRenderer !== 'undefined' && pulseRenderer) pulseRenderer.domElement.style.display = 'none';
-    if (typeof wavesRenderer !== 'undefined' && wavesRenderer) wavesRenderer.domElement.style.display = 'none';
-    if (typeof flowRenderer !== 'undefined' && flowRenderer) flowRenderer.domElement.style.display = 'none';
-}
 
-function setMode(mode) {
-    if ((mode === 'td' || mode === 'pulse' || mode === 'waves' || mode === 'flow') && !document.body.classList.contains('dark-mode')) return;
-    if (mode === currentMode) return;
-    stopDvd(); 
-    if (typeof stopVisualizer === 'function') stopVisualizer();
-    if (typeof stopPulse === 'function') stopPulse();
-    if (typeof stopWaves === 'function') stopWaves();
-    if (typeof stopFlow === 'function') stopFlow();
-
-    hideAllVisualizerCanvases();
-
-    bgLayer.className = '';
-    container.classList.remove('viz-mode');
-    modeToggle.classList.remove('on-dark');
-    currentMode = mode;
-    document.body.classList.toggle('is-dvd', mode === 'dvd');
-    modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-
-    document.body.dataset.activeMode = mode;
-    if (mode === 'clean') {
-        fadeUI(false);
-    } else if (mode === 'dvd') {
-        bgLayer.classList.add('mode-dvd');
-        fadeUI(false);
-        startDvd();
-    } else if (mode === 'td') {
-        bgLayer.classList.add('mode-td');
-        container.classList.add('viz-mode');
-        if (document.body.classList.contains('dark-mode')) {
-            modeToggle.classList.add('on-dark');
-        }
-        fadeUI(false);
-        if (typeof startVisualizer === 'function') startVisualizer();
-        if (typeof updateVizTheme === 'function') updateVizTheme();
-    } else if (mode === 'pulse') {
-        bgLayer.classList.add('mode-pulse');
-        container.classList.add('viz-mode');
-        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
-        fadeUI(false);
-        if (typeof startPulse === 'function') startPulse();
-    } else if (mode === 'waves') {
-        bgLayer.classList.add('mode-waves');
-        container.classList.add('viz-mode');
-        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
-        fadeUI(false);
-        if (typeof startWaves === 'function') startWaves();
-    } else if (mode === 'flow') {
-        bgLayer.classList.add('mode-flow');
-        container.classList.add('viz-mode');
-        if (document.body.classList.contains('dark-mode')) modeToggle.classList.add('on-dark');
-        fadeUI(false);
-        if (typeof startFlow === 'function') startFlow();
-    }
-    
-    if (typeof showSettingsPanelFor === 'function') showSettingsPanelFor(mode);
-}
-
-// Toggle button clicks
-modeBtns.forEach(b => {
-    b.addEventListener('click', () => setMode(b.dataset.mode));
-});
-
-// TD Settings Logic
-function showSettingsPanelFor(modeName) {
-    const panels = document.querySelectorAll('.viz-settings-panel');
-    panels.forEach(p => p.style.display = 'none');
-    const target = document.getElementById('settings-' + modeName);
-    if (target) target.style.display = 'block';
-}
+CuceuViz.setup({ container, provider: audioProvider });
 
 const vizSettingsBtn = document.getElementById('viz-settings-btn');
 const vizSettingsPopup = document.getElementById('viz-settings-popup');
+const vizSettingsMount = document.getElementById('viz-settings-mount');
+
+function setMode(mode) {
+    if (mode === currentMode) return;
+    stopDvd();
+    CuceuViz.stop();
+
+    bgLayer.className = '';
+    container.classList.remove('viz-mode');
+    currentMode = mode;
+    document.body.classList.toggle('is-dvd', mode === 'dvd');
+    document.body.classList.toggle('viz-active', VIZ_MODES.includes(mode));
+    document.body.dataset.activeMode = mode;
+    modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    vizSettingsPopup.classList.remove('visible');
+    CuceuStore.set('cuceu-fm-mode', mode);
+
+    if (mode === 'dvd') {
+        bgLayer.classList.add('mode-dvd');
+        startDvd();
+    } else if (VIZ_MODES.includes(mode)) {
+        container.classList.add('viz-mode');
+        resumeAudioGraph();
+        CuceuViz.start(mode);
+        CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
+    }
+    resetIdleTimer();
+}
+
+modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
 vizSettingsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     vizSettingsPopup.classList.toggle('visible');
 });
 document.addEventListener('click', (e) => {
-    if (!vizSettingsPopup.contains(e.target) && e.target !== vizSettingsBtn) {
+    if (!vizSettingsPopup.contains(e.target) && !vizSettingsBtn.contains(e.target)) {
         vizSettingsPopup.classList.remove('visible');
     }
 });
 
-window.tdSensitivity = 1.0;
-window.tdSpeedMult = 1.0;
-
-document.getElementById('star-size-slider').addEventListener('input', (e) => {
-    if (outerField) outerField.material.uniforms.uSizeMult.value = parseFloat(e.target.value);
-});
-document.getElementById('audio-sense-slider').addEventListener('input', (e) => {
-    window.tdSensitivity = parseFloat(e.target.value);
-});
-document.getElementById('audio-speed-slider').addEventListener('input', (e) => {
-    window.tdSpeedMult = parseFloat(e.target.value);
-});
-
-// Update DVD artwork when track changes
-const origFetchArtwork = fetchArtwork;
-fetchArtwork = async function() {
-    await origFetchArtwork();
-    if (currentMode === 'dvd' && currentArtUrl) {
-        dvdArt.src = currentArtUrl;
-    }
-};
-
-
-
-// ══════════════════════════════════════════════════════════════
-// REAL-TIME AUDIO VISUALIZER — DEEP SPACE
-// ══════════════════════════════════════════════════════════════
-let audioCtx, analyser, audioSource, dataArray;
-let vizScene, vizCamera, vizRenderer;
-let outerField;
-let vizAnimId = null;
-
-// Smoothed audio values for less jittery reactivity
-let smoothTreble = 0;
-
-// ── Sprite texture generators ────────────────────────────────
-
-function makeSoftBokehTexture(size) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-    g.addColorStop(0, 'rgba(255,255,255,0.9)');
-    g.addColorStop(0.15, 'rgba(255,255,255,0.5)');
-    g.addColorStop(0.4, 'rgba(255,255,255,0.08)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(c);
-}
-
-// ── Web Audio ────────────────────────────────────────────────
-function initWebAudio() {
-    if (isWrapper) {
-        window.parent.CuceuGlobalPlayer.resumeAudioContext();
-        if (!dataArray) dataArray = new Uint8Array(512);
-    } else {
-        if (audioCtx) return;
-        const AC = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AC();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 1024;   // more frequency resolution
-        analyser.smoothingTimeConstant = 0.8;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        audioSource = audioCtx.createMediaElementSource(player);
-        audioSource.connect(analyser);
-        analyser.connect(audioCtx.destination);
-    }
-}
-
-// ── Three.js Scene ───────────────────────────────────────────
-function initThreeJS() {
-    if (vizScene) return;
-    const tdContainer = document.getElementById('td-container');
-    tdContainer.innerHTML = '';
-
-    vizScene = new THREE.Scene();
-
-    vizCamera = new THREE.PerspectiveCamera(
-        65,
-        tdContainer.clientWidth / tdContainer.clientHeight,
-        0.1, 4000
-    );
-    vizCamera.position.set(0, 0, 600);
-
-    vizRenderer = new THREE.WebGLRenderer({
-        alpha: true,
-        antialias: false,  // performance: skip AA on particles
-        powerPreference: 'high-performance'
-    });
-    vizRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
-    vizRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    vizRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;';
-    tdContainer.appendChild(vizRenderer.domElement);
-
-    // ── OUTER STAR FIELD (Treble reactive, per-particle twinkle) ──
-    const bokehTexture = makeSoftBokehTexture(64);
-    const outerCount = 12000;
-    const outerGeom = new THREE.BufferGeometry();
-    const outerPositions = new Float32Array(outerCount * 3);
-    const outerSizes = new Float32Array(outerCount);
-    const outerPhases = new Float32Array(outerCount);  // random phase per star
-    const outerSpeeds = new Float32Array(outerCount);  // random twinkle speed
-
-    for (let i = 0; i < outerCount; i++) {
-        outerPositions[i*3]   = (Math.random() - 0.5) * 3800;
-        outerPositions[i*3+1] = (Math.random() - 0.5) * 3800;
-        outerPositions[i*3+2] = (Math.random() - 0.5) * 3800;
-        outerSizes[i] = 0.8 + Math.random() * 3.0;
-        outerPhases[i] = Math.random() * Math.PI * 2;
-        outerSpeeds[i] = 0.5 + Math.random() * 3.0;
-    }
-    outerGeom.setAttribute('position', new THREE.BufferAttribute(outerPositions, 3));
-    outerGeom.setAttribute('aSize', new THREE.BufferAttribute(outerSizes, 1));
-    outerGeom.setAttribute('aPhase', new THREE.BufferAttribute(outerPhases, 1));
-    outerGeom.setAttribute('aSpeed', new THREE.BufferAttribute(outerSpeeds, 1));
-
-    const outerShaderMat = new THREE.ShaderMaterial({
-        uniforms: {
-            uTexture: { value: bokehTexture },
-            uTime: { value: 0 },
-            uTrebleEnergy: { value: 0 },
-            uIsDark: { value: isDark ? 1.0 : 0.0 },
-            uPixelRatio: { value: vizRenderer.getPixelRatio() },
-            uSizeMult: { value: 1.0 },
-            uSpeedMult: { value: 1.0 }
-        },
-        vertexShader: `
-            attribute float aSize;
-            attribute float aPhase;
-            attribute float aSpeed;
-            uniform float uTime;
-            uniform float uTrebleEnergy;
-            uniform float uPixelRatio;
-            uniform float uSizeMult;
-            uniform float uSpeedMult;
-            varying float vAlpha;
-            void main() {
-                // Per-particle twinkle: base flicker + treble-driven intensity
-                float flickerSpeed = aSpeed * (1.0 + uTrebleEnergy * 4.0) * uSpeedMult;
-                float flicker = sin(uTime * flickerSpeed + aPhase) * 0.5 + 0.5;
-                // Treble boosts the range of the flicker
-                float minAlpha = 0.15 - uTrebleEnergy * 0.1;
-                float maxAlpha = 0.5 + uTrebleEnergy * 0.5;
-                vAlpha = mix(max(minAlpha, 0.05), maxAlpha, flicker);
-                
-                vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-                gl_PointSize = (aSize * uSizeMult) * uPixelRatio * (280.0 / -mvPos.z);
-                gl_PointSize = max(gl_PointSize, 0.5);
-                gl_Position = projectionMatrix * mvPos;
-            }
-        `,
-        fragmentShader: `
-            uniform sampler2D uTexture;
-            uniform float uIsDark;
-            varying float vAlpha;
-            void main() {
-                vec4 tex = texture2D(uTexture, gl_PointCoord);
-                // Dark: soft blue-white, Light: muted navy/slate
-                vec3 darkStarColor = vec3(0.75, 0.85, 1.0);
-                vec3 lightStarColor = vec3(0.18, 0.22, 0.35);
-                vec3 starColor = mix(lightStarColor, darkStarColor, uIsDark);
-                gl_FragColor = vec4(starColor * tex.r, tex.a * vAlpha);
-            }
-        `,
-        transparent: true,
-        blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
-        depthWrite: false
-    });
-    outerField = new THREE.Points(outerGeom, outerShaderMat);
-    vizScene.add(outerField);
-
-    // ── Resize handler (ResizeObserver catches zoom, layout shifts, everything) ──
-    const vizResizeObserver = new ResizeObserver(() => onVizResize());
-    vizResizeObserver.observe(tdContainer);
-}
-
-function onVizResize() {
-    if (!vizCamera || !vizRenderer) return;
-    const tdContainer = document.getElementById('td-container');
-    const w = tdContainer.clientWidth || window.innerWidth;
-    const h = tdContainer.clientHeight || window.innerHeight;
-    if (w === 0 || h === 0) return; // container not visible yet
-    vizCamera.aspect = w / h;
-    vizCamera.updateProjectionMatrix();
-    vizRenderer.setSize(w, h);
-}
-
-// ── Audio band extraction ────────────────────────────────────
-function getBandEnergy(data, minHz, maxHz) {
-    const nyquist = audioCtx.sampleRate / 2;
-    const binCount = data.length;
-    const minBin = Math.max(0, Math.floor((minHz / nyquist) * binCount));
-    const maxBin = Math.min(binCount - 1, Math.ceil((maxHz / nyquist) * binCount));
-    let sum = 0, count = 0;
-    for (let i = minBin; i <= maxBin; i++) { sum += data[i]; count++; }
-    return count > 0 ? sum / count : 0;
-}
-
-function getBandPeak(data, minHz, maxHz) {
-    const nyquist = audioCtx.sampleRate / 2;
-    const binCount = data.length;
-    const minBin = Math.max(0, Math.floor((minHz / nyquist) * binCount));
-    const maxBin = Math.min(binCount - 1, Math.ceil((maxHz / nyquist) * binCount));
-    let peak = 0;
-    for (let i = minBin; i <= maxBin; i++) { if (data[i] > peak) peak = data[i]; }
-    return peak;
-}
-
-// ── Render Loop ──────────────────────────────────────────────
-function renderVisualizer(timestamp) {
-    vizAnimId = requestAnimationFrame(renderVisualizer);
-    if (!vizStartTime) vizStartTime = timestamp;
-    const elapsed = (timestamp - vizStartTime) * 0.001; // seconds
-
-    let treble = 0;
-
-    if (dataArray) {
-        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
-        else if (analyser) analyser.getByteFrequencyData(dataArray);
-        treble   = getBandEnergy(dataArray, 4000, 20000);
-
-        const speedMult = window.tdSpeedMult !== undefined ? window.tdSpeedMult : 1.0;
-        const trebleSmooth = Math.min(1, 0.14 * speedMult);
-        smoothTreble += (treble - smoothTreble) * trebleSmooth;
-    }
-
-    const sensitivity = window.tdSensitivity !== undefined ? window.tdSensitivity : 1.0;
-    const trebleNorm = (smoothTreble / 255) * sensitivity;
-
-    // ── C. TREBLE → Outer Star Field Twinkling ───────────────
-    outerField.material.uniforms.uTime.value = elapsed;
-    outerField.material.uniforms.uTrebleEnergy.value = trebleNorm;
-    outerField.rotation.y = elapsed * -0.005;
-
-    vizRenderer.render(vizScene, vizCamera);
-}
-
-// ── Theme-aware color updating ───────────────────────────────
-function updateVizTheme() {
-    if (!vizScene) return;
-    const isDark = document.body.classList.contains('dark-mode');
-    const darkVal = isDark ? 1.0 : 0.0;
-    const blendMode = isDark ? THREE.AdditiveBlending : THREE.NormalBlending;
-
-    // Outer field shader
-    if (outerField) {
-        outerField.material.uniforms.uIsDark.value = darkVal;
-        outerField.material.blending = blendMode;
-        outerField.material.needsUpdate = true;
-    }
-}
-
-// ── Start / Stop ─────────────────────────────────────────────
-function startVisualizer() {
-    if (!playing || currentMode !== 'td') return;
-
-    initWebAudio();
-    initThreeJS();
-
-    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
-    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
-    if (!vizAnimId) {
-        vizStartTime = 0;
-        smoothTreble = 0;
-        updateVizTheme();
-        vizRenderer.domElement.style.display = 'block';
-        renderVisualizer(performance.now());
-    }
-}
-
-function stopVisualizer() {
-    if (vizAnimId) {
-        cancelAnimationFrame(vizAnimId);
-        vizAnimId = null;
-    }
-    // We do NOT close or suspend audioCtx.
-    // The MediaElementSource is permanently tied to this context;
-    // suspending it would mute audio in other modes.
-}
-
-// ══════════════════════════════════════════════════════════════
-// PULSE VISUALIZER
-// ══════════════════════════════════════════════════════════════
-let pulseScene, pulseCamera, pulseRenderer;
-let pulseBars = [];         // array of THREE.Mesh (BoxGeometry)
-let pulseBarCount = 128;    // synced from slider
-let pulseAnimId = null;
-
-// Settings globals:
-window.pulseHeightScale = 1.5;
-window.pulseRadius = 160;
-window.pulseRotationSpeed = 0.3;
-window.pulseColorMode = 'warm';
-
-document.getElementById('pulse-count-slider').addEventListener('input', e => {
-    pulseBarCount = parseInt(e.target.value);
-    if (pulseScene) buildPulseBars();
-});
-document.getElementById('pulse-height-slider').addEventListener('input', e => {
-    window.pulseHeightScale = parseFloat(e.target.value);
-});
-document.getElementById('pulse-radius-slider').addEventListener('input', e => {
-    window.pulseRadius = parseInt(e.target.value);
-    if (pulseScene) buildPulseBars();
-});
-document.getElementById('pulse-rotation-slider').addEventListener('input', e => {
-    window.pulseRotationSpeed = parseFloat(e.target.value);
-});
-document.getElementById('pulse-color-select').addEventListener('change', e => {
-    window.pulseColorMode = e.target.value;
-});
-
-function initPulse() {
-    if (pulseScene) return;
-    const tdContainer = document.getElementById('td-container');
-    
-    pulseScene = new THREE.Scene();
-    pulseCamera = new THREE.PerspectiveCamera(65, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
-    pulseCamera.position.set(0, 0, 400);
-
-    pulseRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
-    pulseRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
-    pulseRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    pulseRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
-    tdContainer.appendChild(pulseRenderer.domElement);
-
-    buildPulseBars();
-
-    const resizeObserver = new ResizeObserver(() => {
-        if (!pulseCamera || !pulseRenderer) return;
-        const w = tdContainer.clientWidth || window.innerWidth;
-        const h = tdContainer.clientHeight || window.innerHeight;
-        if (w === 0 || h === 0) return;
-        pulseCamera.aspect = w / h;
-        pulseCamera.updateProjectionMatrix();
-        pulseRenderer.setSize(w, h);
-    });
-    resizeObserver.observe(tdContainer);
-}
-
-function buildPulseBars() {
-    pulseBars.forEach(bar => pulseScene.remove(bar));
-    pulseBars = [];
-    
-    const barWidth = (window.pulseRadius * 2 * Math.PI) / pulseBarCount * 0.7;
-    const barDepth = 4;
-    
-    for (let i = 0; i < pulseBarCount; i++) {
-        const geom = new THREE.BoxGeometry(barWidth, 1, barDepth);
-        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const mesh = new THREE.Mesh(geom, mat);
-        
-        const angle = (i / pulseBarCount) * Math.PI * 2;
-        mesh.position.x = Math.cos(angle) * window.pulseRadius;
-        mesh.position.z = Math.sin(angle) * window.pulseRadius;
-        mesh.position.y = 0;
-        
-        mesh.rotation.y = -angle;
-        
-        pulseBars.push(mesh);
-        pulseScene.add(mesh);
-    }
-}
-
-function renderPulse(timestamp) {
-    pulseAnimId = requestAnimationFrame(renderPulse);
-    
-    if (dataArray) {
-        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
-        else if (analyser) analyser.getByteFrequencyData(dataArray);
-        
-        // Group bins into buckets for each bar
-        const binsPerBar = Math.floor((dataArray.length * 0.5) / pulseBarCount); // use lower half of spectrum mostly
-        
-        const isDark = document.body.classList.contains('dark-mode');
-        
-        for (let i = 0; i < pulseBarCount; i++) {
-            let sum = 0;
-            for (let j = 0; j < binsPerBar; j++) {
-                sum += dataArray[i * binsPerBar + j];
-            }
-            const avg = sum / binsPerBar;
-            const norm = avg / 255;
-            
-            const targetHeight = norm * window.pulseHeightScale * 200 + 2;
-            const bar = pulseBars[i];
-            
-            bar.scale.y += (targetHeight - bar.scale.y) * 0.25;
-            bar.position.y = bar.scale.y / 2;
-            
-            // Coloring
-            const progress = i / pulseBarCount; // 0 to 1
-            const c = new THREE.Color();
-            if (window.pulseColorMode === 'warm') {
-                if (isDark) {
-                    c.lerpColors(new THREE.Color(0xd07329), new THREE.Color(0xffffff), progress);
-                } else {
-                    c.lerpColors(new THREE.Color(0x331100), new THREE.Color(0x884400), progress);
-                }
-            } else if (window.pulseColorMode === 'cold') {
-                if (isDark) {
-                    c.lerpColors(new THREE.Color(0x00aaff), new THREE.Color(0xffffff), progress);
-                } else {
-                    c.lerpColors(new THREE.Color(0x002244), new THREE.Color(0x005588), progress);
-                }
-            } else {
-                c.setHex(isDark ? 0xffffff : 0x222222);
-            }
-            // Add brightness based on energy
-            c.multiplyScalar(0.5 + norm * 0.5);
-            bar.material.color.copy(c);
+// ── IDLE FADE (chrome fades after 4s in viz modes) ──────────
+let idleTimer = null;
+function resetIdleTimer() {
+    document.body.classList.remove('ui-idle');
+    if (idleTimer) clearTimeout(idleTimer);
+    if (!VIZ_MODES.includes(currentMode)) return;
+    idleTimer = setTimeout(() => {
+        if (!vizSettingsPopup.classList.contains('visible')) {
+            document.body.classList.add('ui-idle');
         }
-    }
-    
-    pulseScene.rotation.y -= window.pulseRotationSpeed * 0.003;
-    pulseRenderer.render(pulseScene, pulseCamera);
+    }, 4000);
 }
-
-function startPulse() {
-    if (!playing || currentMode !== 'pulse') return;
-    initWebAudio();
-    initPulse();
-    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
-    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (!pulseAnimId) {
-        pulseRenderer.domElement.style.display = 'block';
-        renderPulse(performance.now());
-    }
-}
-
-function stopPulse() {
-    if (pulseAnimId) {
-        cancelAnimationFrame(pulseAnimId);
-        pulseAnimId = null;
-    }
-}
+['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, resetIdleTimer, { passive: true }));
 
 // ══════════════════════════════════════════════════════════════
-// WAVES VISUALIZER
+// DVD MODE — authentic constant-speed diagonal bounce
 // ══════════════════════════════════════════════════════════════
-let wavesScene, wavesCamera, wavesRenderer;
-let wavesPlane;
-let wavesGeom;
-let wavesAnimId = null;
-let wavesScrollOffset = 0;
+const dvdBox   = document.getElementById('dvd-box');
+const dvdArt   = document.getElementById('dvd-artwork');
+const dvdTint  = dvdBox.querySelector('.dvd-tint');
+const dvdBurst = document.getElementById('dvd-burst');
+const dvdBadge = document.getElementById('dvd-badge');
+const tickerTopEl = document.querySelector('.ticker-top');
+const tickerBottomEl = document.querySelector('.ticker-bottom');
 
-window.wavesDetail = 50;
-window.wavesHeight = 1.5;
-window.wavesScrollSpeed = 0.8;
-window.wavesColorPalette = 'heat';
-window.wavesCameraTilt = 45;
+const DVD_TINTS = ['#ffffff', '#ffb066', '#f0913c', '#ffd23f', '#ff5c5c', '#7ce0a3', '#6fb7ff', '#c792ff'];
+let dvdAnimId = null, dvdX = 100, dvdY = 100, dvdVx = 0, dvdVy = 0;
+let dvdLastT = 0, dvdTintIdx = 0;
+let dvdCorners = parseInt(sessionStorage.getItem('cuceu-dvd-corners') || '0', 10);
 
-document.getElementById('waves-detail-slider').addEventListener('input', e => {
-    window.wavesDetail = parseInt(e.target.value);
-    if (wavesScene) buildWavesGeometry();
-});
-document.getElementById('waves-height-slider').addEventListener('input', e => {
-    window.wavesHeight = parseFloat(e.target.value);
-});
-document.getElementById('waves-scroll-slider').addEventListener('input', e => {
-    window.wavesScrollSpeed = parseFloat(e.target.value);
-});
-document.getElementById('waves-tilt-slider').addEventListener('input', e => {
-    window.wavesCameraTilt = parseFloat(e.target.value);
-    if (wavesCamera) {
-        wavesCamera.position.set(0, 100 + window.wavesCameraTilt * 2, 300);
-        wavesCamera.lookAt(0, -50, 0);
-    }
-});
-document.getElementById('waves-color-select').addEventListener('change', e => {
-    window.wavesColorPalette = e.target.value;
-});
-
-function initWaves() {
-    if (wavesScene) return;
-    const tdContainer = document.getElementById('td-container');
-    
-    wavesScene = new THREE.Scene();
-    wavesCamera = new THREE.PerspectiveCamera(60, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
-    wavesCamera.position.set(0, 100 + window.wavesCameraTilt * 2, 300);
-    wavesCamera.lookAt(0, -50, 0);
-
-    wavesRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
-    wavesRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
-    wavesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    wavesRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
-    tdContainer.appendChild(wavesRenderer.domElement);
-
-    buildWavesGeometry();
-
-    const resizeObserver = new ResizeObserver(() => {
-        if (!wavesCamera || !wavesRenderer) return;
-        const w = tdContainer.clientWidth || window.innerWidth;
-        const h = tdContainer.clientHeight || window.innerHeight;
-        if (w === 0 || h === 0) return;
-        wavesCamera.aspect = w / h;
-        wavesCamera.updateProjectionMatrix();
-        wavesRenderer.setSize(w, h);
-    });
-    resizeObserver.observe(tdContainer);
+function dvdBounds() {
+    return {
+        top: tickerTopEl.offsetHeight,
+        bottom: container.clientHeight - tickerBottomEl.offsetHeight,
+        left: 0,
+        right: container.clientWidth
+    };
 }
 
-function buildWavesGeometry() {
-    if (wavesPlane) wavesScene.remove(wavesPlane);
-    
-    wavesGeom = new THREE.PlaneGeometry(600, 600, window.wavesDetail, window.wavesDetail);
-    wavesGeom.rotateX(-Math.PI / 2);
-    
-    const mat = new THREE.MeshBasicMaterial({ color: 0xd07329, wireframe: true, transparent: true, opacity: 0.6 });
-    wavesPlane = new THREE.Mesh(wavesGeom, mat);
-    wavesScene.add(wavesPlane);
+function setDvdArt(url) { dvdArt.src = url; }
+
+function applyDvdTint() {
+    dvdTintIdx = (dvdTintIdx + 1) % DVD_TINTS.length;
+    const c = DVD_TINTS[dvdTintIdx];
+    dvdTint.style.background = c;
+    dvdBox.style.filter = `drop-shadow(0 0 16px ${c}80)`;
 }
 
-function renderWaves(timestamp) {
-    wavesAnimId = requestAnimationFrame(renderWaves);
-    
-    if (dataArray) {
-        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
-        else if (analyser) analyser.getByteFrequencyData(dataArray);
-        wavesScrollOffset -= window.wavesScrollSpeed * 0.02; // scroll towards camera
-        
-        const posAttr = wavesGeom.attributes.position;
-        let avgAmp = 0;
-        
-        for (let i = 0; i < posAttr.count; i++) {
-            const z = posAttr.getZ(i); // depth away from camera
-            // plane is 600x600, centered at 0. so z goes from -300 to 300.
-            const u = 1.0 - (z + 300) / 600; // 0 near camera, 1 far away
-            
-            const binIndex = Math.max(0, Math.min(dataArray.length - 1, Math.floor(u * dataArray.length * 0.4))); 
-            const val = dataArray[binIndex] || 0;
-            avgAmp += val;
-            
-            const targetY = (val / 255) * window.wavesHeight * 80 + Math.sin(u * 20 + wavesScrollOffset) * 10;
-            posAttr.setY(i, targetY);
-        }
-        avgAmp /= posAttr.count;
-        posAttr.needsUpdate = true;
-        
-        const isDark = document.body.classList.contains('dark-mode');
-        const c = new THREE.Color();
-        const intensity = avgAmp / 255;
-        
-        if (window.wavesColorPalette === 'heat') {
-            c.lerpColors(new THREE.Color(isDark ? 0xaa2200 : 0x551100), new THREE.Color(0xffaa00), intensity * 2);
-        } else if (window.wavesColorPalette === 'ocean') {
-            c.lerpColors(new THREE.Color(isDark ? 0x0044aa : 0x002255), new THREE.Color(0x00ffff), intensity * 2);
-        } else {
-            c.lerpColors(new THREE.Color(isDark ? 0x444444 : 0x222222), new THREE.Color(0xffffff), intensity * 2);
-        }
-        wavesPlane.material.color.copy(c);
-    }
-    
-    wavesRenderer.render(wavesScene, wavesCamera);
+function celebrateCorner() {
+    dvdCorners++;
+    sessionStorage.setItem('cuceu-dvd-corners', String(dvdCorners));
+    dvdBadge.textContent = dvdCorners;
+    dvdBadge.classList.add('show');
+    dvdBox.classList.remove('corner-pop');
+    dvdBurst.classList.remove('go');
+    // restart the one-shot animations
+    void dvdBox.offsetWidth;
+    dvdBox.classList.add('corner-pop');
+    dvdBurst.classList.add('go');
 }
 
-function startWaves() {
-    if (!playing || currentMode !== 'waves') return;
-    initWebAudio();
-    initWaves();
-    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
-    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (!wavesAnimId) {
-        wavesRenderer.domElement.style.display = 'block';
-        renderWaves(performance.now());
-    }
+function initDvdPosition() {
+    const b = dvdBounds();
+    const w = dvdBox.offsetWidth || 180;
+    const h = dvdBox.offsetHeight || 180;
+    dvdX = b.left + Math.random() * Math.max(1, b.right - b.left - w);
+    dvdY = b.top + Math.random() * Math.max(1, b.bottom - b.top - h);
+    // OG DVD logo: constant speed, perfect 45° diagonals (|vx| = |vy|)
+    const speed = (window.innerWidth < 600 ? 120 : 170) / Math.SQRT2;
+    dvdVx = (Math.random() < 0.5 ? -1 : 1) * speed;
+    dvdVy = (Math.random() < 0.5 ? -1 : 1) * speed;
 }
 
-function stopWaves() {
-    if (wavesAnimId) {
-        cancelAnimationFrame(wavesAnimId);
-        wavesAnimId = null;
-    }
+function dvdFrame(now) {
+    if (currentMode !== 'dvd') return;
+    const dt = Math.min((now - dvdLastT) / 1000, 0.05);
+    dvdLastT = now;
+
+    const b = dvdBounds();
+    const w = dvdBox.offsetWidth || 180;
+    const h = dvdBox.offsetHeight || 180;
+    dvdX += dvdVx * dt;
+    dvdY += dvdVy * dt;
+
+    let hitX = false, hitY = false;
+    if (dvdX <= b.left)          { dvdX = b.left;        dvdVx = Math.abs(dvdVx);  hitX = true; }
+    if (dvdX + w >= b.right)     { dvdX = b.right - w;   dvdVx = -Math.abs(dvdVx); hitX = true; }
+    if (dvdY <= b.top)           { dvdY = b.top;         dvdVy = Math.abs(dvdVy);  hitY = true; }
+    if (dvdY + h >= b.bottom)    { dvdY = b.bottom - h;  dvdVy = -Math.abs(dvdVy); hitY = true; }
+
+    if (hitX || hitY) applyDvdTint();
+    if (hitX && hitY) celebrateCorner();
+
+    dvdBox.style.transform = `translate(${dvdX}px, ${dvdY}px)`;
+    dvdAnimId = requestAnimationFrame(dvdFrame);
 }
 
-// ══════════════════════════════════════════════════════════════
-// FLOW VISUALIZER
-// ══════════════════════════════════════════════════════════════
-let flowScene, flowCamera, flowRenderer;
-let flowParticleSystems = []; // array of THREE.Points for trails
-let flowPositions;
-let flowVelocities;
-let flowTrailHistory = [];
-let flowNoise;
-let flowAnimId = null;
-
-let flowParticleCount = 8000;
-window.flowSpeed = 1;
-window.flowTurbulence = 1;
-window.flowBurst = 1;
-window.flowTrailLength = 3;
-
-document.getElementById('flow-count-slider').addEventListener('input', e => {
-    flowParticleCount = parseInt(e.target.value);
-    if (flowScene) buildFlowField();
-});
-document.getElementById('flow-speed-slider').addEventListener('input', e => {
-    window.flowSpeed = parseFloat(e.target.value);
-});
-document.getElementById('flow-turbulence-slider').addEventListener('input', e => {
-    window.flowTurbulence = parseFloat(e.target.value);
-});
-document.getElementById('flow-burst-slider').addEventListener('input', e => {
-    window.flowBurst = parseFloat(e.target.value);
-});
-document.getElementById('flow-trail-slider').addEventListener('input', e => {
-    window.flowTrailLength = parseInt(e.target.value);
-    if (flowScene) buildFlowField();
-});
-
-function initFlow() {
-    if (flowScene) return;
-    const tdContainer = document.getElementById('td-container');
-    
-    flowScene = new THREE.Scene();
-    flowCamera = new THREE.PerspectiveCamera(70, tdContainer.clientWidth / tdContainer.clientHeight, 0.1, 4000);
-    flowCamera.position.set(0, 0, 500);
-
-    flowRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'high-performance' });
-    flowRenderer.setSize(tdContainer.clientWidth, tdContainer.clientHeight);
-    flowRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    flowRenderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:-1;display:none;';
-    tdContainer.appendChild(flowRenderer.domElement);
-
-    flowNoise = typeof createNoise3D === 'function' ? createNoise3D() : new SimplexNoise();
-
-    buildFlowField();
-
-    const resizeObserver = new ResizeObserver(() => {
-        if (!flowCamera || !flowRenderer) return;
-        const w = tdContainer.clientWidth || window.innerWidth;
-        const h = tdContainer.clientHeight || window.innerHeight;
-        if (w === 0 || h === 0) return;
-        flowCamera.aspect = w / h;
-        flowCamera.updateProjectionMatrix();
-        flowRenderer.setSize(w, h);
-    });
-    resizeObserver.observe(tdContainer);
+function startDvd() {
+    setDvdArt(currentArtUrl || 'cuceugrta.png');
+    if (dvdCorners > 0) { dvdBadge.textContent = dvdCorners; dvdBadge.classList.add('show'); }
+    const begin = () => { initDvdPosition(); dvdLastT = performance.now(); dvdAnimId = requestAnimationFrame(dvdFrame); };
+    if (dvdArt.complete && dvdArt.naturalWidth > 0) begin();
+    else dvdArt.onload = begin;
+}
+function resumeDvd() {
+    if (dvdAnimId) cancelAnimationFrame(dvdAnimId);
+    dvdLastT = performance.now();
+    dvdAnimId = requestAnimationFrame(dvdFrame);
+}
+function stopDvd() {
+    if (dvdAnimId) { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; }
 }
 
-function buildFlowField() {
-    flowParticleSystems.forEach(sys => flowScene.remove(sys));
-    flowParticleSystems = [];
-    
-    let count = flowParticleCount;
-    if (window.innerWidth < 600) count = Math.floor(count / 2); // mobile limit
-    
-    flowPositions = new Float32Array(count * 3);
-    flowVelocities = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-        flowPositions[i*3] = (Math.random() - 0.5) * 600;
-        flowPositions[i*3+1] = (Math.random() - 0.5) * 600;
-        flowPositions[i*3+2] = (Math.random() - 0.5) * 600;
-    }
-    
-    flowTrailHistory = [];
-    for (let t = 0; t < window.flowTrailLength; t++) {
-        flowTrailHistory.push(new Float32Array(flowPositions));
-    }
-    
-    const isDark = document.body.classList.contains('dark-mode');
-    
-    for (let t = 0; t < window.flowTrailLength; t++) {
-        const geom = new THREE.BufferGeometry();
-        geom.setAttribute('position', new THREE.BufferAttribute(flowTrailHistory[t], 3));
-        
-        const colors = new Float32Array(count * 3);
-        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        
-        const opacity = Math.max(0.05, 0.8 - (t / window.flowTrailLength) * 0.7);
-        const mat = new THREE.PointsMaterial({ 
-            size: 1.5, vertexColors: true, transparent: true, 
-            opacity: opacity, blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
-            depthWrite: false
-        });
-        
-        const points = new THREE.Points(geom, mat);
-        flowParticleSystems.push(points);
-        flowScene.add(points);
-    }
-}
+// Keep the box inside the bounds when the window resizes
+new ResizeObserver(() => {
+    if (currentMode !== 'dvd') return;
+    const b = dvdBounds();
+    const w = dvdBox.offsetWidth || 180;
+    const h = dvdBox.offsetHeight || 180;
+    dvdX = Math.min(Math.max(dvdX, b.left), b.right - w);
+    dvdY = Math.min(Math.max(dvdY, b.top), b.bottom - h);
+}).observe(container);
 
-let flowStartTime = 0;
-function renderFlow(timestamp) {
-    flowAnimId = requestAnimationFrame(renderFlow);
-    if (!flowStartTime) flowStartTime = timestamp;
-    const elapsed = timestamp - flowStartTime;
-    
-    const isDark = document.body.classList.contains('dark-mode');
-    
-    if (dataArray) {
-        if (isWrapper) window.parent.CuceuGlobalPlayer.getFrequencyData(dataArray);
-        else if (analyser) analyser.getByteFrequencyData(dataArray);
-        const bassNorm = getBandEnergy(dataArray, 20, 250) / 255;
-        const midNorm = getBandEnergy(dataArray, 250, 4000) / 255;
-        const trebleNorm = getBandEnergy(dataArray, 4000, 20000) / 255;
-        
-        const burstActive = bassNorm > 0.6;
-        
-        const currentPos = flowTrailHistory[0];
-        const nextPos = new Float32Array(currentPos);
-        const colors = flowParticleSystems[0].geometry.attributes.color.array;
-        
-        const count = currentPos.length / 3;
-        for (let i = 0; i < count; i++) {
-            let px = currentPos[i*3];
-            let py = currentPos[i*3+1];
-            let pz = currentPos[i*3+2];
-            
-            let noiseValX = 0, noiseValY = 0, noiseValZ = 0;
-            if (typeof flowNoise === 'function') {
-                noiseValX = flowNoise(px * 0.004, py * 0.004, elapsed * 0.0005);
-                noiseValY = flowNoise(px * 0.004 + 100, py * 0.004 + 100, elapsed * 0.0005);
-                noiseValZ = flowNoise(px * 0.004 + 200, py * 0.004 + 200, elapsed * 0.0005);
-            } else if (flowNoise.noise3D) {
-                noiseValX = flowNoise.noise3D(px * 0.004, py * 0.004, elapsed * 0.0005);
-                noiseValY = flowNoise.noise3D(px * 0.004 + 100, py * 0.004 + 100, elapsed * 0.0005);
-                noiseValZ = flowNoise.noise3D(px * 0.004 + 200, py * 0.004 + 200, elapsed * 0.0005);
-            }
-            
-            let vx = flowVelocities[i*3] + noiseValX * window.flowTurbulence * (1 + midNorm * 2);
-            let vy = flowVelocities[i*3+1] + noiseValY * window.flowTurbulence * (1 + midNorm * 2);
-            let vz = flowVelocities[i*3+2] + noiseValZ * window.flowTurbulence * (1 + midNorm * 2);
-            
-            if (burstActive) {
-                const dist = Math.sqrt(px*px + py*py + pz*pz) || 1;
-                vx += (px/dist) * window.flowBurst * bassNorm * 5;
-                vy += (py/dist) * window.flowBurst * bassNorm * 5;
-                vz += (pz/dist) * window.flowBurst * bassNorm * 5;
-            }
-            
-            const speed = Math.sqrt(vx*vx + vy*vy + vz*vz);
-            const cap = window.flowSpeed * 2 * (1 + trebleNorm);
-            if (speed > cap) {
-                vx = (vx/speed)*cap; vy = (vy/speed)*cap; vz = (vz/speed)*cap;
-            }
-            
-            flowVelocities[i*3] = vx; flowVelocities[i*3+1] = vy; flowVelocities[i*3+2] = vz;
-            
-            px += vx; py += vy; pz += vz;
-            
-            if (Math.abs(px) > 500 || Math.abs(py) > 500 || Math.abs(pz) > 500) {
-                px = (Math.random() - 0.5) * 100;
-                py = (Math.random() - 0.5) * 100;
-                pz = (Math.random() - 0.5) * 100;
-                flowVelocities[i*3] = flowVelocities[i*3+1] = flowVelocities[i*3+2] = 0;
-            }
-            
-            nextPos[i*3] = px; nextPos[i*3+1] = py; nextPos[i*3+2] = pz;
-            
-            const speedNorm = Math.min(1, speed / 3);
-            const r = isDark ? 0.8 + trebleNorm : 0.1 + trebleNorm;
-            const g = isDark ? 0.4 + speedNorm*0.5 : 0.2 + speedNorm*0.3;
-            const b = isDark ? speedNorm : 0.4 + speedNorm*0.5;
-            colors[i*3] = r; colors[i*3+1] = g; colors[i*3+2] = b;
-        }
-        
-        flowTrailHistory.unshift(nextPos);
-        flowTrailHistory.pop();
-        
-        for (let t = 0; t < flowParticleSystems.length; t++) {
-            const sys = flowParticleSystems[t];
-            sys.geometry.attributes.position.array.set(flowTrailHistory[t]);
-            sys.geometry.attributes.position.needsUpdate = true;
-            if (t === 0) {
-                sys.geometry.attributes.color.needsUpdate = true;
-            } else {
-                sys.geometry.attributes.color.array.set(colors);
-                sys.geometry.attributes.color.needsUpdate = true;
-            }
-        }
-    }
-    
-    flowScene.rotation.y = elapsed * 0.0001;
-    flowScene.rotation.z = elapsed * 0.00005;
-    
-    flowRenderer.render(flowScene, flowCamera);
+// ── RESTORE LAST MODE ────────────────────────────────────────
+const savedMode = CuceuStore.get('cuceu-fm-mode', 'clean');
+if (savedMode !== 'clean' && (savedMode === 'dvd' || VIZ_MODES.includes(savedMode))) {
+    setMode(savedMode);
 }
-
-function startFlow() {
-    if (!playing || currentMode !== 'flow') return;
-    initWebAudio();
-    initFlow();
-    if (isWrapper) window.parent.CuceuGlobalPlayer.resumeAudioContext();
-    else if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (!flowAnimId) {
-        flowRenderer.domElement.style.display = 'block';
-        renderFlow(performance.now());
-    }
-}
-
-function stopFlow() {
-    if (flowAnimId) {
-        cancelAnimationFrame(flowAnimId);
-        flowAnimId = null;
-    }
-}
-
 </script>
 </body>
 </html>
