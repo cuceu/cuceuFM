@@ -8,20 +8,15 @@
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background-color: transparent; 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            color: white;
         }
 
         /* The container that holds everything */
         #app-container {
             width: 100vw; height: 100vh;
             display: flex; flex-direction: column;
-            background-color: #111;
-            transform-origin: 70% 100%; 
-            transition: all 0.6s cubic-bezier(0.5, 0, 0.1, 1);
-            
-            /* Explicitly define the open state */
+            background-color: var(--c-bg);
+            transform-origin: 70% 100%;
+            transition: all 0.6s var(--ease-snappy);
             transform: scale(1) translateY(0);
             opacity: 1;
             border-radius: 0;
@@ -34,27 +29,46 @@
             border-radius: 100px !important;
         }
 
-        /* The fake macOS app window bar */
+        /* Aero glass app window bar */
         .mac-titlebar {
-            height: 40px; background: #e5e5e5; display: flex; align-items: center; padding: 0 15px;
-            border-bottom: 1px solid #ccc; position: relative; z-index: 9999;
+            height: 40px;
+            background: var(--c-glass-strong);
+            backdrop-filter: blur(var(--blur-glass)) saturate(160%);
+            -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(160%);
+            display: flex; align-items: center; padding: 0 15px;
+            border-bottom: 1px solid var(--c-glass-edge);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+            position: relative; z-index: 9999;
         }
 
-        /* The close button */
+        /* The close orb — recognizable red, with an Aero specular dot */
         .close-btn {
-            width: 13px; height: 13px; background-color: #ff5f56; border-radius: 50%;
-            display: inline-block; cursor: pointer; border: 1px solid #e0443e;
-            transition: opacity 0.2s; position: relative; z-index: 99999;
+            width: 13px; height: 13px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), #ff5f56 45%, #c93c34 100%);
+            border: 1px solid #e0443e;
+            box-shadow: 0 0 6px rgba(255,95,86,0.4);
+            display: inline-block; cursor: pointer; padding: 0;
+            transition: transform 0.2s var(--ease-spring), opacity 0.2s;
+            position: relative; z-index: 99999;
         }
-        .close-btn:hover { opacity: 0.7; }
-        
-        .window-title { flex-grow: 1; text-align: center; font-weight: 600; font-size: 13px; color: #333; margin-left: -13px; pointer-events: none; }
+        .close-btn:hover { transform: scale(1.15); }
+        .close-btn:active { transform: scale(0.9); }
 
-        /* Camera wrapper */
-        .app-content { 
-            height: calc(100% - 40px); width: 100%; position: relative; 
+        .window-title {
+            flex-grow: 1; text-align: center; font-weight: 600; font-size: 13px;
+            color: var(--c-text); margin-left: -13px; pointer-events: none;
+        }
+
+        /* Camera wrapper — glass vignette frame around the feed */
+        .app-content {
+            height: calc(100% - 40px); width: 100%; position: relative;
             display: flex; justify-content: center; align-items: center;
             z-index: 1;
+            background: #000;
+        }
+        .app-content::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
         }
 
         /* The video feed */
@@ -66,6 +80,7 @@
         /* Message if they deny camera access */
         #error-msg {
             display: none; text-align: center; font-size: 1.2rem;
+            color: #f4ede3;
             position: absolute; z-index: 5; max-width: 80%;
         }
     </style>
@@ -73,15 +88,15 @@
 <body>
 
     <div id="app-container" class="genie-state">
-        
+
         <div class="mac-titlebar">
-            <div onclick="closeApp()" class="close-btn" title="Close App"></div>
+            <button id="close-btn" class="close-btn" title="Close App" aria-label="Close App"></button>
             <div class="window-title">Trash</div>
         </div>
 
         <div class="app-content">
             <video id="camera-feed" autoplay playsinline muted></video>
-            
+
             <div id="error-msg">
                 Oops! To see the trash, you need to allow camera access. 📷🗑️
             </div>
@@ -89,6 +104,7 @@
 
     </div>
 
+    <script src="../shared.js"></script>
     <script>
         // Redirect to wrapper if loaded directly
         if (window === window.parent) {
@@ -103,7 +119,8 @@
 
         // --- THE GENIE ENTRANCE ANIMATION ---
         document.addEventListener("DOMContentLoaded", () => {
-            // A tiny delay gives the browser time to draw the tiny window first, 
+            CuceuTheme.apply();
+            // A tiny delay gives the browser time to draw the tiny window first,
             // then we remove the class so it animates up to full size!
             setTimeout(() => {
                 document.getElementById('app-container').classList.remove('genie-state');
@@ -114,7 +131,7 @@
         function closeApp() {
             // Add the class back so it sucks down into the dock
             document.getElementById('app-container').classList.add('genie-state');
-            
+
             // Stop camera to release the light indicator
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
@@ -124,6 +141,7 @@
                 window.location.href = '/';
             }, 550);
         }
+        document.getElementById('close-btn').addEventListener('click', closeApp);
 
         // Request front camera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
@@ -137,6 +155,5 @@
                 errorMsg.style.display = 'block';
             });
     </script>
-    <script src="../shared.js"></script>
 </body>
 </html>
