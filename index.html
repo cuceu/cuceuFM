@@ -10,8 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/shared.css">
-    <!-- HLS.js for stream -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         html, body {
             margin: 0; padding: 0;
@@ -27,41 +25,29 @@
         /* ── PERSISTENT MINI PLAYER ──────────────────────────────── */
         #persistent-player {
             position: fixed;
-            bottom: 24px; left: 50%; transform: translateX(-50%);
+            bottom: 24px; left: 50%;
             width: calc(100% - 48px); max-width: 320px;
-            background: var(--c-glass);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--c-glass-border);
             border-radius: var(--r-pill);
             padding: 12px 20px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
             z-index: 99999;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
             transform: translate(-50%, 20px);
         }
         #persistent-player.visible {
             opacity: 1; pointer-events: auto; transform: translate(-50%, 0);
-        }
-        body.dark-mode #persistent-player {
-            box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 1px rgba(208,115,41,0.08);
-            border-color: var(--c-amber-15);
         }
 
         .pp-left {
             display: flex; align-items: center; gap: 12px;
         }
         .pp-play-btn {
-            background: var(--c-amber); color: #fff;
-            border: none; width: 36px; height: 36px; border-radius: 50%;
+            width: 36px; height: 36px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+            flex-shrink: 0;
         }
-        .pp-play-btn:hover { transform: scale(1.1); background: #b8621e; }
-        .pp-play-btn:active { transform: scale(0.95); }
-        .pp-play-icon { width: 18px; height: 18px; fill: currentColor; }
+        .pp-play-icon { width: 18px; height: 18px; fill: currentColor; position: relative; z-index: 1; }
 
         .pp-info {
             display: flex; flex-direction: column;
@@ -72,17 +58,16 @@
         }
         .pp-status {
             font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 1.5px;
-            color: var(--c-amber); display: flex; align-items: center; gap: 4px;
+            color: var(--c-amber); display: flex; align-items: center; gap: 5px;
         }
         .pp-dot {
-            width: 4px; height: 4px; border-radius: 50%; background: var(--c-amber);
-            box-shadow: 0 0 6px var(--c-amber);
+            width: 6px; height: 6px;
+            animation: aero-pulse 1.4s ease-in-out infinite;
         }
         .pp-dot.buffering {
-            background: #ffcc00; box-shadow: 0 0 6px #ffcc00;
-            animation: ppFlash 0.8s infinite alternate;
+            --dot-c: #ffcc00;
+            animation: aero-blink 0.8s infinite alternate;
         }
-        @keyframes ppFlash { from {opacity:0.4} to {opacity:1} }
 
         .pp-close-btn {
             background: transparent; border: none; color: #888;
@@ -100,15 +85,15 @@
     <iframe id="app-frame" src=""></iframe>
 
     <!-- Persistent Global Audio Player -->
-    <div id="persistent-player">
+    <div id="persistent-player" class="aero-panel">
         <div class="pp-left">
-            <button class="pp-play-btn" id="pp-play-btn" aria-label="Play/Pause">
+            <button class="pp-play-btn aero-gel" id="pp-play-btn" aria-label="Play/Pause">
                 <svg class="pp-play-icon play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 <svg class="pp-play-icon pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
             <div class="pp-info">
                 <span class="pp-title">cuceu.fm</span>
-                <span class="pp-status"><div class="pp-dot" id="pp-dot"></div> <span id="pp-status-text">LIVE</span></span>
+                <span class="pp-status"><div class="pp-dot aero-dot" id="pp-dot"></div> <span id="pp-status-text">LIVE</span></span>
             </div>
         </div>
         <button class="pp-close-btn" id="pp-close-btn" aria-label="Hide Player">
@@ -271,6 +256,14 @@
                 if (analyser) {
                     analyser.getByteFrequencyData(array);
                 }
+            },
+            getSampleRate: () => {
+                initWebAudio();
+                return audioCtx ? audioCtx.sampleRate : 44100;
+            },
+            getFrequencyBinCount: () => {
+                initWebAudio();
+                return analyser ? analyser.frequencyBinCount : 512;
             }
         };
     </script>
