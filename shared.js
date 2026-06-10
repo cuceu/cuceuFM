@@ -97,6 +97,31 @@ const CuceuClock = (() => {
     return { format, start };
 })();
 
+// ── STORAGE ──────────────────────────────────────────────────
+// Small JSON localStorage helper shared by player + visualizers.
+const CuceuStore = (() => {
+    function get(key, fallback = null) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+            return fallback;
+        }
+    }
+
+    function set(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch { /* storage full or unavailable — non-fatal */ }
+    }
+
+    function remove(key) {
+        try { localStorage.removeItem(key); } catch { /* ignore */ }
+    }
+
+    return { get, set, remove };
+})();
+
 // ── PAGE TRANSITIONS ─────────────────────────────────────────
 const CuceuTransitions = (() => {
     const EXIT_DURATION = 600; // ms
