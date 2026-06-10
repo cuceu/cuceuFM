@@ -222,6 +222,25 @@
             isManuallyClosed = true;
         });
 
+        // --- WEB AUDIO API (Hosted in Parent) ---
+        let audioCtx, analyser, audioSource;
+
+        function initWebAudio() {
+            if (audioCtx) return;
+            const AC = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AC();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 1024;
+            analyser.smoothingTimeConstant = 0.8;
+            
+            // Allow CORS audio processing
+            player.crossOrigin = "anonymous";
+            
+            audioSource = audioCtx.createMediaElementSource(player);
+            audioSource.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        }
+
         // --- GLOBAL API FOR IFRAME PAGES ---
         // Expose a global object so `fm/index.html` can control this player
         window.CuceuGlobalPlayer = {
@@ -240,6 +259,18 @@
             },
             hideMiniPlayer: () => {
                 pp.classList.remove('visible');
+            },
+            resumeAudioContext: () => {
+                initWebAudio();
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            },
+            getFrequencyData: (array) => {
+                initWebAudio();
+                if (analyser) {
+                    analyser.getByteFrequencyData(array);
+                }
             }
         };
     </script>

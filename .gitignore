@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+package.json
+test-console.js
+test-console2.js
+tmp_script_0.js
+.DS_Store
