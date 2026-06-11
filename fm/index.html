@@ -13,55 +13,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/4.0.0/simplex-noise.min.js"></script>
     <style>
         html, body {
             height: 100dvh; overflow: hidden;
         }
+        /* The photo IS the page — no aurora wash or grain here */
+        body::before, body::after { display: none; }
+        body { --page-bg: #fafafa; background: var(--page-bg); }
+        body.dark-mode { --page-bg: #000; background: var(--page-bg); }
 
         /* ── FULL-BLEED CONTAINER ────────────────────── */
         #app-container {
             width: 100vw; height: 100dvh;
             position: relative; overflow: hidden;
-            /* transparent so the body aurora wash shows through */
             background-color: transparent;
             transition: background-color var(--dur-slow) ease;
         }
-        /* Visualizers always run on strict black, both themes */
+        /* DVD + visualizers run on strict black, both themes */
         #app-container.viz-mode { background-color: #000; }
         #viz-canvas { z-index: 2; }
 
-        /* ── TICKERS ─────────────────────────────────── */
+        /* ── TICKERS — always black tape, white type ──── */
         .ticker-tape {
             position: absolute; left: 0; right: 0;
             height: 54px; z-index: 60;
-            background: linear-gradient(180deg, rgba(255,252,246,0.88), rgba(255,252,246,0.72));
-            backdrop-filter: blur(18px) saturate(160%);
-            -webkit-backdrop-filter: blur(18px) saturate(160%);
-            color: var(--c-text);
+            background: #0c0c0c;
+            color: #f4f4f4;
             overflow: hidden; display: flex; align-items: center;
-            transition: background var(--dur-slow) ease, color var(--dur-slow) ease;
+            transition: opacity 1.1s ease;
         }
-        body.dark-mode .ticker-tape,
-        body.viz-active .ticker-tape {
-            background: linear-gradient(180deg, rgba(8,5,2,0.82), rgba(8,5,2,0.68));
-            color: #f4ede3;
-        }
-        /* Amber accent hairline on the inner edge */
-        .ticker-tape::after {
-            content: ''; position: absolute; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--c-amber-bright), var(--c-amber-hot), var(--c-amber-bright), transparent);
-            opacity: 0.8;
-        }
-        .ticker-top::after    { bottom: 0; }
-        .ticker-bottom::after { top: 0; }
-        /* Periodic gloss sweep */
-        .ticker-tape::before {
-            content: ''; position: absolute; inset: 0; pointer-events: none;
-            background: var(--g-shine); background-size: 50% 100%; background-repeat: no-repeat;
-            animation: aero-shine 14s linear infinite;
-            opacity: 0.5; z-index: 1;
-        }
+        body.dark-mode .ticker-tape { border-block: 1px solid rgba(255,255,255,0.14); }
         .ticker-top    { top: 0; }
         .ticker-bottom { bottom: 0; }
         .ticker-top    { transform: translateY(-100%); animation: stIn 0.55s var(--ease-smooth) 0.2s forwards; }
@@ -74,158 +55,285 @@
         @keyframes sbOut { to{transform:translateY( 100%)} }
         .marquee-wrapper { display:flex; white-space:nowrap; align-items:center; width:fit-content; animation:tickerScroll linear infinite; transition: opacity 0.4s ease; }
         @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        /* Track-change roll: composes with tickerScroll (opacity/blur only) */
+        @keyframes trackRoll {
+            0%   { opacity: 0; filter: blur(10px); }
+            100% { opacity: 1; filter: blur(0); }
+        }
         .ticker-item  { display:inline-flex; align-items:center; }
         .ticker-art   {
-            height:40px; width:40px; object-fit:cover; margin:0 20px; border-radius:8px; opacity:0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
+            height:38px; width:38px; object-fit:cover; margin:0 22px; border-radius:5px; opacity:0;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.25);
             transition: opacity 0.4s ease, width 0.5s var(--ease-spring), margin 0.5s var(--ease-spring);
         }
         .ticker-art.has-art { opacity:1; }
         body.is-dvd .ticker-art { opacity: 0; width: 0; margin: 0; }
-        .song-display { font-size:1.5rem; font-weight:900; text-transform:uppercase; letter-spacing:4px; padding:0 10px; }
+        .song-display { font-size:1.25rem; font-weight:900; text-transform:uppercase; letter-spacing:3.5px; padding:0 10px; }
 
         /* ── NAV ─────────────────────────────────────── */
         .top-nav-bar {
             position: absolute; top: 62px; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 24px; z-index: 50;
-            transition: opacity 1.2s var(--ease-smooth);
+            padding: 14px 26px; z-index: 50;
+            transition: opacity 1.1s var(--ease-smooth);
         }
-        body.viz-active .cuceu-clock { color: #f4ede3; text-shadow: 0 0 8px rgba(0,0,0,0.5), 0 0 14px var(--c-amber-soft); }
+        /* Mockup-style outlined BACK box */
+        .top-nav-bar .back-pill {
+            background: var(--page-bg); border: 1.5px solid var(--c-text);
+            color: var(--c-text); border-radius: 4px;
+            padding: 8px 16px; font-size: 10px; font-weight: 900;
+            letter-spacing: 2px; text-transform: uppercase;
+            box-shadow: none; backdrop-filter: none;
+        }
+        .top-nav-bar .back-pill:hover { background: var(--c-text); color: var(--page-bg); }
+        body.viz-active .top-nav-bar .back-pill { background: transparent; border-color: #e8e8e8; color: #e8e8e8; }
+        body.viz-active .top-nav-bar .back-pill:hover { background: #e8e8e8; color: #000; }
+        body.viz-active .cuceu-clock { color: #f4ede3; text-shadow: 0 0 8px rgba(0,0,0,0.5); }
         body.viz-active .theme-toggle { color: #f4ede3; }
         .nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
 
-        /* ── MAIN CLUSTER ──────────────────────────── */
-        #main-cluster {
-            position: absolute; top: 50%; left: 50%; z-index: 10;
-            transform: translate(-50%, -50%);
-            width: min(420px, calc(100vw - 40px));
-            transition: opacity 1.2s ease;
+        /* ── PHOTO STAGE (clean mode) ─────────────────── */
+        #photo-stage {
+            position: absolute; inset: 54px 0;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5;
+            transition: opacity 0.9s ease;
         }
-        .cluster-inner {
-            display: flex; flex-direction: column; align-items: center; gap: 28px;
-            width: 100%;
+        body.viz-active #photo-stage { opacity: 0; pointer-events: none; }
+        .photo-frame {
+            position: relative;
+            width: min(960px, 94vw, calc((100dvh - 150px) * 1.1));
+            container-type: inline-size;
+        }
+        .stage-photo {
+            display: block; width: 100%; height: auto;
+            user-select: none; pointer-events: none;
+            transition: filter var(--dur-slow) ease;
+        }
+        body.dark-mode .stage-photo { filter: invert(1) contrast(0.96); }
+        /* Soft vignette blends photo edges into the page background */
+        .photo-frame::after {
+            content: ''; position: absolute; inset: -2px;
+            box-shadow: inset 0 0 46px 34px var(--page-bg);
+            pointer-events: none;
+            transition: box-shadow var(--dur-slow) ease;
         }
 
-        #bg-logo-layer {
+        /* Logo sprayed onto the shutter */
+        .stage-logo {
+            position: absolute; left: 50%; top: 36%;
+            transform: translate(-50%, -50%);
+            width: 44%; z-index: 3;
             display: flex; flex-direction: column; align-items: center;
             user-select: none; pointer-events: none;
-            transition: opacity 1.6s ease, transform 0.6s var(--ease-spring);
         }
-        .logo-row { display:flex; align-items:flex-end; gap:0; }
+        .logo-row { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
         .cuceu-logo-img {
-            height: clamp(4.5rem,16vw,8.5rem); width: auto;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-            transition: filter 1.8s ease;
+            width: 82%; height: auto;
+            filter: drop-shadow(0 3px 10px rgba(0,0,0,0.18));
         }
-        body.dark-mode .cuceu-logo-img,
-        body.viz-active .cuceu-logo-img { filter: drop-shadow(0 4px 16px rgba(255,176,102,0.25)); }
         .fm-text {
-            font-size: clamp(1.6rem,5.5vw,3.2rem); font-weight: 900; letter-spacing: -2px; color: var(--c-text);
-            padding-bottom: clamp(0.2rem,0.7vw,0.5rem); margin-left: -16px;
-            transition: color 1.2s ease;
+            font-size: clamp(15px, 6.2cqw, 60px);
+            font-weight: 900; letter-spacing: -2px; color: var(--c-text);
+            padding-bottom: clamp(2px, 0.8cqw, 8px); margin-left: -2%;
+            transition: color var(--dur-slow) ease;
         }
-        body.viz-active .fm-text { color: #fff; text-shadow: 0 2px 8px rgba(255,255,255,0.2); }
+        .stage-live {
+            display: flex; align-items: center; gap: clamp(6px, 1cqw, 10px);
+            margin-top: clamp(8px, 1.6cqw, 18px);
+            font-size: clamp(11px, 1.8cqw, 17px);
+            font-weight: 900; letter-spacing: 5px; text-transform: uppercase;
+            color: var(--c-text);
+            transition: color var(--dur-slow) ease;
+        }
+        .stage-live .aero-dot {
+            width: clamp(9px, 1.5cqw, 13px); height: clamp(9px, 1.5cqw, 13px);
+            animation: aero-pulse 1.6s ease-in-out infinite;
+        }
+        .stage-live .aero-dot.buffering { animation: aero-blink 0.8s infinite alternate; }
 
-        /* ── PLAYER DECK ───────────────────────────── */
-        #player-deck {
-            width: 100%;
-            border-radius: 28px;
-            padding: 18px;
-            display: flex; flex-direction: column; gap: 16px;
-            transition: background var(--dur-slow) ease, box-shadow var(--dur-slow) ease;
+        /* Controls under the windowsill */
+        .stage-controls {
+            position: absolute; left: 50%; top: 61%;
+            transform: translateX(-50%); z-index: 4;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 11px; width: max-content; max-width: 92vw;
         }
-        body.viz-active #player-deck {
-            background: rgba(18, 12, 6, 0.55);
-            border-color: rgba(255, 176, 102, 0.22);
+        .listen-btn {
+            display: none; align-items: center; gap: 10px;
+            background: #0c0c0c; color: #fff;
+            border: 1.5px solid #0c0c0c; border-radius: 4px;
+            padding: 13px 42px;
+            font-family: var(--font-primary);
+            font-size: 11px; font-weight: 900; letter-spacing: 3.5px; text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.25s, color 0.25s, transform 0.25s var(--ease-spring);
         }
+        .listen-btn.show { display: inline-flex; animation: aero-pop-in 0.5s var(--ease-spring) both; }
+        .listen-btn:hover { transform: scale(1.04); }
+        .listen-btn:active { transform: scale(0.97); }
+        body.dark-mode .listen-btn { background: #f4f4f4; color: #000; border-color: #f4f4f4; }
 
-        .deck-top { display: flex; align-items: center; gap: 14px; min-width: 0; }
-        .deck-art-wrap {
-            position: relative; width: 76px; height: 76px; flex-shrink: 0;
-            border-radius: 14px; overflow: hidden;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
-            transition: box-shadow 0.8s ease;
+        .stage-volume {
+            display: flex; align-items: center; gap: 9px;
+            width: 170px;
+            opacity: 0; pointer-events: none; transform: translateY(-4px);
+            transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
+            color: var(--c-text);
         }
-        .deck-art-wrap.playing {
-            box-shadow: 0 0 0 2px var(--c-amber-bright), 0 0 22px var(--c-amber-glow),
-                        0 4px 14px rgba(0,0,0,0.25);
-        }
-        #deck-art { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .deck-art-wrap::after {
-            content: ''; position: absolute; inset: 0 0 50% 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.02));
-            pointer-events: none;
-        }
-
-        .deck-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
-        .deck-status {
-            display: flex; align-items: center; gap: 7px;
-            font-size: 0.6rem; font-weight: 800; letter-spacing: 2.5px;
-            color: var(--c-text-muted); text-transform: uppercase;
-        }
-        body.viz-active .deck-status { color: #9a8d7c; }
-        .deck-status .aero-dot { width: 8px; height: 8px; animation: aero-pulse 1.6s ease-in-out infinite; }
-        .deck-status .aero-dot.buffering { animation: aero-blink 0.8s infinite alternate; }
-        .deck-title {
-            font-size: 0.92rem; font-weight: 800; letter-spacing: 0.5px;
-            color: var(--c-text); text-transform: uppercase;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        body.viz-active .deck-title { color: #f4ede3; }
-        .deck-artist {
-            font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px;
-            color: var(--c-text-muted); text-transform: uppercase;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        body.is-playing .stage-volume { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .stage-volume svg { flex-shrink: 0; opacity: 0.7; }
+        .stage-volume input[type="range"] {
+            flex: 1; min-width: 0; height: 3px;
+            accent-color: var(--c-text);
+            cursor: pointer;
         }
 
-        .deck-controls { display: flex; align-items: center; gap: 14px; }
-        .deck-play {
-            width: 54px; height: 54px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
+        .recent-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--page-bg); color: var(--c-text);
+            border: 1.5px solid var(--c-text); border-radius: 4px;
+            padding: 9px 20px;
+            font-family: var(--font-primary);
+            font-size: 9px; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.25s, color 0.25s;
         }
-        .deck-play svg { width: 22px; height: 22px; fill: #fff; position: relative; z-index: 1; }
-        .deck-play.playing { box-shadow: var(--sh-gloss), var(--sh-glow); }
-        .deck-volume { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-        .deck-volume svg { flex-shrink: 0; color: var(--c-text-muted); }
-        .deck-volume .aero-slider { flex: 1; min-width: 0; }
-        .deck-history-btn {
-            background: transparent; border: none; padding: 8px; cursor: pointer;
-            color: var(--c-text-muted); flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            transition: color 0.3s, transform 0.4s var(--ease-spring);
-        }
-        .deck-history-btn:hover { color: var(--c-amber); }
-        #player-deck.expanded .deck-history-btn { color: var(--c-amber); transform: rotate(180deg); }
+        .recent-btn:hover { background: var(--c-text); color: var(--page-bg); }
+        .recent-btn .chev { transition: transform 0.4s var(--ease-spring); font-size: 8px; }
+        .stage-controls.recent-open .recent-btn .chev { transform: rotate(180deg); }
 
-        .deck-drawer-wrap {
+        .recent-wrap {
             display: grid; grid-template-rows: 0fr;
-            transition: grid-template-rows 0.6s var(--ease-spring);
+            transition: grid-template-rows 0.55s var(--ease-spring);
+            width: min(380px, 88vw);
         }
-        #player-deck.expanded .deck-drawer-wrap { grid-template-rows: 1fr; }
-        .deck-drawer { min-height: 0; overflow: hidden; }
-        .deck-drawer-head {
-            font-size: 0.55rem; font-weight: 800; letter-spacing: 2.5px;
-            color: var(--c-text-muted); text-transform: uppercase;
-            padding: 4px 4px 8px;
-            border-bottom: 1px solid var(--c-glass-edge);
+        .stage-controls.recent-open .recent-wrap { grid-template-rows: 1fr; }
+        .recent-panel { min-height: 0; overflow: hidden; }
+        .recent-inner {
+            background: var(--page-bg);
+            border: 1.5px solid var(--c-text); border-radius: 6px;
+            padding: 10px 14px; max-height: 190px; overflow-y: auto;
         }
-        #history-list { list-style: none; padding: 6px 0 0; margin: 0; display: flex; flex-direction: column; }
+        #history-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
         .history-item {
             display: flex; align-items: baseline; gap: 10px;
-            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+            font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
             color: var(--c-text-muted);
-            padding: 7px 4px;
-            border-bottom: 1px solid var(--c-glass-edge);
+            padding: 7px 2px;
+            border-bottom: 1px solid rgba(128,128,128,0.18);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            transition: color 0.3s, background 0.3s;
-            border-radius: 6px;
+            transition: color 0.3s;
         }
         .history-item:last-child { border-bottom: none; }
-        .history-item:hover { color: var(--c-amber-bright); background: var(--c-amber-soft); }
-        .history-num { font-size: 0.58rem; font-weight: 900; color: var(--c-amber); flex-shrink: 0; }
-        body.viz-active .history-item { color: #9a8d7c; }
-        body.viz-active .deck-title, body.viz-active .history-item:hover { color: var(--c-amber-hot); }
+        .history-item:hover { color: var(--c-amber); }
+        .history-num { font-size: 8px; font-weight: 900; color: var(--c-amber); flex-shrink: 0; }
+
+        /* ── VIZ CLUSTER (DVD + Aurora) ───────────────── */
+        #viz-cluster {
+            position: absolute; inset: 0; z-index: 10;
+            pointer-events: none;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.9s ease, visibility 0.9s;
+        }
+        body.viz-active #viz-cluster { opacity: 1; visibility: visible; }
+
+        .viz-logo {
+            position: absolute; left: 50%; top: 21%;
+            transform: translate(-50%, -50%);
+            display: flex; align-items: flex-end;
+            transition: top 1.15s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 1.15s ease,
+                        transform 1.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .viz-logo img { height: clamp(54px, 11vw, 86px); width: auto;
+            filter: drop-shadow(0 4px 16px rgba(0,0,0,0.6)); }
+        .viz-logo .fm-viz {
+            font-size: clamp(19px, 4vw, 38px); font-weight: 900; letter-spacing: -2px;
+            color: #fff; padding-bottom: 4px; margin-left: -8px;
+        }
+        /* AOD: logo descends to center and dims — like the iPhone always-on display */
+        body.ui-idle .viz-logo {
+            top: 46%;
+            opacity: 0.45;
+            transform: translate(-50%, -50%) scale(0.92);
+        }
+
+        .viz-now {
+            position: absolute; bottom: 132px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 12px;
+            width: min(330px, 82vw); height: 60px;
+            padding: 8px 14px 8px 8px; box-sizing: border-box;
+            background: rgba(14, 14, 14, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 999px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            pointer-events: auto;
+            overflow: hidden;
+            transition: width 1.05s cubic-bezier(0.4, 0, 0.2, 1),
+                        height 1.05s cubic-bezier(0.4, 0, 0.2, 1),
+                        bottom 1.05s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding 1.05s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 1.05s ease, border-color 1.05s ease;
+        }
+        #now-art {
+            width: 44px; height: 44px; flex-shrink: 0;
+            border-radius: 50%; object-fit: cover;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+            transition: width 1.05s cubic-bezier(0.4, 0, 0.2, 1), height 1.05s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #now-art.swap { animation: artPop 0.7s var(--ease-spring); }
+        @keyframes artPop { 0% { scale: 0.55; } 60% { scale: 1.12; } 100% { scale: 1; } }
+        .now-meta {
+            display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;
+            transition: opacity 0.6s ease;
+        }
+        #now-title {
+            font-size: 11.5px; font-weight: 800; letter-spacing: 0.6px; color: #f4f4f4;
+            text-transform: uppercase;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .now-status {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 8px; font-weight: 800; letter-spacing: 2px; color: #999;
+            text-transform: uppercase;
+        }
+        .now-status .aero-dot { width: 6px; height: 6px; animation: aero-pulse 1.6s ease-in-out infinite; }
+        .now-status .aero-dot.buffering { animation: aero-blink 0.8s infinite alternate; }
+        .viz-play {
+            width: 34px; height: 34px; flex-shrink: 0;
+            border-radius: 50%; border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff;
+            transition: background 0.3s, opacity 0.6s ease;
+        }
+        .viz-play:hover { background: rgba(255,255,255,0.22); }
+        .viz-play svg { width: 12px; height: 12px; fill: currentColor; }
+        /* AOD: now-playing shrinks into a breathing circle.
+           Art keeps its left slot and ends up centered as the pill
+           collapses around it — no layout jump. */
+        body.ui-idle .viz-now {
+            width: 64px; height: 64px; bottom: 33%;
+            padding: 0 7px; gap: 0;
+            background: rgba(8, 8, 8, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+            animation: aodBreathe 5.5s ease-in-out 1.2s infinite;
+        }
+        body.ui-idle #now-art { width: 50px; height: 50px; }
+        body.ui-idle .now-meta, body.ui-idle .viz-play {
+            opacity: 0; pointer-events: none;
+            position: absolute; top: 50%; translate: 0 -50%;
+            transition: opacity 0.3s ease;
+        }
+        body.ui-idle .now-meta { left: 70px; width: 200px; }
+        body.ui-idle .viz-play { right: 14px; }
+        @keyframes aodBreathe {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50%      { transform: translateX(-50%) scale(1.05); }
+        }
 
         /* ── BACKGROUND MODES (DVD) ──────────────────── */
         #bg-layer {
@@ -248,11 +356,6 @@
             pointer-events: none;
             transition: background 0.15s ease;
         }
-        #dvd-box::after {
-            content: ''; position: absolute; inset: 0 0 55% 0; border-radius: 8px 8px 0 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.02));
-            pointer-events: none;
-        }
         #dvd-box.corner-pop { animation: dvdPop 0.7s var(--ease-spring); }
         @keyframes dvdPop {
             0% { scale: 1; } 35% { scale: 1.18; } 100% { scale: 1; }
@@ -271,68 +374,71 @@
         .dvd-badge {
             position: absolute; top: -10px; right: -10px;
             min-width: 22px; height: 22px; padding: 0 6px;
-            border-radius: 11px; background: var(--g-gel);
+            border-radius: 11px; background: #0c0c0c;
+            border: 1px solid rgba(255,255,255,0.35);
             color: #fff; font-size: 11px; font-weight: 900;
             display: none; align-items: center; justify-content: center;
-            box-shadow: var(--sh-gloss), 0 2px 8px rgba(0,0,0,0.3);
         }
         .dvd-badge.show { display: flex; }
 
-        /* ── MODE DOCK ──────────────────────────────── */
+        /* ── MODE DOCK — monochrome ──────────────────── */
         .mode-dock-wrap {
             position: absolute; bottom: 70px; left: 50%;
             transform: translateX(-50%);
             z-index: 70;
             max-width: calc(100vw - 32px);
-            transition: opacity 1.2s var(--ease-smooth);
+            transition: opacity 1.1s var(--ease-smooth);
         }
+        /* Step aside while the recently-played drawer is open */
+        body:has(.recent-open) .mode-dock-wrap { opacity: 0; pointer-events: none; transition-duration: 0.35s; }
         .mode-toggle {
             display: flex; gap: 0;
             border-radius: var(--r-pill); padding: 4px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1.5px solid rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             max-width: 100%;
             flex-wrap: nowrap;
+            transition: background 0.6s ease, border-color 0.6s ease;
         }
         .mode-toggle::-webkit-scrollbar { display: none; }
+        body.dark-mode .mode-toggle,
         body.viz-active .mode-toggle {
-            background: rgba(18, 12, 6, 0.6);
-            border-color: rgba(255, 176, 102, 0.22);
+            background: rgba(10, 10, 10, 0.7);
+            border-color: rgba(255, 255, 255, 0.25);
         }
         .mode-btn {
-            position: relative;
             background: transparent; border: none;
-            padding: 7px 14px; font-size: 9px; font-weight: 900;
+            padding: 8px 18px; font-size: 9px; font-weight: 900;
             letter-spacing: 2px; text-transform: uppercase;
-            color: var(--c-text-muted); cursor: pointer;
+            color: #777; cursor: pointer;
             border-radius: var(--r-pill); white-space: nowrap;
-            flex-shrink: 0; overflow: hidden;
-            transition: color 0.3s, background 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
+            flex-shrink: 0;
+            font-family: var(--font-primary);
+            transition: color 0.3s, background 0.3s var(--ease-spring);
         }
-        .mode-btn:hover { color: var(--c-text); transform: scale(1.05); }
-        body.viz-active .mode-btn { color: #9a8d7c; }
-        body.viz-active .mode-btn:hover { color: #f4ede3; }
-        .mode-btn.active { background: var(--g-gel); color: #fff; box-shadow: var(--sh-gloss), 0 2px 10px rgba(143,74,20,0.35); }
-        .mode-btn.active::before {
-            content: ''; position: absolute; inset: 1px 1px 55% 1px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.06));
-            border-radius: inherit; pointer-events: none;
-        }
+        .mode-btn:hover { color: var(--c-text); }
+        body.dark-mode .mode-btn:hover, body.viz-active .mode-btn:hover { color: #f4f4f4; }
+        .mode-btn.active { background: #0c0c0c; color: #fff; }
+        body.dark-mode .mode-btn.active,
+        body.viz-active .mode-btn.active { background: #f4f4f4; color: #000; }
 
         .viz-settings-btn {
-            background: transparent; border: none; color: var(--c-text-muted);
+            background: transparent; border: none; color: #888;
             cursor: pointer;
             border-radius: 50%; opacity: 0; pointer-events: none;
             width: 0; padding: 0; transition: width 0.3s, opacity 0.3s, padding 0.3s, color 0.3s;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
-        body.viz-active .viz-settings-btn {
+        body[data-active-mode="aurora"] .viz-settings-btn {
             width: 30px; padding: 4px; opacity: 1; pointer-events: auto; margin-left: 2px;
-            color: #9a8d7c;
         }
-        .viz-settings-btn:hover { color: var(--c-amber-bright); background: var(--c-amber-soft); }
+        .viz-settings-btn:hover { color: #fff; }
 
         .viz-settings-popup {
             position: absolute; bottom: calc(100% + 12px); right: 0;
@@ -342,61 +448,63 @@
             transition: opacity 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
             width: 210px; transform-origin: bottom right;
             max-height: min(420px, calc(100dvh - 220px)); overflow-y: auto;
-            background: rgba(18, 12, 6, 0.85);
-            border-color: rgba(255, 176, 102, 0.22);
+            background: rgba(10, 10, 10, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         .viz-settings-popup.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 
         .viz-set-section {
-            color: var(--c-amber-hot); font-size: 9px; font-weight: 900;
+            color: rgba(255,255,255,0.55); font-size: 9px; font-weight: 900;
             letter-spacing: 2px; text-transform: uppercase;
-            border-bottom: 1px solid rgba(255,176,102,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
             padding: 8px 0 6px; margin-bottom: 4px;
         }
         .viz-set-section:first-child { padding-top: 0; }
         .viz-set-row {
             display: flex; flex-direction: column; gap: 6px; padding: 4px 0;
-            color: rgba(244, 237, 227, 0.65);
+            color: rgba(244, 237, 227, 0.6);
             font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
         }
         .viz-set-range { width: 100%; height: 4px; }
         .viz-set-select {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,176,102,0.25);
-            color: #f4ede3; padding: 5px; border-radius: 6px; outline: none;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            color: #f4f4f4; padding: 5px; border-radius: 6px; outline: none;
             font-size: 8px; font-weight: 800; text-transform: uppercase;
             cursor: pointer; font-family: var(--font-primary);
         }
-        .viz-set-select option { background: #1a120a; color: #f4ede3; }
+        .viz-set-select option { background: #111; color: #f4f4f4; }
         .viz-set-reset {
             margin-top: 8px; padding: 6px;
-            background: rgba(255,176,102,0.1); border: 1px solid rgba(255,176,102,0.25);
-            border-radius: var(--r-pill); color: var(--c-amber-hot);
+            background: transparent; border: 1px solid rgba(255,255,255,0.25);
+            border-radius: var(--r-pill); color: #e8e8e8;
             font-size: 8px; font-weight: 900; letter-spacing: 2px; cursor: pointer;
             font-family: var(--font-primary);
             transition: background 0.3s, color 0.3s;
         }
-        .viz-set-reset:hover { background: var(--c-amber); color: #fff; }
+        .viz-set-reset:hover { background: #fff; color: #000; }
 
-        /* ── IDLE FADE (viz modes) ───────────────────── */
+        /* ── AOD IDLE (viz modes) ─────────────────────── */
         body.viz-active.ui-idle .top-nav-bar,
-        body.viz-active.ui-idle #main-cluster,
         body.viz-active.ui-idle .mode-dock-wrap {
             opacity: 0; pointer-events: none;
         }
+        body.viz-active.ui-idle .ticker-tape { opacity: 0.15; }
 
         /* ── MOBILE ──────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar  { top:50px; padding:10px 16px; }
+            .top-nav-bar  { top:48px; padding:10px 14px; }
             .ticker-tape  { height:48px; }
-            .song-display { font-size:1.2rem; letter-spacing:3px; }
-            .ticker-art   { height:34px; width:34px; }
-            #player-deck  { padding: 14px; gap: 12px; border-radius: 24px; }
-            .deck-art-wrap { width: 60px; height: 60px; }
-            .deck-play    { width: 48px; height: 48px; }
-            .cluster-inner { gap: 20px; }
-            .fm-text { margin-left:-12px; }
+            #photo-stage  { inset: 48px 0; }
+            .song-display { font-size:1.05rem; letter-spacing:2.5px; }
+            .ticker-art   { height:32px; width:32px; margin: 0 16px; }
+            .stage-live   { letter-spacing: 3.5px; }
+            .listen-btn   { padding: 12px 30px; font-size: 10px; letter-spacing: 3px; }
+            .stage-controls { gap: 9px; top: 60%; }
             .mode-dock-wrap { bottom: 60px; }
-            .mode-btn     { padding: 6px 9px; font-size: 7.5px; letter-spacing: 1.5px; }
+            .mode-btn     { padding: 7px 13px; font-size: 8px; letter-spacing: 1.5px; }
+            .viz-now      { bottom: 118px; width: min(300px, 84vw); }
             #dvd-box      { width: clamp(100px, 30vw, 160px); }
         }
     </style>
@@ -406,9 +514,9 @@
     <div id="app-container" class="a-pop">
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
-        <div class="top-nav-bar a-drop" style="--d:.2s">
-            <a href="/" class="back-pill internal-link">Home</a>
-            <div class="nav-right">
+        <div class="top-nav-bar">
+            <a href="/" class="back-pill internal-link a-drop" style="--d:.2s">&larr; Back</a>
+            <div class="nav-right a-drop" style="--d:.2s">
                 <div class="cuceu-clock"><span class="cuceu-clock-text">MONDAY | 00:00 AM</span></div>
                 <button class="theme-toggle" id="direct-theme-toggle" aria-label="Toggle Theme">
                     <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -417,52 +525,59 @@
             </div>
         </div>
 
-        <!-- FOREGROUND: LOGO + PLAYER DECK -->
-        <div id="main-cluster">
-            <div class="cluster-inner a-rise" style="--d:.35s">
-                <div id="bg-logo-layer">
+        <!-- CLEAN MODE: the photo is the page -->
+        <div id="photo-stage">
+            <div class="photo-frame a-rise" style="--d:.3s">
+                <img class="stage-photo" src="IMG_1148.webp" alt="Pigeons on a windowsill under a shuttered window">
+
+                <div class="stage-logo">
                     <div class="logo-row">
                         <img src="cuceugrta.png" alt="CUCEU" class="cuceu-logo-img">
                         <span class="fm-text">.fm</span>
                     </div>
+                    <div class="stage-live">
+                        <div class="aero-dot" id="stage-dot" style="--dot-c:#9a9a9a"></div>
+                        <span id="stage-status-text">CHECKING</span>
+                    </div>
                 </div>
 
-                <div id="player-deck" class="aero-panel">
-                    <div class="deck-top">
-                        <div class="deck-art-wrap" id="deck-art-wrap">
-                            <img id="deck-art" src="cuceugrta.png" alt="Album artwork">
-                        </div>
-                        <div class="deck-meta">
-                            <div class="deck-status">
-                                <div class="aero-dot" id="deck-dot" style="--dot-c:#9a9a9a"></div>
-                                <span id="deck-status-text">CHECKING...</span>
+                <div class="stage-controls" id="stage-controls">
+                    <button id="btn" class="listen-btn" aria-label="Play/Pause stream">&#9654;&nbsp; Listen</button>
+                    <div class="stage-volume" id="stage-volume">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
+                    </div>
+                    <button id="history-toggle" class="recent-btn" aria-expanded="false">Recently Played <span class="chev">&#9660;</span></button>
+                    <div class="recent-wrap">
+                        <div class="recent-panel">
+                            <div class="recent-inner">
+                                <ul id="history-list"><li class="history-item">Loading...</li></ul>
                             </div>
-                            <div class="deck-title" id="deck-title">CUCEU.FM</div>
-                            <div class="deck-artist" id="deck-artist">INTERNET RADIO</div>
-                        </div>
-                    </div>
-
-                    <div class="deck-controls">
-                        <button id="btn" class="deck-play aero-gel" aria-label="Play/Pause">
-                            <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            <svg class="pause-icon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                        </button>
-                        <div class="deck-volume">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                            <input type="range" id="volume-slider" class="aero-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
-                        </div>
-                        <button id="history-toggle" class="deck-history-btn" aria-label="Toggle recently played">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </button>
-                    </div>
-
-                    <div class="deck-drawer-wrap">
-                        <div class="deck-drawer">
-                            <div class="deck-drawer-head">Recently Played</div>
-                            <ul id="history-list"><li class="history-item">Loading...</li></ul>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- DVD + AURORA: logo + now-playing puck (AOD ambient when idle) -->
+        <div id="viz-cluster">
+            <div class="viz-logo">
+                <img src="cuceugrta.png" alt="CUCEU">
+                <span class="fm-viz">.fm</span>
+            </div>
+            <div class="viz-now" id="viz-now">
+                <img id="now-art" src="cuceugrta.png" alt="Album artwork">
+                <div class="now-meta">
+                    <span id="now-title">CUCEU.FM</span>
+                    <span class="now-status">
+                        <span class="aero-dot" id="now-dot" style="--dot-c:#9a9a9a"></span>
+                        <span id="now-status-text">CHECKING</span>
+                    </span>
+                </div>
+                <button class="viz-play" id="viz-play" aria-label="Play/Pause stream">
+                    <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg class="pause-icon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
             </div>
         </div>
 
@@ -478,19 +593,15 @@
 
         <!-- Mode dock -->
         <div class="mode-dock-wrap" id="mode-dock-wrap">
-            <div class="mode-toggle aero-panel a-slideup" style="--d:.45s" id="mode-toggle">
+            <div class="mode-toggle a-slideup" style="--d:.45s" id="mode-toggle">
                 <button class="mode-btn active" data-mode="clean">Clean</button>
                 <button class="mode-btn" data-mode="dvd">DVD</button>
-                <button class="mode-btn" data-mode="starlight">Starlight</button>
-                <button class="mode-btn" data-mode="halo">Halo</button>
                 <button class="mode-btn" data-mode="aurora">Aurora</button>
-                <button class="mode-btn" data-mode="nebula">Nebula</button>
-                <button class="mode-btn" data-mode="prism">Prism</button>
                 <button class="viz-settings-btn" id="viz-settings-btn" aria-label="Visualizer Settings">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
             </div>
-            <div class="viz-settings-popup aero-panel" id="viz-settings-popup">
+            <div class="viz-settings-popup" id="viz-settings-popup">
                 <div id="viz-settings-mount"></div>
             </div>
         </div>
@@ -513,7 +624,6 @@ CuceuTheme.bindToggle(document.getElementById('direct-theme-toggle'));
 
 // ── STREAM ────────────────────────────────────────────────────
 const STREAM_BASE    = "https://stream.cuceu.co.uk";
-const btn            = document.getElementById('btn');
 // Use the global wrapper player if available, else fall back to the local element
 const isWrapper      = window !== window.parent && window.parent.CuceuGlobalPlayer;
 const player         = isWrapper ? window.parent.CuceuGlobalPlayer.getAudioElement() : document.getElementById('radioPlayer');
@@ -523,17 +633,19 @@ if (isWrapper) {
     window.parent.CuceuGlobalPlayer.hideMiniPlayer();
 }
 
-const deckStatusText = document.getElementById('deck-status-text');
-const deckDot        = document.getElementById('deck-dot');
-const deckTitle      = document.getElementById('deck-title');
-const deckArtist     = document.getElementById('deck-artist');
-const deckArt        = document.getElementById('deck-art');
-const deckArtWrap    = document.getElementById('deck-art-wrap');
-const playerDeck     = document.getElementById('player-deck');
-const historyList    = document.getElementById('history-list');
-const historyToggle  = document.getElementById('history-toggle');
-const topMarquee     = document.getElementById('top-marquee');
-const bottomMarquee  = document.getElementById('bottom-marquee');
+const listenBtn       = document.getElementById('btn');
+const vizPlayBtn      = document.getElementById('viz-play');
+const stageStatusText = document.getElementById('stage-status-text');
+const stageDot        = document.getElementById('stage-dot');
+const nowStatusText   = document.getElementById('now-status-text');
+const nowDot          = document.getElementById('now-dot');
+const nowTitle        = document.getElementById('now-title');
+const nowArt          = document.getElementById('now-art');
+const stageControls   = document.getElementById('stage-controls');
+const historyList     = document.getElementById('history-list');
+const historyToggle   = document.getElementById('history-toggle');
+const topMarquee      = document.getElementById('top-marquee');
+const bottomMarquee   = document.getElementById('bottom-marquee');
 let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '', currentTickerBase = '';
 
 const DOT_COLORS = {
@@ -541,22 +653,25 @@ const DOT_COLORS = {
     offline: '#777777', checking: '#9a9a9a'
 };
 function setStatus(text, kind) {
-    deckStatusText.textContent = text;
-    deckDot.style.setProperty('--dot-c', DOT_COLORS[kind] || DOT_COLORS.checking);
-    deckDot.classList.toggle('buffering', kind === 'buffering');
+    const color = DOT_COLORS[kind] || DOT_COLORS.checking;
+    stageStatusText.textContent = text;
+    stageDot.style.setProperty('--dot-c', color);
+    stageDot.classList.toggle('buffering', kind === 'buffering');
+    nowStatusText.textContent = text;
+    nowDot.style.setProperty('--dot-c', color);
+    nowDot.classList.toggle('buffering', kind === 'buffering');
 }
 
-function setDeckSong(title) {
-    // Titles usually arrive as "Artist - Track"
-    const sep = title.indexOf(' - ');
-    if (sep > 0) {
-        deckArtist.textContent = title.slice(0, sep);
-        deckTitle.textContent = title.slice(sep + 3);
-    } else {
-        deckArtist.textContent = 'CUCEU.FM';
-        deckTitle.textContent = title;
-    }
-    deckTitle.title = title;
+// LISTEN only exists while the station is live (or already playing)
+function updateListenVisibility() {
+    listenBtn.classList.toggle('show', isOnline || playing);
+}
+
+function renderPlayState() {
+    listenBtn.innerHTML = playing ? '&#10074;&#10074;&nbsp; Pause' : '&#9654;&nbsp; Listen';
+    vizPlayBtn.querySelector('.play-icon').style.display = playing ? 'none' : 'block';
+    vizPlayBtn.querySelector('.pause-icon').style.display = playing ? 'block' : 'none';
+    document.body.classList.toggle('is-playing', playing);
 }
 
 function updateTicker(base) {
@@ -564,18 +679,32 @@ function updateTicker(base) {
     const item = `<div class="ticker-item"><span class="song-display">${base}</span>${art}</div>`;
     const content = Array(14).fill(item).join('');
     const dur = Math.max(22, base.length * 1.6);
-    topMarquee.style.opacity = '0'; bottomMarquee.style.opacity = '0';
     setTimeout(() => {
-        topMarquee.innerHTML = content + content;
-        topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
-        bottomMarquee.innerHTML = content + content;
-        bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
-        bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
-        topMarquee.style.opacity = '1'; bottomMarquee.style.opacity = '1';
-    }, 400);
+        for (const m of [topMarquee, bottomMarquee]) {
+            m.innerHTML = content + content;
+            // Blur-roll swap composes with the endless scroll
+            m.style.animation = `tickerScroll ${dur}s linear infinite, trackRoll 0.8s var(--ease-smooth)`;
+        }
+        bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s, 0s`;
+        setTimeout(() => {
+            topMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+            bottomMarquee.style.animation = `tickerScroll ${dur}s linear infinite`;
+            bottomMarquee.style.animationDelay = `-${(dur * 0.44).toFixed(1)}s`;
+        }, 900);
+    }, 50);
 }
 
-historyToggle.addEventListener('click', () => playerDeck.classList.toggle('expanded'));
+// Pop the artwork + roll the tickers when the song changes
+function flashTrackSwap() {
+    nowArt.classList.remove('swap');
+    void nowArt.offsetWidth;
+    nowArt.classList.add('swap');
+}
+
+historyToggle.addEventListener('click', () => {
+    const open = stageControls.classList.toggle('recent-open');
+    historyToggle.setAttribute('aria-expanded', String(open));
+});
 
 async function fetchGlobalHistory() {
     try {
@@ -589,7 +718,7 @@ async function fetchArtwork() {
         const u = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
         if (u && u.startsWith('http')) currentArtUrl = u;
     } catch(_) { currentArtUrl = ''; }
-    deckArt.src = currentArtUrl || 'cuceugrta.png';
+    nowArt.src = currentArtUrl || 'cuceugrta.png';
     if (currentMode === 'dvd') setDvdArt(currentArtUrl || 'cuceugrta.png');
 }
 async function fetchSongData() {
@@ -601,9 +730,11 @@ async function fetchSongData() {
         if (!playing) setStatus('LIVE', 'live');
         if (t !== currentTitle) {
             currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
-            setDeckSong(t);
+            nowTitle.textContent = t;
+            nowTitle.title = t;
             currentTickerBase = `NOW PLAYING: ${t}`;
             updateTicker(currentTickerBase);
+            flashTrackSwap();
         }
     } catch(_) {
         isOnline = false;
@@ -612,31 +743,28 @@ async function fetchSongData() {
             if (currentTickerBase !== 'STANDBY') { currentTickerBase = 'STANDBY'; updateTicker('STANDBY'); }
         }
     }
+    updateListenVisibility();
 }
-player.onwaiting = () => { if (playing) setStatus('BUFFERING...', 'buffering'); };
+player.onwaiting = () => { if (playing) setStatus('BUFFERING', 'buffering'); };
 player.onplaying = () => { if (playing) setStatus('ON AIR', 'on-air'); };
 player.onpause   = () => { if (isOnline) setStatus('LIVE', 'live'); };
 
-const playIcon = btn.querySelector('.play-icon');
-const pauseIcon = btn.querySelector('.pause-icon');
-btn.addEventListener('click', () => {
+function togglePlay() {
     if (!playing) {
         player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
         player.play().catch(() => {});
-        playIcon.style.display = 'none'; pauseIcon.style.display = 'block';
-        btn.classList.add('playing');
-        deckArtWrap.classList.add('playing');
         setStatus('BUFFERING', 'buffering');
         resumeAudioGraph();
     } else {
         player.pause(); player.src = '';
-        playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
-        btn.classList.remove('playing');
-        deckArtWrap.classList.remove('playing');
         setStatus(isOnline ? 'LIVE' : 'OFFLINE', isOnline ? 'live' : 'offline');
     }
     playing = !playing;
-});
+    renderPlayState();
+    updateListenVisibility();
+}
+listenBtn.addEventListener('click', togglePlay);
+vizPlayBtn.addEventListener('click', togglePlay);
 
 // Volume — persisted across visits
 const volumeSlider = document.getElementById('volume-slider');
@@ -694,13 +822,14 @@ const audioProvider = isWrapper ? {
 };
 
 // ══════════════════════════════════════════════════════════════
-// MODE SYSTEM (Clean / DVD / 5 visualizers)
+// MODE SYSTEM (Clean / DVD / Aurora)
 // ══════════════════════════════════════════════════════════════
 const bgLayer    = document.getElementById('bg-layer');
 const container  = document.getElementById('app-container');
 const modeToggle = document.getElementById('mode-toggle');
 const modeBtns   = modeToggle.querySelectorAll('.mode-btn');
-const VIZ_MODES  = ['starlight', 'halo', 'aurora', 'nebula', 'prism'];
+const ENGINE_MODES  = ['aurora'];           // run on the Three.js engine
+const AMBIENT_MODES = ['dvd', 'aurora'];    // dark chrome + AOD idle state
 let currentMode = 'clean';
 
 CuceuViz.setup({ container, provider: audioProvider });
@@ -718,16 +847,17 @@ function setMode(mode) {
     container.classList.remove('viz-mode');
     currentMode = mode;
     document.body.classList.toggle('is-dvd', mode === 'dvd');
-    document.body.classList.toggle('viz-active', VIZ_MODES.includes(mode));
+    document.body.classList.toggle('viz-active', AMBIENT_MODES.includes(mode));
     document.body.dataset.activeMode = mode;
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     vizSettingsPopup.classList.remove('visible');
     CuceuStore.set('cuceu-fm-mode', mode);
 
     if (mode === 'dvd') {
+        container.classList.add('viz-mode');
         bgLayer.classList.add('mode-dvd');
         startDvd();
-    } else if (VIZ_MODES.includes(mode)) {
+    } else if (ENGINE_MODES.includes(mode)) {
         container.classList.add('viz-mode');
         resumeAudioGraph();
         CuceuViz.start(mode);
@@ -748,17 +878,17 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ── IDLE FADE (chrome fades after 4s in viz modes) ──────────
+// ── AOD IDLE (DVD + Aurora drift into always-on-display) ────
 let idleTimer = null;
 function resetIdleTimer() {
     document.body.classList.remove('ui-idle');
     if (idleTimer) clearTimeout(idleTimer);
-    if (!VIZ_MODES.includes(currentMode)) return;
+    if (!AMBIENT_MODES.includes(currentMode)) return;
     idleTimer = setTimeout(() => {
         if (!vizSettingsPopup.classList.contains('visible')) {
             document.body.classList.add('ui-idle');
         }
-    }, 4000);
+    }, 4500);
 }
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(ev =>
     document.addEventListener(ev, resetIdleTimer, { passive: true }));
@@ -872,11 +1002,12 @@ new ResizeObserver(() => {
     dvdY = Math.min(Math.max(dvdY, b.top), b.bottom - h);
 }).observe(container);
 
-// ── RESTORE LAST MODE ────────────────────────────────────────
+// ── RESTORE LAST MODE (legacy saved modes fall back to clean) ──
 const savedMode = CuceuStore.get('cuceu-fm-mode', 'clean');
-if (savedMode !== 'clean' && (savedMode === 'dvd' || VIZ_MODES.includes(savedMode))) {
+if (savedMode !== 'clean' && AMBIENT_MODES.includes(savedMode)) {
     setMode(savedMode);
 }
+renderPlayState();
 </script>
 </body>
 </html>
