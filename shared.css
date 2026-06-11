@@ -31,9 +31,9 @@
 
     /* Aero gradients */
     --g-aurora:
-        radial-gradient(60% 50% at 18% 8%, rgba(255, 176, 102, 0.20), transparent 70%),
-        radial-gradient(50% 45% at 85% 18%, rgba(240, 145, 60, 0.14), transparent 70%),
-        radial-gradient(70% 60% at 50% 110%, rgba(208, 115, 41, 0.16), transparent 70%);
+        radial-gradient(75% 60% at 18% 8%, rgba(255, 176, 102, 0.09), transparent 70%),
+        radial-gradient(65% 55% at 85% 18%, rgba(240, 145, 60, 0.06), transparent 70%),
+        radial-gradient(80% 65% at 50% 110%, rgba(208, 115, 41, 0.08), transparent 70%);
     --g-gel: linear-gradient(180deg, var(--c-amber-bright) 0%, var(--c-amber) 45%,
                              var(--c-amber-deep) 50%, var(--c-amber) 100%);
     --g-spec: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%,
@@ -96,9 +96,9 @@ body.dark-mode {
     --c-glass-border: rgba(255, 176, 102, 0.22);
     --c-glass-edge: rgba(255, 176, 102, 0.10);
     --g-aurora:
-        radial-gradient(55% 45% at 15% 10%, rgba(208, 115, 41, 0.16), transparent 70%),
-        radial-gradient(45% 40% at 85% 20%, rgba(240, 145, 60, 0.10), transparent 70%),
-        radial-gradient(75% 60% at 50% 115%, rgba(143, 74, 20, 0.20), transparent 70%);
+        radial-gradient(70% 55% at 15% 10%, rgba(208, 115, 41, 0.07), transparent 70%),
+        radial-gradient(60% 50% at 85% 20%, rgba(240, 145, 60, 0.05), transparent 70%),
+        radial-gradient(85% 65% at 50% 115%, rgba(143, 74, 20, 0.10), transparent 70%);
     --g-spec: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%,
                               rgba(255, 255, 255, 0.04) 46%, rgba(255, 255, 255, 0) 52%);
     --sh-float: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 30px rgba(208, 115, 41, 0.10);
