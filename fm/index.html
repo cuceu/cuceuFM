@@ -118,9 +118,9 @@
         /* ── GLASSY PLAYER ───────────────────────────── */
         .player {
             pointer-events: auto;
-            width: min(380px, 90vw);
-            display: flex; flex-direction: column; gap: 16px;
-            padding: 16px 18px;
+            width: min(330px, 90vw);
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            padding: 20px 20px 10px;
             border-radius: 26px;
             background: var(--c-glass-strong);
             border: 1px solid var(--c-glass-border);
@@ -129,8 +129,11 @@
             backdrop-filter: blur(24px) saturate(160%);
             -webkit-backdrop-filter: blur(24px) saturate(160%);
             transition: background 0.9s ease, border-color 0.9s ease,
-                        box-shadow 0.9s ease, padding 0.9s var(--ease-smooth),
-                        width 0.9s var(--ease-smooth), gap 0.9s ease;
+                        box-shadow 0.9s ease, opacity 0.9s ease,
+                        transform 0.9s var(--ease-smooth);
+            /* entry uses `backwards` (not `both`) so the idle dim
+               can take over opacity/transform once it finishes */
+            animation: aero-rise-in var(--dur-medium) var(--ease-smooth) 0.42s backwards;
         }
         body.viz-active .player {
             background: rgba(16, 16, 18, 0.6);
@@ -138,44 +141,24 @@
             outline-color: rgba(255,255,255,0.05);
         }
 
-        .player-row1 { display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
+        /* Square artwork on top of the card */
+        .art-wrap {
+            width: 132px; height: 132px; flex-shrink: 0;
+            position: relative; border-radius: 18px; overflow: hidden;
+            margin: 2px auto 0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+        }
+        #now-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .art-wrap::after {
+            content: ''; position: absolute; inset: 0 0 55% 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.02));
+            pointer-events: none;
+        }
+        #now-art.swap { animation: artPop 0.7s var(--ease-spring); }
+        @keyframes artPop { 0% { scale: 0.7; opacity: 0.4; } 60% { scale: 1.06; } 100% { scale: 1; opacity: 1; } }
 
-        /* Vinyl / artwork — morphs into a spinning record when idle */
-        .vinyl {
-            --v: 56px;
-            width: var(--v); height: var(--v); flex-shrink: 0;
-            position: relative; border-radius: 50%;
-            background:
-                repeating-radial-gradient(circle at 50% 50%,
-                    rgba(255,255,255,0) 0, rgba(255,255,255,0) 2.5px,
-                    rgba(255,255,255,0.05) 2.5px, rgba(255,255,255,0.05) 3.5px),
-                radial-gradient(circle at 38% 32%, #232323, #060606 78%);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.08);
-            transition: width 0.9s var(--ease-smooth), height 0.9s var(--ease-smooth);
-        }
-        .vinyl-label {
-            position: absolute; inset: 16%;
-            width: 68%; height: 68%; border-radius: 50%;
-            object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
-        }
-        .vinyl-hole {
-            position: absolute; top: 50%; left: 50%;
-            width: 6%; height: 6%; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--c-glass-strong);
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
-        }
-        body.viz-active .vinyl-hole { background: #16161a; }
-        body.ui-idle .vinyl {
-            --v: clamp(170px, 42vw, 220px);
-            animation: spin 4.5s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .player-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; overflow: hidden;
-            transition: opacity 0.5s ease, max-width 0.9s var(--ease-smooth); max-width: 400px; }
         .player-status {
-            display: flex; align-items: center; gap: 7px;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
             font-size: 8px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
             color: var(--c-text-muted);
         }
@@ -184,7 +167,8 @@
         .player-status .aero-dot.buffering { animation: aero-blink 0.8s infinite alternate; }
         .player-title {
             font-size: 13px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
-            color: var(--c-text);
+            color: var(--c-text); text-align: center;
+            width: 100%; max-width: 100%;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         body.viz-active .player-title { color: #f4f4f4; }
@@ -196,9 +180,7 @@
             display: flex; align-items: center; justify-content: center;
             box-shadow: var(--sh-gloss), 0 4px 14px rgba(143,74,20,0.35);
             position: relative; overflow: hidden;
-            transition: transform 0.25s var(--ease-spring), opacity 0.4s ease, filter 0.4s ease,
-                        max-width 0.9s var(--ease-smooth);
-            max-width: 60px;
+            transition: transform 0.25s var(--ease-spring), opacity 0.4s ease, filter 0.4s ease;
         }
         .play-btn::before {
             content: ''; position: absolute; inset: 1px 1px 55% 1px;
@@ -210,11 +192,11 @@
         .play-btn:active { transform: scale(0.95); }
         .play-btn:disabled { filter: grayscale(1) brightness(0.7); opacity: 0.5; cursor: not-allowed; }
 
-        .player-row2 {
-            display: flex; align-items: center; gap: 16px;
-            overflow: hidden;
-            transition: opacity 0.45s ease, max-height 0.9s var(--ease-smooth), margin 0.9s ease;
-            max-height: 40px;
+        /* volume | play | bass — play stays dead centre */
+        .controls-row {
+            display: grid; grid-template-columns: 1fr auto 1fr;
+            align-items: center; gap: 14px; width: 100%;
+            margin-top: 2px;
         }
         .vol { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; color: var(--c-text-muted); }
         body.viz-active .vol { color: #9a8d7c; }
@@ -225,7 +207,7 @@
         }
 
         /* Bass boost — OFF / 1 / 2 / 3 segmented control */
-        .bass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .bass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; justify-self: end; }
         .bass-label {
             font-size: 8px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
             color: var(--c-text-muted);
@@ -243,17 +225,51 @@
         body.viz-active .bass-seg { border-color: #6a6258; }
         body.viz-active .bass-seg.on { background: var(--c-amber-bright); border-color: var(--c-amber-bright); }
 
-        /* AOD idle: collapse everything but the vinyl (kept centred by
-           row1's justify-center), which grows and spins */
-        body.ui-idle .player {
-            background: transparent; border-color: transparent;
-            outline-color: transparent; box-shadow: none;
-            padding: 0; gap: 0;
+        /* ── RECENTLY PLAYED — dropdown built into the card ── */
+        .recent-sec { width: 100%; border-top: 1px solid var(--c-glass-edge); margin-top: 2px; }
+        body.viz-active .recent-sec { border-top-color: rgba(255,255,255,0.1); }
+        .recent-toggle {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            background: transparent; border: none; cursor: pointer;
+            padding: 12px 4px 10px;
+            font-family: var(--font-primary);
+            font-size: 9px; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--c-text-muted);
+            transition: color 0.3s;
         }
-        body.ui-idle .player-row1 { gap: 0; }
-        body.ui-idle .player-meta { opacity: 0; max-width: 0; flex: 0 0 auto; }
-        body.ui-idle .play-btn { opacity: 0; max-width: 0; pointer-events: none; }
-        body.ui-idle .player-row2 { opacity: 0; max-height: 0; margin-top: -16px; pointer-events: none; }
+        .recent-toggle:hover { color: var(--c-amber); }
+        body.viz-active .recent-toggle { color: #9a8d7c; }
+        body.viz-active .recent-toggle:hover { color: var(--c-amber-bright); }
+        .recent-toggle .chev { transition: transform 0.4s var(--ease-spring); font-size: 8px; }
+        #player.recent-open .recent-toggle .chev { transform: rotate(180deg); }
+        .recent-wrap {
+            display: grid; grid-template-rows: 0fr; width: 100%;
+            transition: grid-template-rows 0.55s var(--ease-spring);
+        }
+        #player.recent-open .recent-wrap { grid-template-rows: 1fr; }
+        .recent-panel { min-height: 0; overflow: hidden; }
+        #history-list {
+            list-style: none; padding: 0 2px 6px; margin: 0;
+            max-height: 168px; overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+        .history-item {
+            display: flex; align-items: baseline; gap: 10px;
+            font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            color: var(--c-text-muted);
+            padding: 8px 2px;
+            border-bottom: 1px solid var(--c-glass-edge);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: color 0.3s;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-item:hover { color: var(--c-amber); }
+        body.viz-active .history-item { color: #8a8a8a; border-bottom-color: rgba(255,255,255,0.08); }
+        body.viz-active .history-item:hover { color: var(--c-amber-bright); }
+        .history-num { font-size: 8px; font-weight: 900; color: var(--c-amber); flex-shrink: 0; }
+
+        /* Sleep: everything settles and dims — no morphing */
+        body.ui-idle .player { opacity: 0.3; transform: scale(0.97); }
 
         /* ── DVD MODE — clean artwork bounce, no tinting ── */
         #bg-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -285,6 +301,8 @@
             max-width: calc(100vw - 32px);
             transition: opacity 1.1s var(--ease-smooth);
         }
+        /* Step aside while the recently-played drawer is open */
+        body:has(#player.recent-open) .mode-dock-wrap { opacity: 0; pointer-events: none; transition-duration: 0.35s; }
         .mode-toggle {
             display: flex; gap: 0; border-radius: var(--r-pill); padding: 4px;
             background: rgba(255, 255, 255, 0.85);
@@ -374,7 +392,8 @@
             #stage        { inset: 48px 0 48px; }
             .song-display { font-size:1.05rem; letter-spacing:2.5px; }
             .ticker-art   { height:32px; width:32px; margin: 0 16px; }
-            .player       { width: min(340px, 90vw); }
+            .player       { width: min(320px, 90vw); }
+            .art-wrap     { width: 112px; height: 112px; }
             .mode-dock-wrap { bottom: 60px; }
             .mode-btn     { padding: 7px 13px; font-size: 8px; letter-spacing: 1.5px; }
             #dvd-box      { width: clamp(96px, 30vw, 150px); }
@@ -406,35 +425,38 @@
                 </div>
             </div>
 
-            <div class="player a-rise" id="player" style="--d:.42s">
-                <div class="player-row1">
-                    <div class="vinyl" id="vinyl">
-                        <img class="vinyl-label" id="now-art" src="cuceugrta.png" alt="Now playing artwork">
-                        <div class="vinyl-hole"></div>
-                    </div>
-                    <div class="player-meta">
-                        <div class="player-status">
-                            <span class="aero-dot" id="status-dot" style="--dot-c:#9a9a9a"></span>
-                            <span id="status-text">CHECKING</span>
-                        </div>
-                        <div class="player-title" id="track-title">CUCEU.FM</div>
+            <div class="player" id="player">
+                <div class="art-wrap">
+                    <img id="now-art" src="cuceugrta.png" alt="Now playing artwork">
+                </div>
+                <div class="player-status">
+                    <span class="aero-dot" id="status-dot" style="--dot-c:#9a9a9a"></span>
+                    <span id="status-text">CHECKING</span>
+                </div>
+                <div class="player-title" id="track-title">CUCEU.FM</div>
+                <div class="controls-row">
+                    <div class="vol">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
                     </div>
                     <button class="play-btn" id="play-btn" aria-label="Play/Pause stream" disabled>
                         <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         <svg class="pause-icon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </button>
-                </div>
-                <div class="player-row2">
-                    <div class="vol">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
-                    </div>
                     <div class="bass" role="group" aria-label="Bass boost">
                         <span class="bass-label">Bass</span>
                         <div class="bass-segs" id="bass-segs">
                             <button class="bass-seg" data-level="1" aria-label="Bass level 1"></button>
                             <button class="bass-seg" data-level="2" aria-label="Bass level 2"></button>
                             <button class="bass-seg" data-level="3" aria-label="Bass level 3"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-sec">
+                    <button class="recent-toggle" id="history-toggle" aria-expanded="false">Recently Played <span class="chev">&#9660;</span></button>
+                    <div class="recent-wrap">
+                        <div class="recent-panel">
+                            <ul id="history-list"><li class="history-item">Loading...</li></ul>
                         </div>
                     </div>
                 </div>
@@ -487,6 +509,9 @@ const nowArt       = document.getElementById('now-art');
 const playBtn      = document.getElementById('play-btn');
 const topMarquee   = document.getElementById('top-marquee');
 const bottomMarquee= document.getElementById('bottom-marquee');
+const playerEl     = document.getElementById('player');
+const historyList  = document.getElementById('history-list');
+const historyToggle= document.getElementById('history-toggle');
 let playing = false, isOnline = false, currentTitle = '', currentArtUrl = '', currentTickerBase = '';
 
 const DOT_COLORS = {
@@ -524,6 +549,23 @@ function updateTicker(base) {
     }, 900);
 }
 
+// ── RECENTLY PLAYED dropdown ──────────────────────────────────
+historyToggle.addEventListener('click', () => {
+    const open = playerEl.classList.toggle('recent-open');
+    historyToggle.setAttribute('aria-expanded', String(open));
+});
+
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+async function fetchGlobalHistory() {
+    try {
+        const d = await fetch(`${STREAM_BASE}/history.json?t=` + Date.now()).then(r => r.json());
+        if (Array.isArray(d) && d.length) {
+            historyList.innerHTML = d.filter(Boolean).map((t, i) =>
+                `<li class="history-item"><span class="history-num">${String(i + 1).padStart(2, '0')}</span>${esc(t)}</li>`).join('');
+        }
+    } catch(_) {}
+}
+
 async function fetchArtwork() {
     try {
         const u = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
@@ -540,7 +582,8 @@ async function fetchSongData() {
         const t = Array.isArray(s) ? (s[0].title || 'ON AIR') : (s.title || 'ON AIR');
         if (!playing) setStatus('LIVE', 'live');
         if (t !== currentTitle) {
-            currentTitle = t; await fetchArtwork();
+            currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
+            nowArt.classList.remove('swap'); void nowArt.offsetWidth; nowArt.classList.add('swap');
             trackTitle.textContent = t; trackTitle.title = t;
             currentTickerBase = `NOW PLAYING: ${t}`;
             updateTicker(currentTickerBase);
@@ -632,7 +675,7 @@ bassSegs.addEventListener('click', (e) => {
 renderBass();
 
 // ── POLLING ───────────────────────────────────────────────────
-updateTicker('STANDBY'); fetchSongData();
+updateTicker('STANDBY'); fetchSongData(); fetchGlobalHistory();
 let fetchInterval = setInterval(fetchSongData, 4000);
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
@@ -699,7 +742,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ── AOD IDLE (all modes drift to the spinning-vinyl sleep state) ──
+// ── SLEEP IDLE (chrome fades, logo and player dim) ──────────
 let idleTimer = null;
 function resetIdleTimer() {
     document.body.classList.remove('ui-idle');
