@@ -49,6 +49,14 @@ const CuceuViz = (() => {
     const smoothed = {};
     const logCache = new Map();
 
+    // iOS Safari won't feed live HTTP streams into the analyser (zeros).
+    // When we're playing but the spectrum stays silent, synthesize one so
+    // the visuals still dance.
+    let isPlaying = false;
+    let silentFrames = 0;
+    let synthFallback = false;
+    let darkTheme = true;
+
     function isDemoMode() {
         try { return localStorage.getItem(DEMO_KEY) === '1'; } catch { return false; }
     }
@@ -100,6 +108,18 @@ const CuceuViz = (() => {
             fillDemoSpectrum(now);
         } else if (provider && provider.getFrequencyData) {
             provider.getFrequencyData(dataArray);
+            if (isPlaying) {
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i += 8) sum += dataArray[i];
+                if (sum === 0) {
+                    silentFrames++;
+                    if (silentFrames > 150) synthFallback = true;   // ~2.5s @60fps
+                } else {
+                    silentFrames = 0;
+                    synthFallback = false;
+                }
+                if (synthFallback) fillDemoSpectrum(now);
+            }
         }
 
         let levelSum = 0;
@@ -202,12 +222,17 @@ const CuceuViz = (() => {
             for (const s of items) {
                 const row = document.createElement('label');
                 row.className = 'viz-set-row';
+
+                // Header row: label on left, value readout on right
+                const headerRow = document.createElement('div');
+                headerRow.className = 'viz-set-header';
                 const label = document.createElement('span');
                 label.className = 'viz-set-label';
                 label.textContent = s.label;
-                row.appendChild(label);
+                headerRow.appendChild(label);
 
                 if (s.type === 'select') {
+                    row.appendChild(headerRow);
                     const sel = document.createElement('select');
                     sel.className = 'viz-set-select';
                     for (const opt of s.options) {
@@ -220,6 +245,13 @@ const CuceuViz = (() => {
                     sel.addEventListener('change', () => setSetting(vizId, s.key, sel.value));
                     row.appendChild(sel);
                 } else {
+                    // Value readout badge
+                    const valBadge = document.createElement('span');
+                    valBadge.className = 'viz-set-value';
+                    valBadge.textContent = values[s.key];
+                    headerRow.appendChild(valBadge);
+                    row.appendChild(headerRow);
+
                     const input = document.createElement('input');
                     input.type = 'range';
                     input.className = 'aero-slider viz-set-range';
@@ -227,7 +259,11 @@ const CuceuViz = (() => {
                     input.max = s.max;
                     input.step = s.step;
                     input.value = values[s.key];
-                    input.addEventListener('input', () => setSetting(vizId, s.key, parseFloat(input.value)));
+                    input.addEventListener('input', () => {
+                        const v = parseFloat(input.value);
+                        valBadge.textContent = v;
+                        setSetting(vizId, s.key, v);
+                    });
                     row.appendChild(input);
                 }
                 mount.appendChild(row);
@@ -249,9 +285,10 @@ const CuceuViz = (() => {
 
     function ensureRenderer() {
         if (renderer) return;
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Transparent canvas: the page background (theme-aware) shows through
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setClearColor(0x000000, 1);
+        renderer.setClearColor(0x000000, 0);
         renderer.domElement.id = 'viz-canvas';
         renderer.domElement.style.cssText =
             'position:absolute;inset:0;width:100%;height:100%;display:none;';
@@ -310,9 +347,11 @@ const CuceuViz = (() => {
             quality: isMobile() ? 0.5 : 1,
             width: w,
             height: h,
+            dark: darkTheme,
             state: {}
         };
         def.init(ctx);
+        if (def.setTheme) def.setTheme(ctx, darkTheme);
 
         active = { def, ctx };
         lastTime = performance.now();
@@ -356,6 +395,17 @@ const CuceuViz = (() => {
         start,
         stop,
         activeId() { return active ? active.def.id : null; },
+        setPlaying(p) {
+            isPlaying = !!p;
+            if (!isPlaying) { silentFrames = 0; synthFallback = false; }
+        },
+        setTheme(dark) {
+            darkTheme = !!dark;
+            if (active) {
+                active.ctx.dark = darkTheme;
+                if (active.def.setTheme) active.def.setTheme(active.ctx, darkTheme);
+            }
+        },
         getSettings,
         setSetting,
         resetSettings,
