@@ -15,23 +15,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         html, body { height: 100dvh; overflow: hidden; }
-        /* No aurora wash / grain on the radio page */
         body::before, body::after { display: none; }
-        body { --page-bg: #fafafa; background: var(--page-bg); }
+        body { --page-bg: #f3efe9; background: var(--page-bg); }
         body.dark-mode { --page-bg: #000; background: var(--page-bg); }
 
-        /* ── FULL-BLEED CONTAINER ────────────────────── */
         #app-container {
             width: 100vw; height: 100dvh;
             position: relative; overflow: hidden;
-            background-color: transparent;
+            background-color: var(--page-bg);
             transition: background-color var(--dur-slow) ease;
         }
-        /* Viz canvas is transparent — the theme background shows through,
-           so DVD/Aurora/Orbit work in light AND dark mode */
+
+        /* ── AMBIENT BACKDROP — blurred artwork bleeds its colour ── */
+        #ambient {
+            position: absolute; inset: 0; z-index: 0;
+            background-size: cover; background-position: center;
+            filter: blur(72px) saturate(1.6);
+            transform: scale(1.25);
+            will-change: transform;
+        }
+        #ambient::after {
+            content: ''; position: absolute; inset: 0;
+            background: rgba(243, 239, 233, 0.80);
+            transition: background var(--dur-slow) ease;
+        }
+        body.dark-mode #ambient::after {
+            background: radial-gradient(125% 95% at 50% 32%, rgba(0,0,0,0.58), rgba(0,0,0,0.88));
+        }
+
+        /* Viz canvas — transparent so the ambient shows through (light + dark) */
         #viz-canvas { z-index: 2; }
 
-        /* ── TICKERS — always black tape, white type ──── */
+        /* ── TICKERS ─────────────────────────────────── */
         .ticker-tape {
             position: absolute; left: 0; right: 0;
             height: 54px; z-index: 60;
@@ -60,59 +75,40 @@
         .ticker-art.has-art { opacity:1; }
         .song-display { font-size:1.25rem; font-weight:900; text-transform:uppercase; letter-spacing:3.5px; padding:0 10px; }
 
-        /* ── NAV ─────────────────────────────────────── */
-        .top-nav-bar {
-            position: absolute; top: 62px; left: 0; right: 0;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 26px; z-index: 50;
+        /* ── TOP BAR: back · brand ident · clock/theme ── */
+        .top-bar {
+            position: absolute; top: 62px; left: 0; right: 0; z-index: 50;
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            gap: 12px; padding: 12px 24px;
             transition: opacity 1.1s var(--ease-smooth);
         }
-        .top-nav-bar .back-pill {
-            background: var(--page-bg); border: 1.5px solid var(--c-text);
+        .top-bar .back-pill {
+            justify-self: start;
+            background: transparent; border: 1.5px solid var(--c-text);
             color: var(--c-text); border-radius: 4px;
             padding: 8px 16px; font-size: 10px; font-weight: 900;
             letter-spacing: 2px; text-transform: uppercase;
             box-shadow: none; backdrop-filter: none;
         }
-        .top-nav-bar .back-pill:hover { background: var(--c-text); color: var(--page-bg); }
-        .nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
+        .top-bar .back-pill:hover { background: var(--c-text); color: var(--page-bg); }
 
-        /* ── STAGE: logo + player, centered in every mode ── */
-        #stage {
-            position: absolute; inset: 54px 0 54px;
-            z-index: 10;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: clamp(26px, 5vh, 52px);
-            pointer-events: none;
-            transition: gap 1.1s var(--ease-smooth);
+        .brand-ident {
+            justify-self: center; display: flex; align-items: flex-end;
+            user-select: none; pointer-events: none;
         }
-        body.ui-idle #stage { gap: clamp(18px, 3.5vh, 34px); }
-
-        /* Big centered logo (idle dims this; entry anim lives on the inner) */
-        .fm-logo {
-            user-select: none;
-            transition: opacity 1.1s ease, transform 1.1s var(--ease-smooth);
+        .brand-ident img {
+            height: 40px; width: auto;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
         }
-        .fm-logo-inner { display: flex; align-items: flex-end; justify-content: center; }
-        .fm-logo-img {
-            height: clamp(72px, 15vw, 150px); width: auto;
-            filter: drop-shadow(0 4px 14px rgba(0,0,0,0.18));
-            transition: filter var(--dur-slow) ease;
-        }
-        body.dark-mode .fm-logo-img { filter: drop-shadow(0 4px 20px rgba(0,0,0,0.6)); }
-        /* ".fm" as a gel sticker slapped next to the graffiti logo */
+        body.dark-mode .brand-ident img { filter: drop-shadow(0 2px 10px rgba(0,0,0,0.7)); }
         .fm-badge {
             display: inline-block;
-            margin-left: -8px; margin-bottom: clamp(4px, 1vw, 14px);
-            padding: 0.16em 0.5em 0.2em;
-            transform: rotate(-6deg);
-            border-radius: 0.45em;
-            background: var(--g-gel);
-            color: #fff;
-            font-size: clamp(16px, 3.4vw, 34px);
-            font-weight: 900; letter-spacing: -1px;
-            box-shadow: var(--sh-gloss), 0 4px 14px rgba(143, 74, 20, 0.35);
+            margin-left: -4px; margin-bottom: 3px;
+            padding: 0.14em 0.42em 0.18em;
+            transform: rotate(-6deg); border-radius: 0.4em;
+            background: var(--g-gel); color: #fff;
+            font-size: 13px; font-weight: 900; letter-spacing: -0.5px;
+            box-shadow: var(--sh-gloss), 0 3px 10px rgba(143, 74, 20, 0.35);
             position: relative; overflow: hidden;
         }
         .fm-badge::before {
@@ -120,35 +116,61 @@
             background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.05));
             border-radius: inherit; pointer-events: none;
         }
-        /* AOD: logo lifts a touch and dims */
-        body.ui-idle .fm-logo { opacity: 0.4; transform: translateY(-6px); }
+        .nav-right { justify-self: end; display: flex; align-items: center; gap: 12px; }
 
-        /* ── GLASSY PLAYER ───────────────────────────── */
+        /* ── HERO STAGE (Clean mode centrepiece) ──────── */
+        #stage {
+            position: absolute; inset: 54px 0 200px; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        #hero {
+            opacity: 0;
+            transition: opacity 0.9s ease, transform 1.1s var(--ease-smooth);
+        }
+        body[data-active-mode="clean"] #hero { opacity: 1; }
+        #hero-art {
+            width: clamp(200px, 40vh, 384px); height: clamp(200px, 40vh, 384px);
+            object-fit: cover; border-radius: 26px; display: block;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.10),
+                        inset 0 1px 0 rgba(255,255,255,0.3);
+            animation: heroFloat 7s ease-in-out infinite;
+        }
+        body.dark-mode #hero-art {
+            box-shadow: 0 30px 90px rgba(0,0,0,0.7), 0 0 70px rgba(208,115,41,0.16),
+                        0 0 0 1px rgba(255,255,255,0.06);
+        }
+        #hero-art.swap { animation: heroFloat 7s ease-in-out infinite, heroSwap 0.8s var(--ease-spring); }
+        @keyframes heroFloat { 0%,100%{ translate: 0 0 } 50%{ translate: 0 -12px } }
+        @keyframes heroSwap { 0%{ scale: 0.86; opacity: 0.3 } 60%{ scale: 1.03 } 100%{ scale: 1; opacity: 1 } }
+        body.ui-idle #hero { transform: scale(1.06); }
+
+        /* ── FLOATING PLAYER HUD ──────────────────────── */
+        .hud-wrap {
+            position: absolute; left: 50%; bottom: 122px;
+            transform: translateX(-50%); z-index: 40;
+            width: min(440px, 92vw);
+            transition: opacity 1.1s ease, transform 1.1s var(--ease-smooth);
+        }
+        body.ui-idle .hud-wrap { opacity: 0; pointer-events: none; transform: translate(-50%, 14px); }
+
         .player {
-            pointer-events: auto;
-            position: relative;            /* popover anchor */
-            width: min(400px, 92vw);
-            display: flex; flex-direction: column; gap: 10px;
-            padding: 12px 14px 10px;
+            position: relative;
+            display: flex; flex-direction: column; gap: 9px;
+            padding: 11px 13px 9px;
             border-radius: 20px;
             background: var(--c-glass-strong);
             border: 1px solid var(--c-glass-border);
             outline: 1px solid var(--c-glass-edge);
             box-shadow: var(--sh-float), var(--sh-gloss);
-            backdrop-filter: blur(24px) saturate(160%);
-            -webkit-backdrop-filter: blur(24px) saturate(160%);
-            transition: background 0.9s ease, border-color 0.9s ease,
-                        box-shadow 0.9s ease, opacity 0.9s ease,
-                        transform 0.9s var(--ease-smooth);
-            /* entry uses `backwards` (not `both`) so the idle dim
-               can take over opacity/transform once it finishes */
+            backdrop-filter: blur(26px) saturate(170%);
+            -webkit-backdrop-filter: blur(26px) saturate(170%);
             animation: aero-rise-in var(--dur-medium) var(--ease-smooth) 0.42s backwards;
         }
         .player-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
 
-        /* Small square artwork — DVD mode already floats the big one */
         .art-wrap {
-            width: 46px; height: 46px; flex-shrink: 0;
+            width: 44px; height: 44px; flex-shrink: 0;
             position: relative; border-radius: 10px; overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.35);
         }
@@ -176,44 +198,36 @@
         }
 
         .play-btn {
-            width: 46px; height: 46px; flex-shrink: 0;
+            width: 44px; height: 44px; flex-shrink: 0;
             border-radius: 50%; border: none; cursor: pointer;
             background: var(--g-gel); color: #fff;
             display: flex; align-items: center; justify-content: center;
             box-shadow: var(--sh-gloss), 0 4px 14px rgba(143,74,20,0.35);
             position: relative; overflow: hidden;
-            transition: transform 0.25s var(--ease-spring), opacity 0.4s ease, filter 0.4s ease;
+            transition: transform 0.25s var(--ease-spring), filter 0.4s ease;
         }
         .play-btn::before {
             content: ''; position: absolute; inset: 1px 1px 55% 1px;
             background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.05));
             border-radius: inherit; pointer-events: none;
         }
-        .play-btn svg { width: 19px; height: 19px; fill: #fff; position: relative; z-index: 1; }
+        .play-btn svg { width: 18px; height: 18px; fill: #fff; position: relative; z-index: 1; }
         .play-btn:hover { transform: scale(1.06); }
         .play-btn:active { transform: scale(0.95); }
         .play-btn:disabled { filter: grayscale(1) brightness(0.7); opacity: 0.5; cursor: not-allowed; }
 
-        /* slim utility row under the divider: volume · bass · history */
         .player-sub {
             display: flex; align-items: center; gap: 14px;
             border-top: 1px solid var(--c-glass-edge);
-            padding-top: 9px; margin-top: 1px;
+            padding-top: 8px;
         }
         .vol { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; color: var(--c-text-muted); }
         .vol svg { flex-shrink: 0; opacity: 0.8; }
-        .vol input[type="range"] {
-            flex: 1; min-width: 0; height: 4px; cursor: pointer;
-            accent-color: var(--c-amber);
-        }
+        .vol input[type="range"] { flex: 1; min-width: 0; height: 4px; cursor: pointer; accent-color: var(--c-amber); }
 
-        /* Bass boost — OFF / 1 / 2 / 3 segmented control */
-        .bass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; justify-self: end; }
-        .bass-label {
-            font-size: 8px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
-            color: var(--c-text-muted);
-        }
-                .bass-segs { display: flex; gap: 3px; align-items: flex-end; }
+        .bass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .bass-label { font-size: 8px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-muted); }
+        .bass-segs { display: flex; gap: 3px; align-items: flex-end; }
         .bass-seg {
             width: 9px; height: 14px; padding: 0; cursor: pointer;
             border: 1.5px solid var(--c-text-muted); border-radius: 2px;
@@ -223,7 +237,7 @@
         .bass-seg[data-level="3"] { height: 20px; }
         .bass-seg.on { background: var(--c-amber); border-color: var(--c-amber); }
 
-        /* ── RECENTLY PLAYED — floating glass popover ──────── */
+        /* Recently played — popover opens UPWARD above the HUD */
         .recent-toggle {
             display: inline-flex; align-items: center; gap: 7px;
             background: transparent; border: none; cursor: pointer;
@@ -234,38 +248,36 @@
             transition: color 0.3s;
         }
         .recent-toggle:hover { color: var(--c-amber); }
-        .recent-toggle .chev { transition: transform 0.4s var(--ease-spring); font-size: 7px; }
+        .recent-toggle .chev { transition: transform 0.4s var(--ease-spring); font-size: 7px; display: inline-block; transform: rotate(180deg); }
         #player.recent-open .recent-toggle { color: var(--c-amber); }
-        #player.recent-open .recent-toggle .chev { transform: rotate(180deg); }
+        #player.recent-open .recent-toggle .chev { transform: rotate(0deg); }
 
         .recent-pop {
-            position: absolute; top: calc(100% + 10px); left: 0; right: 0;
+            position: absolute; bottom: calc(100% + 10px); left: 0; right: 0;
             border-radius: 16px;
             background: var(--c-glass-strong);
             border: 1px solid var(--c-glass-border);
             outline: 1px solid var(--c-glass-edge);
             box-shadow: var(--sh-float);
-            backdrop-filter: blur(24px) saturate(160%);
-            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            backdrop-filter: blur(26px) saturate(170%);
+            -webkit-backdrop-filter: blur(26px) saturate(170%);
             padding: 12px 14px 8px;
             opacity: 0; pointer-events: none;
-            transform: translateY(-6px) scale(0.98);
-            transform-origin: top center;
+            transform: translateY(8px) scale(0.98);
+            transform-origin: bottom center;
             transition: opacity 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
             z-index: 6;
         }
         #player.recent-open .recent-pop { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         .recent-head {
-            display: flex; align-items: center; justify-content: space-between;
             font-size: 8px; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
             color: var(--c-text-muted);
             padding-bottom: 8px; margin-bottom: 2px;
             border-bottom: 1px solid var(--c-glass-edge);
         }
-        .recent-head .recent-live-dot { width: 6px; height: 6px; }
         #history-list {
             list-style: none; padding: 0; margin: 0;
-            max-height: 192px; overflow-y: auto;
+            max-height: 200px; overflow-y: auto;
             display: flex; flex-direction: column;
             scrollbar-width: thin; scrollbar-color: var(--c-amber-20) transparent;
         }
@@ -284,10 +296,7 @@
         .history-item:hover { color: var(--c-amber); }
         .history-num { font-size: 8px; font-weight: 900; color: var(--c-amber); flex-shrink: 0; }
 
-        /* Sleep: everything settles and dims — no morphing */
-        body.ui-idle .player { opacity: 0.3; transform: scale(0.97); }
-
-        /* ── DVD MODE — clean artwork bounce, no tinting ── */
+        /* ── DVD bounce ──────────────────────────────── */
         #bg-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
         #dvd-box {
             position: absolute; top: 0; left: 0;
@@ -310,33 +319,31 @@
         }
         .dvd-badge.show { display: flex; }
 
-        /* ── MODE DOCK — monochrome ──────────────────── */
+        /* ── MODE DOCK ──────────────────────────────── */
         .mode-dock-wrap {
-            position: absolute; bottom: 70px; left: 50%;
+            position: absolute; bottom: 68px; left: 50%;
             transform: translateX(-50%); z-index: 70;
             max-width: calc(100vw - 32px);
             transition: opacity 1.1s var(--ease-smooth);
         }
-        /* Step aside while the recently-played drawer is open */
-        body:has(#player.recent-open) .mode-dock-wrap { opacity: 0; pointer-events: none; transition-duration: 0.35s; }
         .mode-toggle {
             display: flex; gap: 0; border-radius: var(--r-pill); padding: 4px;
-            background: rgba(255, 255, 255, 0.85);
-            border: 1.5px solid rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1.5px solid rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
             max-width: 100%; flex-wrap: nowrap;
             transition: background 0.6s ease, border-color 0.6s ease;
         }
         .mode-toggle::-webkit-scrollbar { display: none; }
         body.dark-mode .mode-toggle {
-            background: rgba(10, 10, 10, 0.7); border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(10, 10, 10, 0.55); border-color: rgba(255, 255, 255, 0.25);
         }
         .mode-btn {
             background: transparent; border: none;
             padding: 8px 18px; font-size: 9px; font-weight: 900;
             letter-spacing: 2px; text-transform: uppercase;
-            color: #777; cursor: pointer; border-radius: var(--r-pill);
+            color: #888; cursor: pointer; border-radius: var(--r-pill);
             white-space: nowrap; flex-shrink: 0; font-family: var(--font-primary);
             transition: color 0.3s, background 0.3s var(--ease-spring);
         }
@@ -355,7 +362,8 @@
         body[data-active-mode="orbit"] .viz-settings-btn {
             width: 30px; padding: 4px; opacity: 1; pointer-events: auto; margin-left: 2px;
         }
-        .viz-settings-btn:hover { color: #fff; }
+        .viz-settings-btn:hover { color: var(--c-text); }
+        body.dark-mode .viz-settings-btn:hover { color: #fff; }
 
         .viz-settings-popup {
             position: absolute; bottom: calc(100% + 12px); right: 0;
@@ -380,9 +388,7 @@
             color: rgba(244, 237, 227, 0.6);
             font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
         }
-        .viz-set-header {
-            display: flex; align-items: center; justify-content: space-between;
-        }
+        .viz-set-header { display: flex; align-items: center; justify-content: space-between; }
         .viz-set-value {
             font-variant-numeric: tabular-nums;
             color: var(--c-amber, #d07329); opacity: 0.85;
@@ -405,20 +411,23 @@
         }
         .viz-set-reset:hover { background: #fff; color: #000; }
 
-        /* ── AOD idle: fade the surrounding chrome ─────── */
-        body.ui-idle .top-nav-bar,
+        /* ── IDLE: fade to pure art / visuals ───────────── */
+        body.ui-idle .top-bar,
+        body.ui-idle .hud-wrap,
         body.ui-idle .mode-dock-wrap { opacity: 0; pointer-events: none; }
-        body.ui-idle .ticker-tape { opacity: 0.12; }
+        body.ui-idle .ticker-tape { opacity: 0.1; }
 
         /* ── MOBILE ──────────────────────────────────── */
         @media (max-width: 600px) {
-            .top-nav-bar  { top:48px; padding:10px 14px; }
+            .top-bar      { top:48px; padding:10px 14px; }
+            .brand-ident img { height: 32px; }
+            .fm-badge     { font-size: 11px; }
             .ticker-tape  { height:48px; }
-            #stage        { inset: 48px 0 48px; }
+            #stage        { inset: 48px 0 188px; }
+            #hero-art     { border-radius: 22px; }
             .song-display { font-size:1.05rem; letter-spacing:2.5px; }
             .ticker-art   { height:32px; width:32px; margin: 0 16px; }
-            .player       { width: min(370px, 92vw); }
-            .player-sub   { gap: 10px; }
+            .hud-wrap     { width: min(400px, 92vw); bottom: 116px; }
             .mode-dock-wrap { bottom: 60px; }
             .mode-btn     { padding: 7px 13px; font-size: 8px; letter-spacing: 1.5px; }
             #dvd-box      { width: clamp(96px, 30vw, 150px); }
@@ -428,10 +437,16 @@
 <body>
 
     <div id="app-container" class="a-pop">
+        <div id="ambient" style="background-image:url('cuceugrta.png')"></div>
+
         <div class="ticker-tape ticker-top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
-        <div class="top-nav-bar">
+        <div class="top-bar">
             <a href="/" class="back-pill internal-link a-drop" style="--d:.2s">&larr; Back</a>
+            <div class="brand-ident a-drop" style="--d:.3s">
+                <img src="cuceugrta.png" alt="CUCEU">
+                <span class="fm-badge">.fm</span>
+            </div>
             <div class="nav-right a-drop" style="--d:.2s">
                 <div class="cuceu-clock"><span class="cuceu-clock-text">MONDAY | 00:00 AM</span></div>
                 <button class="theme-toggle" id="direct-theme-toggle" aria-label="Toggle Theme">
@@ -441,15 +456,23 @@
             </div>
         </div>
 
-        <!-- UNIFIED STAGE: logo + glassy player, centered in every mode -->
+        <!-- Hero artwork (Clean mode centrepiece) -->
         <div id="stage">
-            <div class="fm-logo">
-                <div class="fm-logo-inner a-rise" style="--d:.3s">
-                    <img src="cuceugrta.png" alt="CUCEU" class="fm-logo-img">
-                    <span class="fm-badge">.fm</span>
-                </div>
+            <div id="hero">
+                <img id="hero-art" src="cuceugrta.png" alt="Now playing artwork">
             </div>
+        </div>
 
+        <!-- DVD bounce layer -->
+        <div id="bg-layer">
+            <div id="dvd-box">
+                <img id="dvd-artwork" src="" alt="">
+                <span class="dvd-badge" id="dvd-badge">0</span>
+            </div>
+        </div>
+
+        <!-- Floating player HUD -->
+        <div class="hud-wrap" id="hud-wrap">
             <div class="player" id="player">
                 <div class="player-main">
                     <div class="art-wrap">
@@ -483,17 +506,9 @@
                     <button class="recent-toggle" id="history-toggle" aria-expanded="false">History <span class="chev">&#9660;</span></button>
                 </div>
                 <div class="recent-pop" role="region" aria-label="Recently played">
-                    <div class="recent-head"><span>Recently Played</span></div>
+                    <div class="recent-head">Recently Played</div>
                     <ul id="history-list"><li class="history-item">Loading...</li></ul>
                 </div>
-            </div>
-        </div>
-
-        <!-- DVD bounce layer -->
-        <div id="bg-layer">
-            <div id="dvd-box">
-                <img id="dvd-artwork" src="" alt="">
-                <span class="dvd-badge" id="dvd-badge">0</span>
             </div>
         </div>
 
@@ -535,6 +550,8 @@ const statusText   = document.getElementById('status-text');
 const statusDot    = document.getElementById('status-dot');
 const trackTitle   = document.getElementById('track-title');
 const nowArt       = document.getElementById('now-art');
+const heroArt      = document.getElementById('hero-art');
+const ambient      = document.getElementById('ambient');
 const playBtn      = document.getElementById('play-btn');
 const topMarquee   = document.getElementById('top-marquee');
 const bottomMarquee= document.getElementById('bottom-marquee');
@@ -578,7 +595,7 @@ function updateTicker(base) {
     }, 900);
 }
 
-// ── RECENTLY PLAYED dropdown ──────────────────────────────────
+// ── RECENTLY PLAYED popover ───────────────────────────────────
 historyToggle.addEventListener('click', () => {
     const open = playerEl.classList.toggle('recent-open');
     historyToggle.setAttribute('aria-expanded', String(open));
@@ -595,12 +612,18 @@ async function fetchGlobalHistory() {
     } catch(_) {}
 }
 
+// Paint the artwork everywhere: HUD thumb, hero, ambient backdrop
+function applyArtwork(url) {
+    nowArt.src = url;
+    heroArt.src = url;
+    ambient.style.backgroundImage = `url("${url}")`;
+}
 async function fetchArtwork() {
     try {
         const u = (await fetch(`${STREAM_BASE}/artwork.txt?t=` + Date.now()).then(r => r.text())).trim();
         if (u && u.startsWith('http')) currentArtUrl = u; else currentArtUrl = '';
     } catch(_) { currentArtUrl = ''; }
-    nowArt.src = currentArtUrl || 'cuceugrta.png';
+    applyArtwork(currentArtUrl || 'cuceugrta.png');
     if (currentMode === 'dvd') setDvdArt(currentArtUrl || 'cuceugrta.png');
 }
 async function fetchSongData() {
@@ -612,7 +635,7 @@ async function fetchSongData() {
         if (!playing) setStatus('LIVE', 'live');
         if (t !== currentTitle) {
             currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
-            nowArt.classList.remove('swap'); void nowArt.offsetWidth; nowArt.classList.add('swap');
+            for (const el of [nowArt, heroArt]) { el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
             trackTitle.textContent = t; trackTitle.title = t;
             currentTickerBase = `NOW PLAYING: ${t}`;
             updateTicker(currentTickerBase);
@@ -719,15 +742,15 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
-// MODE SYSTEM (Clean / DVD / Aurora) — same stage, different bg
+// MODE SYSTEM (Clean / DVD / Aurora / Orbit)
 // ══════════════════════════════════════════════════════════════
 const bgLayer    = document.getElementById('bg-layer');
 const container  = document.getElementById('app-container');
 const modeToggle = document.getElementById('mode-toggle');
 const modeBtns   = modeToggle.querySelectorAll('.mode-btn');
-const ENGINE_MODES  = ['aurora', 'orbit'];           // Three.js engine
-const DARK_MODES    = ['dvd', 'aurora', 'orbit'];    // force black canvas + dark chrome
+const ENGINE_MODES  = ['aurora', 'orbit'];   // Three.js engine
 let currentMode = 'clean';
+document.body.dataset.activeMode = 'clean';  // hero visible on first load
 
 CuceuViz.setup({ container, provider: audioProvider });
 
@@ -740,20 +763,16 @@ function setMode(mode) {
     stopDvd();
     CuceuViz.stop();
     bgLayer.className = '';
-    container.classList.remove('viz-mode');
     currentMode = mode;
-    document.body.classList.toggle('viz-active', DARK_MODES.includes(mode));
     document.body.dataset.activeMode = mode;
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     vizSettingsPopup.classList.remove('visible');
     CuceuStore.set('cuceu-fm-mode', mode);
 
     if (mode === 'dvd') {
-        container.classList.add('viz-mode');
         bgLayer.classList.add('mode-dvd');
         startDvd();
     } else if (ENGINE_MODES.includes(mode)) {
-        container.classList.add('viz-mode');
         resumeAudioGraph();
         CuceuViz.start(mode);
         CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
@@ -772,13 +791,13 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ── SLEEP IDLE (chrome fades, logo and player dim) ──────────
+// ── SLEEP IDLE (chrome fades to pure art / visuals) ──────────
 let idleTimer = null;
 function resetIdleTimer() {
     document.body.classList.remove('ui-idle');
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-        if (!vizSettingsPopup.classList.contains('visible')) {
+        if (!vizSettingsPopup.classList.contains('visible') && !playerEl.classList.contains('recent-open')) {
             document.body.classList.add('ui-idle');
         }
     }, 5000);
