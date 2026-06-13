@@ -70,15 +70,15 @@ const CuceuTheme = (() => {
 
 // ── CLOCK ────────────────────────────────────────────────────
 const CuceuClock = (() => {
-    const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     let intervalId = null;
 
+    // Raw underground format: "SAT / 16.54.12", shortens to "16.54" on mobile
     function format() {
         const n = new Date();
-        const h = n.getHours() % 12 || 12;
-        const m = n.getMinutes().toString().padStart(2, '0');
-        const ap = n.getHours() >= 12 ? 'PM' : 'AM';
-        return `${DAYS[n.getDay()]} | ${h}:${m} ${ap}`;
+        const p = x => String(x).padStart(2, '0');
+        if (window.innerWidth < 680) return `${p(n.getHours())}.${p(n.getMinutes())}`;
+        return `${DAYS[n.getDay()]} / ${p(n.getHours())}.${p(n.getMinutes())}.${p(n.getSeconds())}`;
     }
 
     /** Start clock updates on all elements matching selector */
