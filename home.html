@@ -12,542 +12,245 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        html, body {
-            height: 100vh; height: 100dvh;
-            display: flex; flex-direction: column;
-            overflow: hidden;
+        :root {
+            --bg:#000; --ink:#f2f0eb; --dim:#6b6b6b; --line:#262626; --acid:#ff4d00;
+            --mono:'Space Mono', ui-monospace, monospace;
+            --disp:'Archivo', system-ui, sans-serif;
         }
+        body:not(.dark-mode) { --bg:#f4f2ec; --ink:#14110d; --dim:#8a857a; --line:#d8d4ca; --acid:#f23c00; }
 
-        /* ── NOW PLAYING BANNER ──────────────────────────── */
-        #app-container {
-            width: 100vw; height: 100dvh;
-            position: relative; overflow: hidden;
-            background-color: var(--c-bg);
-            transition: background-color var(--dur-slow) ease;
-        }
+        * { box-sizing:border-box; margin:0; }
+        html, body { height:100dvh; overflow:hidden; }
+        body { background:var(--bg); color:var(--ink); font-family:var(--disp);
+            display:flex; flex-direction:column; transition:background 0.4s ease, color 0.4s ease; }
 
-        /* Floating Aero glass capsule, detached from the top edge */
-        #now-playing-banner {
-            position: absolute; top: 16px; left: 50%;
-            width: min(560px, calc(100vw - 32px));
-            height: 62px;
-            border-radius: var(--r-pill);
-            z-index: 120;
-            transform: translate(-50%, calc(-100% - 20px));
-            transition: transform var(--dur-medium) var(--ease-spring);
-        }
-        #now-playing-banner.visible { transform: translate(-50%, 0); }
-        body.is-exiting #now-playing-banner {
-            transition: transform 0.30s var(--ease-smooth);
-            transform: translate(-50%, calc(-100% - 20px));
-        }
-        .banner-inner {
-            display: flex; align-items: center;
-            height: 100%; padding: 0 var(--sp-16) 0 var(--sp-24); gap: 14px;
-            position: relative; z-index: 1;
-        }
-        .banner-live-dot {
-            width: 9px; height: 9px;
-            --dot-c: var(--c-amber-bright);
-            animation: aero-pulse 1.4s ease-in-out infinite;
-        }
-        #banner-art {
-            width: 40px; height: 40px; border-radius: 10px;
-            object-fit: cover; flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
-            opacity: 0; transition: opacity 0.35s ease;
-        }
-        #banner-art.has-art { opacity: 1; }
-        .banner-info { flex: 1; min-width: 0; }
-        .banner-label {
-            display: block; font-size: 8px; font-weight: var(--fw-black);
-            letter-spacing: var(--ls-ultra); color: var(--c-amber);
-            text-transform: uppercase;
-        }
-        #banner-track {
-            display: block; font-size: 13px; font-weight: var(--fw-heavy);
-            color: var(--c-text); text-transform: uppercase;
-            letter-spacing: var(--ls-normal);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .banner-btn {
-            flex-shrink: 0; color: #fff;
-            font-size: 10px; font-weight: var(--fw-black);
-            letter-spacing: var(--ls-wide);
-            text-transform: uppercase; text-decoration: none;
-            padding: 9px 18px;
-            white-space: nowrap;
-            display: inline-flex; align-items: center;
-        }
+        /* ── HEADER ──────────────────────────────────── */
+        .head { flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+            padding:14px 24px; border-bottom:1px solid var(--line); z-index:30; background:var(--bg); }
+        .tagline { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--dim); }
+        .clock { display:flex; align-items:center; gap:16px; }
+        .clock .cuceu-clock-text { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim); white-space:nowrap; }
+        .tog { width:28px; height:28px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s, color 0.2s; }
+        .tog:hover { background:var(--ink); color:var(--bg); }
+        .tog svg { width:15px; height:15px; }
+        .tog .icon-sun { display:none; } body.dark-mode .tog .icon-sun { display:block; } body.dark-mode .tog .icon-moon { display:none; }
 
-        /* ── STATUS AREA (clock + theme toggle) ──────────── */
-        .status-area {
-            position: absolute; top: 25px; right: 30px;
-            display: flex; align-items: center; gap: var(--sp-12);
-            z-index: 100;
-            transition: top var(--dur-medium) var(--ease-smooth);
-        }
-        body.banner-active .status-area { top: 92px; }
+        /* ── NOW PLAYING BANNER (raw drop-bar) ───────── */
+        #now-playing-banner { flex-shrink:0; overflow:hidden; max-height:0; background:var(--bg);
+            border-bottom:0 solid var(--line); z-index:25;
+            transition:max-height 0.45s var(--mono, ease), border-bottom-width 0.45s; }
+        #now-playing-banner.visible { max-height:58px; border-bottom:1px solid var(--line); }
+        .banner-inner { display:flex; align-items:center; gap:14px; height:58px; padding:0 24px; }
+        .banner-live-dot { width:9px; height:9px; flex-shrink:0; background:var(--acid); animation:blink 1s steps(2) infinite alternate; }
+        @keyframes blink { from{opacity:1} to{opacity:0.35} }
+        #banner-art { width:38px; height:38px; object-fit:cover; flex-shrink:0; border:1px solid var(--line); opacity:0; transition:opacity 0.35s ease; }
+        #banner-art.has-art { opacity:1; }
+        .banner-info { flex:1; min-width:0; display:flex; align-items:baseline; gap:12px; }
+        .banner-label { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--acid); flex-shrink:0; }
+        #banner-track { font-family:var(--mono); font-size:13px; font-weight:700; text-transform:uppercase; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .banner-btn { flex-shrink:0; background:var(--acid); color:#000; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; padding:9px 18px; }
+        .banner-btn:hover { filter:brightness(1.1); }
 
-        /* ── TAGLINE ─────────────────────────────────────── */
-        .tagline {
-            position: absolute;
-            top: 25px; left: 30px;
-            z-index: 100;
-            font-size: clamp(9px, 1vw, 11px);
-            font-weight: var(--fw-black);
-            letter-spacing: var(--ls-mega);
-            text-transform: uppercase;
-            color: var(--c-text-muted);
-            transition: top var(--dur-medium) var(--ease-smooth);
-        }
-        body.banner-active .tagline { top: 92px; }
+        /* ── MARQUEE STAGE ───────────────────────────── */
+        .main-content { flex:1; position:relative; overflow:hidden; min-height:0; }
+        #logo-wrapper { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:0.4vw; overflow:hidden; pointer-events:none; }
+        .marquee-track { display:flex; flex-wrap:nowrap; width:max-content; will-change:transform; }
+        .track-right { transform:translateX(-50%); }
+        img.cuceu-img { height:clamp(3rem, 4.6vw, 6rem); width:auto; margin-right:1.4vw; flex-shrink:0; user-select:none; -webkit-user-drag:none; }
+        .marquee-track:nth-child(even) img.cuceu-img { transform:rotate(180deg); }
+        body:not(.dark-mode) img.cuceu-img { filter:none; }
 
-        /* ── MARQUEE BACKGROUND ──────────────────────────── */
-        .main-content {
-            flex-grow: 1; display: flex; align-items: center;
-            justify-content: center; position: relative;
-        }
+        /* ── DOCK (raw bottom nav) ───────────────────── */
+        .dock { flex-shrink:0; display:flex; align-items:stretch; border-top:1px solid var(--line); background:var(--bg); z-index:30; }
+        .dock-app { flex:1; position:relative; text-decoration:none; border-right:1px solid var(--line);
+            display:flex; align-items:center; justify-content:center; gap:10px; min-height:56px; padding:0 12px;
+            font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+            color:var(--dim); transition:background 0.2s, color 0.2s; }
+        .dock-app:last-child { border-right:none; }
+        .dock-app:hover { background:var(--ink); color:var(--bg); }
+        .dock-app svg { width:16px; height:16px; flex-shrink:0; }
+        .dock-app.is-fm { color:var(--ink); }
+        .dock-app.is-fm:hover { background:var(--acid); color:#000; }
+        .app-badge { display:none; align-items:center; gap:5px; font-size:9px; letter-spacing:1px; color:var(--acid); }
+        .app-badge.visible { display:inline-flex; }
+        .dock-app:hover .app-badge { color:#000; }
+        .recording-dot { width:6px; height:6px; background:var(--acid); }
+        .dock-app:hover .recording-dot { background:#000; }
+        .ext { font-size:10px; opacity:0.6; }
 
-        #logo-wrapper {
-            position: absolute; top: 50px; left: 0;
-            width: 100vw; height: calc(100dvh - 160px);
-            display: flex; flex-direction: column; justify-content: center;
-            overflow: hidden; pointer-events: none;
-        }
-
-        .marquee-track {
-            display: flex; flex-wrap: nowrap;
-            width: max-content; will-change: transform;
-            margin-top: -0.8vw;
-        }
-        .track-right { transform: translateX(-50%); }
-        .track-left  { transform: translateX(0%); }
-
-        img.cuceu-img {
-            height: clamp(3rem, 4.5vw, 6rem); width: auto;
-            margin-right: 1vw; flex-shrink: 0;
-            user-select: none; -webkit-user-drag: none;
-        }
-        .marquee-track:nth-child(even) img.cuceu-img {
-            transform: rotate(180deg);
-        }
-
-        /* ── LIQUID GLASS DOCK ───────────────────────────── */
-        .mac-dock-container {
-            position: absolute; bottom: 30px; width: 100%;
-            display: flex; justify-content: center; z-index: 10;
-        }
-
-        .mac-dock {
-            border-radius: 32px;
-            padding: 10px 16px;
-            display: flex; gap: 12px; align-items: center;
-        }
-
-        .dock-app {
-            text-decoration: none; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            transition: transform 0.35s var(--ease-spring), filter 0.3s ease;
-            position: relative; height: 60px; width: 60px;
-            z-index: 1;
-        }
-        .dock-app.is-open::after {
-            content: ''; position: absolute; bottom: 2px; left: 50%;
-            transform: translateX(-50%); width: 5px; height: 5px;
-            background: var(--c-amber); border-radius: 50%;
-            box-shadow: 0 0 6px var(--c-amber-glow);
-        }
-        .dock-app:hover {
-            transform: translateY(-8px) scale(1.12);
-            filter: drop-shadow(0 6px 12px var(--c-amber-15));
-        }
-
-        /* Icon Base Styles */
-        .app-icon {
-            width: 50px; height: 50px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-        }
-
-        /* App Squircle Shape */
-        .squircle {
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            overflow: hidden;
-            transition: box-shadow 0.3s ease;
-        }
-        .dock-app:hover .squircle {
-            box-shadow: 0 6px 20px var(--c-amber-20);
-        }
-        .squircle::after {
-            content: ''; position: absolute; inset: 0;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-top-color: rgba(255,255,255,0.5);
-            border-bottom-color: rgba(0,0,0,0.1);
-            border-radius: inherit; pointer-events: none;
-        }
-
-        /* Specific App Colors */
-        .icon-ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-        .icon-td { background: transparent; }
-        .icon-fm {
-            background: var(--g-gel); color: #fff;
-            font-size: 20px; font-weight: var(--fw-heavy);
-            letter-spacing: -0.5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        .icon-fm::before {
-            content: ''; position: absolute; inset: 1px 1px 50% 1px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.08));
-            border-radius: 13px 13px 40% 40%;
-            pointer-events: none;
-        }
-        .icon-bin {
-            background: transparent; box-shadow: none;
-            width: 56px; height: 56px; margin-bottom: -4px;
-        }
-
-        .app-tooltip {
-            position: absolute; top: -38px;
-            background: rgba(20,18,14,0.88); backdrop-filter: blur(12px);
-            padding: 6px 14px; border-radius: var(--r-md);
-            font-size: 11px; font-weight: var(--fw-bold); color: #fff;
-            opacity: 0; pointer-events: none;
-            transform: translateY(4px) scale(0.95);
-            transition: opacity 0.25s, transform 0.3s var(--ease-spring);
-            white-space: nowrap; text-transform: uppercase;
-        }
-        .dock-app:hover .app-tooltip { opacity: 1; transform: translateY(0) scale(1); }
-
-        .app-badge {
-            position: absolute; top: -4px; right: -8px;
-            background: rgba(20,20,25,0.92); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
-            padding: 3px 7px; display: flex; align-items: center; gap: 4px;
-            font-size: 8px; font-weight: var(--fw-heavy); color: #fff;
-            opacity: 0; z-index: 20; pointer-events: none;
-        }
-        .app-badge.visible { opacity: 1; }
-        .recording-dot {
-            width: 5px; height: 5px; background: var(--c-amber); border-radius: 50%;
-            box-shadow: 0 0 6px var(--c-amber-glow);
-            animation: aero-pulse 2s ease-in-out infinite;
-        }
-
-        /* ── MOBILE ──────────────────────────────────────── */
-        @media (max-width: 600px) {
-            .status-area { font-size: 11px; top: 20px; right: 16px; letter-spacing: 0.8px; }
-            body.banner-active .status-area { top: 82px; }
-            .tagline { top: 20px; left: 16px; }
-            body.banner-active .tagline { top: 82px; }
-            img.cuceu-img { height: 4rem; margin-right: 4vw; }
-            .marquee-track { margin-top: -1vw; }
-            .mac-dock { gap: 8px; padding: 8px 12px; border-radius: 24px; }
-            .dock-app { width: 50px; height: 50px; }
-            .app-icon { width: 44px; height: 44px; border-radius: 10px; }
-            .icon-fm { font-size: 16px; }
-            .icon-bin { width: 48px; height: 48px; }
-            #now-playing-banner { height: 54px; }
-            .banner-btn { padding: 7px 12px; font-size: 9px; }
-            #banner-track { font-size: 11px; }
+        @media (max-width:680px) {
+            .head { padding:11px 14px; }
+            .tagline { font-size:10px; letter-spacing:2px; }
+            .banner-inner { padding:0 14px; gap:10px; }
+            .banner-label { display:none; }
+            .dock { flex-wrap:wrap; }
+            .dock-app { flex:1 1 50%; min-height:52px; font-size:10px; letter-spacing:1px; }
+            .dock-app:nth-child(2) { border-right:none; }
+            .dock-app:nth-child(1), .dock-app:nth-child(2) { border-bottom:1px solid var(--line); }
+            img.cuceu-img { height:4rem; margin-right:4vw; }
         }
     </style>
 </head>
 <body>
 
-    <div id="now-playing-banner" class="aero-panel">
+    <div class="head">
+        <span class="tagline">Music × Visuals</span>
+        <div class="clock">
+            <span class="cuceu-clock-text">FRI / 00.00.00</span>
+            <button class="tog" id="theme-toggle-btn" aria-label="Toggle Theme">
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="now-playing-banner">
         <div class="banner-inner">
-            <span class="banner-live-dot aero-dot"></span>
+            <span class="banner-live-dot"></span>
             <img id="banner-art" alt="">
             <div class="banner-info">
                 <span class="banner-label">Live Now</span>
                 <span id="banner-track">—</span>
             </div>
-            <a href="/fm/" class="banner-btn aero-gel" target="_top">Listen Now →</a>
+            <a href="/fm/" class="banner-btn" target="_top">Listen ↗</a>
         </div>
-    </div>
-
-    <div class="tagline a-drop" style="--d:.3s">Music × Visuals</div>
-
-    <div class="status-area a-drop" style="--d:.1s">
-        <span class="cuceu-clock-text">MONDAY | 12:00 AM</span>
-        <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme">
-            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </button>
     </div>
 
     <div class="main-content">
-        <div id="logo-wrapper" class="a-rise" style="--d:.1s">
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-right mobile-hide">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-            <div class="marquee-track track-left mobile-hide">
-                <img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU"><img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">
-            </div>
-        </div>
+        <div id="logo-wrapper"></div>
     </div>
 
-    <div class="mac-dock-container">
-        <div class="mac-dock aero-panel a-slideup" style="--d:.1s">
-
-            <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
-                <div class="app-tooltip">Instagram</div>
-                <div class="app-icon squircle icon-ig">
-                    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                </div>
-            </a>
-
-            <a href="/td/index.html" class="dock-app internal-link">
-                <div class="app-tooltip">TouchDesigner</div>
-                <div class="app-icon squircle icon-td">
-                    <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0" y="0" width="100" height="100" fill="#919c7d" />
-                        <path d="M50 0L50 100M0 50L100 50" stroke="#111" stroke-width="5"/>
-                        <path d="M20 20L50 50M80 20L50 50M20 80L50 50M80 80L50 50" stroke="#111" stroke-width="5"/>
-                        <rect x="12" y="12" width="20" height="20" fill="#111"/>
-                        <rect x="68" y="12" width="20" height="20" fill="#111"/>
-                        <rect x="12" y="68" width="20" height="20" fill="#111"/>
-                        <rect x="68" y="68" width="20" height="20" fill="#111"/>
-                        <circle cx="50" cy="50" r="23" fill="#fff" stroke="#111" stroke-width="5"/>
-                        <rect x="43" y="43" width="14" height="14" fill="#111"/>
-                    </svg>
-                </div>
-            </a>
-
-            <a href="/fm/" class="dock-app" target="_top" id="fm-app">
-                <div class="app-tooltip">cuceuFM</div>
-                <div class="app-badge" id="fm-badge">
-                    <div class="recording-dot" style="display:none;"></div>
-                    <span id="fm-badge-text">OFFLINE</span>
-                </div>
-                <div class="app-icon squircle icon-fm">.fm</div>
-            </a>
-
-            <a href="/bin/index.html" class="dock-app internal-link">
-                <div class="app-tooltip">Bin</div>
-                <div class="app-icon icon-bin">
-                    <svg viewBox="0 0 100 100" width="48" height="48">
-                        <defs>
-                            <linearGradient id="binFront" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#e0e0e0"/>
-                                <stop offset="20%" stop-color="#ffffff"/>
-                                <stop offset="80%" stop-color="#e0e0e0"/>
-                                <stop offset="100%" stop-color="#c0c0c0"/>
-                            </linearGradient>
-                            <linearGradient id="binBack" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#b0b0b0"/>
-                                <stop offset="100%" stop-color="#d0d0d0"/>
-                            </linearGradient>
-                        </defs>
-                        <ellipse cx="50" cy="25" rx="30" ry="8" fill="url(#binBack)"/>
-                        <path d="M20 25 L28 85 C28 90, 72 90, 72 85 L80 25 Z" fill="url(#binFront)"/>
-                        <ellipse cx="50" cy="25" rx="30" ry="8" fill="none" stroke="#f4f4f4" stroke-width="2"/>
-                        <ellipse cx="50" cy="25" rx="31" ry="9" fill="none" stroke="#c0c0c0" stroke-width="1"/>
-                        <line x1="33" y1="33" x2="38" y2="83" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="41" y1="34" x2="44" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="50" y1="34" x2="50" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="59" y1="34" x2="56" y2="84" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="67" y1="33" x2="62" y2="83" stroke="#c8c8c8" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                </div>
-            </a>
-
-        </div>
-    </div>
+    <nav class="dock">
+        <a href="https://www.instagram.com/cuceuuu/" target="_blank" class="dock-app">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            Instagram <span class="ext">↗</span>
+        </a>
+        <a href="/td/index.html" class="dock-app internal-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+            TouchDesigner
+        </a>
+        <a href="/fm/" class="dock-app is-fm" target="_top" id="fm-app">
+            Radio
+            <span class="app-badge" id="fm-badge"><span class="recording-dot" style="display:none;"></span><span id="fm-badge-text">Offline</span></span>
+        </a>
+        <a href="/bin/index.html" class="dock-app internal-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Bin
+        </a>
+    </nav>
 
     <script>
-        // Redirect to wrapper if loaded directly
-        if (window === window.parent) {
-            window.location.replace('/?path=' + window.location.pathname);
-        }
+        if (window === window.parent) { window.location.replace('/?path=' + window.location.pathname); }
     </script>
     <script src="shared.js"></script>
     <script>
-        // ── MARQUEE ANIMATION (Web Animations API) ───────────
         document.addEventListener('DOMContentLoaded', () => {
-            // Bind theme toggle
             CuceuTheme.bindToggle(document.getElementById('theme-toggle-btn'));
 
+            // Build marquee rows (graffiti tape) — alternating direction
+            const wrap = document.getElementById('logo-wrapper');
+            const ROWS = 7, PER_ROW = 16;
+            for (let r = 0; r < ROWS; r++) {
+                const track = document.createElement('div');
+                track.className = 'marquee-track ' + (r % 2 === 0 ? 'track-right' : 'track-left');
+                let html = '';
+                for (let i = 0; i < PER_ROW; i++) html += '<img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">';
+                track.innerHTML = html;
+                wrap.appendChild(track);
+            }
+
+            // Marquee animation with tape-deck spin-up
             const marqueeAnimations = [];
             const tracks = document.querySelectorAll('.marquee-track');
             let isSpinningUp = true;
-
             tracks.forEach((track, index) => {
                 const isRight = track.classList.contains('track-right');
                 const keyframes = isRight
                     ? [{ transform: 'translateX(-50%)' }, { transform: 'translateX(0%)' }]
                     : [{ transform: 'translateX(0%)' }, { transform: 'translateX(-50%)' }];
-
-                const anim = track.animate(keyframes, {
-                    duration: 30000,
-                    iterations: Infinity,
-                    easing: 'linear'
-                });
+                const anim = track.animate(keyframes, { duration: 30000, iterations: Infinity, easing: 'linear' });
                 anim.pause();
                 anim.currentTime = (index * 4500) % 30000;
                 marqueeAnimations.push(anim);
             });
-
             function setMarqueeState(state) {
                 if (isSpinningUp) return;
-                marqueeAnimations.forEach(anim => {
-                    if (state === 'running') anim.play();
-                    else anim.pause();
-                });
+                marqueeAnimations.forEach(a => state === 'running' ? a.play() : a.pause());
             }
-
-            // Tape-deck spin-up acceleration
             setTimeout(() => {
-                marqueeAnimations.forEach(anim => {
-                    anim.play();
-                    anim.playbackRate = 0;
-                });
-
-                let start = null;
-                const duration = 2500;
-
-                function step(timestamp) {
-                    if (!start) start = timestamp;
-                    const elapsed = timestamp - start;
-                    const progress = Math.min(elapsed / duration, 1);
+                marqueeAnimations.forEach(a => { a.play(); a.playbackRate = 0; });
+                let start = null; const duration = 2500;
+                function step(ts) {
+                    if (!start) start = ts;
+                    const progress = Math.min((ts - start) / duration, 1);
                     const easeIn = progress * progress * progress;
-
-                    marqueeAnimations.forEach(anim => {
-                        anim.playbackRate = easeIn;
-                    });
-
-                    if (progress < 1) {
-                        requestAnimationFrame(step);
-                    } else {
-                        marqueeAnimations.forEach(anim => { anim.playbackRate = 1; });
-                        isSpinningUp = false;
-                    }
+                    marqueeAnimations.forEach(a => a.playbackRate = easeIn);
+                    if (progress < 1) requestAnimationFrame(step);
+                    else { marqueeAnimations.forEach(a => a.playbackRate = 1); isSpinningUp = false; }
                 }
                 requestAnimationFrame(step);
-            }, 1400);
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') setMarqueeState('running');
-                else setMarqueeState('paused');
-            });
-
+            }, 1000);
+            document.addEventListener('visibilitychange', () =>
+                setMarqueeState(document.visibilityState === 'visible' ? 'running' : 'paused'));
             window.addEventListener('pageshow', (e) => {
-                if (e.persisted) {
-                    document.body.classList.remove('is-exiting');
-                    setMarqueeState('running');
-                }
+                if (e.persisted) { document.body.classList.remove('is-exiting'); setMarqueeState('running'); }
             });
         });
 
         // ── STREAM STATUS + NOW PLAYING BANNER ───────────────
-        // BUG FIX: Fetches directly from stream server (no CORS proxy)
-        // BUG FIX: Parses JSON instead of regex on text
         const STREAM_BASE = "https://stream.cuceu.co.uk";
         let bannerShown = false;
         let lastBannerTitle = '';
 
         async function refreshBannerArt() {
             try {
-                const artUrlResponse = await fetch(`${STREAM_BASE}/artwork.txt?t=${Date.now()}`);
-                const artUrl = (await artUrlResponse.text()).trim();
+                const artUrl = (await fetch(`${STREAM_BASE}/artwork.txt?t=${Date.now()}`).then(r => r.text())).trim();
                 if (artUrl && artUrl.startsWith('http')) {
                     const img = document.getElementById('banner-art');
                     img.onload = () => img.classList.add('has-art');
                     img.src = artUrl;
                 }
-            } catch (e) { /* artwork fetch failed, no big deal */ }
+            } catch (e) { /* no big deal */ }
         }
-
         async function checkStream() {
             const fmBadgeTextEl = document.getElementById('fm-badge-text');
             const fmBadgeEl = document.getElementById('fm-badge');
             const liveDot = fmBadgeEl.querySelector('.recording-dot');
-            const nowPlayingBanner = document.getElementById('now-playing-banner');
-
+            const banner = document.getElementById('now-playing-banner');
             try {
                 const response = await fetch(`${STREAM_BASE}/status-json.xsl?t=${Date.now()}`);
-                if (!response.ok) throw new Error('Network response was not ok.');
-
+                if (!response.ok) throw new Error('not ok');
                 const data = await response.json();
                 const source = data.icestats?.source;
-
                 if (source) {
-                    const title = Array.isArray(source)
-                        ? (source[0].title || 'ON AIR')
-                        : (source.title || 'ON AIR');
-
-                    fmBadgeTextEl.innerText = "ON AIR";
+                    const title = Array.isArray(source) ? (source[0].title || 'ON AIR') : (source.title || 'ON AIR');
+                    fmBadgeTextEl.innerText = "On Air";
                     fmBadgeEl.classList.add('visible');
                     liveDot.style.display = 'block';
-
                     document.getElementById('banner-track').textContent = title;
-                    // Refetch artwork whenever the track changes, not just on first show
-                    if (title !== lastBannerTitle) {
-                        lastBannerTitle = title;
-                        refreshBannerArt();
-                    }
+                    if (title !== lastBannerTitle) { lastBannerTitle = title; refreshBannerArt(); }
                     if (!bannerShown) {
                         bannerShown = true;
-                        setTimeout(() => {
-                            nowPlayingBanner.classList.add('visible');
-                            document.body.classList.add('banner-active');
-                        }, 2500);
+                        setTimeout(() => banner.classList.add('visible'), 2200);
                     }
-
-                } else {
-                    throw new Error('No source');
-                }
-
+                } else { throw new Error('No source'); }
             } catch (e) {
-                if (bannerShown) {
-                    document.getElementById('now-playing-banner').classList.remove('visible');
-                    document.body.classList.remove('banner-active');
-                    bannerShown = false;
-                }
-                fmBadgeTextEl.innerText = "OFFLINE";
+                if (bannerShown) { document.getElementById('now-playing-banner').classList.remove('visible'); bannerShown = false; }
+                fmBadgeTextEl.innerText = "Offline";
                 fmBadgeEl.classList.add('visible');
                 liveDot.style.display = 'none';
             }
         }
-
         checkStream();
         setInterval(checkStream, 15000);
 
-        // ── KEYBOARD SHORTCUTS ───────────────────────────────
+        // ── KEYBOARD SHORTCUTS (1-4 → dock items) ────────────
         document.addEventListener('keydown', (e) => {
-            // Number keys 1-4 to activate dock items
             const dockApps = document.querySelectorAll('.dock-app');
             const key = parseInt(e.key);
-            if (key >= 1 && key <= dockApps.length) {
-                dockApps[key - 1].click();
-            }
+            if (key >= 1 && key <= dockApps.length) dockApps[key - 1].click();
         });
     </script>
 

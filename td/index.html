@@ -6,8 +6,27 @@
     <title>cuceu.td</title>
     <meta name="description" content="cuceu.td — TouchDesigner projects and visual experiments.">
     <link rel="icon" href="data:image/svg+xml,<svg viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22><rect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22%23919c7d%22/><path d=%22M 50 0 L 50 100 M 0 50 L 100 50%22 stroke=%22%23111%22 stroke-width=%225%22/><path d=%22M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50%22 stroke=%22%23111%22 stroke-width=%225%22/><rect x=%2212%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2212%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2212%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><rect x=%2268%22 y=%2268%22 width=%2220%22 height=%2220%22 fill=%22%23111%22 /><circle cx=%2250%22 cy=%2250%22 r=%2223%22 fill=%22%23ffffff%22 stroke=%22%23111%22 stroke-width=%225%22 /><rect x=%2243%22 y=%2243%22 width=%2214%22 height=%2214%22 fill=%22%23111%22 /></svg>">
-    <link rel="stylesheet" href="../shared.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg:#000; --ink:#f2f0eb; --dim:#6b6b6b; --line:#262626; --acid:#ff4d00;
+            --ease-smooth:cubic-bezier(.25,1,.5,1); --ease-snappy:cubic-bezier(.5,0,.1,1);
+            --mono:'Space Mono', ui-monospace, monospace; --disp:'Archivo', system-ui, sans-serif;
+        }
+        body:not(.dark-mode){ --bg:#f4f2ec; --ink:#14110d; --dim:#8a857a; --line:#d8d4ca; --acid:#f23c00; }
+        body { background:var(--bg); color:var(--ink); font-family:var(--disp); margin:0; transition:background .4s ease, color .4s ease; }
+        .cuceu-nav { display:flex; align-items:center; justify-content:space-between; padding:13px 24px; border-bottom:1px solid var(--line); flex-shrink:0; }
+        .cuceu-nav .back-pill { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--ink); padding:7px 13px; color:var(--ink); text-decoration:none; }
+        .cuceu-nav .back-pill:hover { background:var(--ink); color:var(--bg); }
+        .nav-right { display:flex; align-items:center; gap:16px; }
+        .cuceu-clock { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim); white-space:nowrap; }
+        .theme-toggle { width:28px; height:28px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .theme-toggle:hover { background:var(--ink); color:var(--bg); }
+        .theme-toggle .icon-sun { display:none; }
+        body.dark-mode .theme-toggle .icon-sun { display:block; }
+        body.dark-mode .theme-toggle .icon-moon { display:none; }
         * { box-sizing: border-box; user-select: none; }
 
         body, html {
@@ -17,7 +36,7 @@
 
         /* ── PAGE TRANSITION ─────────────────────────────── */
         #page-transition-overlay {
-            position: fixed; inset: 0; background: var(--c-bg);
+            position: fixed; inset: 0; background: var(--bg);
             z-index: 99999; pointer-events: none; opacity: 1;
             transition: opacity 0.4s var(--ease-smooth);
         }
@@ -47,7 +66,7 @@
             margin-top: 20px;
         }
 
-        body.dark-mode .cuceu-header-img { filter: invert(1); }
+        body.dark-mode .cuceu-header-img { filter: none; }
 
         /* Logo group: PNG + .td text */
         .logo-group {
@@ -64,12 +83,10 @@
 
         /* .td text pulled close to the PNG */
         .td-text {
-            font-size: clamp(1.4rem, 4.5vw, 3.8rem);
-            font-weight: 400; text-transform: lowercase;
-            color: var(--c-text); letter-spacing: -2px;
-            /* Pull left to close the gap from the PNG's transparent right edge */
-            margin-left: -14px;
-            padding-bottom: clamp(0.2rem, 0.6vw, 0.5rem);
+            font-family: var(--mono); font-weight: 700;
+            font-size: clamp(1.1rem, 2.6vw, 2rem);
+            color: var(--ink); letter-spacing: 0;
+            margin-left: 4px; margin-bottom: 8px;
         }
 
         /* ── TOUCHDESIGNER WINDOW ────────────────────────── */
@@ -78,8 +95,7 @@
             flex-grow: 1; margin: 0 28px 28px;
             border-radius: 16px; background: #1a1a1a; color: #d0d0d0;
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: var(--sh-float), 0 0 0 1px var(--c-glass-edge);
-            border: 1px solid var(--c-glass-border);
+            border: 1px solid #3d3d3d;
             position: relative;
         }
         .top-bar {

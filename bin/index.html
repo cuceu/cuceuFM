@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trash</title>
-    <link rel="stylesheet" href="../shared.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg:#000; --ink:#f2f0eb; --dim:#6b6b6b; --line:#262626; --acid:#ff4d00;
+            --ease-snappy:cubic-bezier(.5,0,.1,1); --ease-spring:cubic-bezier(.34,1.56,.64,1);
+            --mono:'Space Mono', ui-monospace, monospace; --disp:'Archivo', system-ui, sans-serif;
+        }
+        body:not(.dark-mode){ --bg:#f4f2ec; --ink:#14110d; --dim:#8a857a; --line:#d8d4ca; --acid:#f23c00; }
         body, html {
             margin: 0; padding: 0; height: 100%; overflow: hidden;
         }
@@ -14,7 +22,7 @@
         #app-container {
             width: 100vw; height: 100vh;
             display: flex; flex-direction: column;
-            background-color: var(--c-bg);
+            background-color: var(--bg); color: var(--ink); font-family: var(--disp);
             transform-origin: 70% 100%;
             transition: all 0.6s var(--ease-snappy);
             transform: scale(1) translateY(0);
@@ -31,32 +39,27 @@
 
         /* Aero glass app window bar */
         .mac-titlebar {
-            height: 40px;
-            background: var(--c-glass-strong);
-            backdrop-filter: blur(var(--blur-glass)) saturate(160%);
-            -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(160%);
-            display: flex; align-items: center; padding: 0 15px;
-            border-bottom: 1px solid var(--c-glass-edge);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+            height: 42px; background: var(--bg);
+            display: flex; align-items: center; gap: 12px; padding: 0 14px;
+            border-bottom: 1px solid var(--line);
             position: relative; z-index: 9999;
         }
 
         /* The close orb — recognizable red, with an Aero specular dot */
         .close-btn {
-            width: 13px; height: 13px; border-radius: 50%;
-            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), #ff5f56 45%, #c93c34 100%);
-            border: 1px solid #e0443e;
-            box-shadow: 0 0 6px rgba(255,95,86,0.4);
-            display: inline-block; cursor: pointer; padding: 0;
-            transition: transform 0.2s var(--ease-spring), opacity 0.2s;
-            position: relative; z-index: 99999;
+            width: 24px; height: 24px; border: 1px solid var(--line);
+            background: transparent; color: var(--ink); cursor: pointer; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--mono); font-size: 12px; z-index: 99999;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
         }
-        .close-btn:hover { transform: scale(1.15); }
-        .close-btn:active { transform: scale(0.9); }
+        .close-btn::before { content: '\2715'; }
+        .close-btn:hover { background: var(--acid); color: #000; border-color: var(--acid); }
 
         .window-title {
-            flex-grow: 1; text-align: center; font-weight: 600; font-size: 13px;
-            color: var(--c-text); margin-left: -13px; pointer-events: none;
+            flex-grow: 1; text-align: center; margin-left: -36px; pointer-events: none;
+            font-family: var(--mono); font-weight: 700; font-size: 12px;
+            letter-spacing: 3px; text-transform: uppercase; color: var(--ink);
         }
 
         /* Camera wrapper — glass vignette frame around the feed */
@@ -80,7 +83,7 @@
         /* Message if they deny camera access */
         #error-msg {
             display: none; text-align: center; font-size: 1.2rem;
-            color: #f4ede3;
+            color: var(--ink); font-family: var(--mono);
             position: absolute; z-index: 5; max-width: 80%;
         }
     </style>
