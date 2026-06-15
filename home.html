@@ -29,7 +29,10 @@
         /* ── HEADER ──────────────────────────────────── */
         .head { flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
             padding:14px 24px; border-bottom:1px solid var(--line); z-index:30; background:var(--bg); }
-        .tagline { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--dim); }
+        .station-id { display:flex; align-items:center; gap:9px; }
+        .wordmark { font-family:var(--disp); font-size:18px; font-weight:800; letter-spacing:-0.6px; color:var(--ink); line-height:1; }
+        .head-live-dot { width:7px; height:7px; background:var(--acid); display:none; animation:blink 1s steps(2) infinite alternate; }
+        .head-live-dot.visible { display:block; }
         .clock { display:flex; align-items:center; gap:16px; }
         .clock .cuceu-clock-text { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim); white-space:nowrap; }
         .tog { width:28px; height:28px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s, color 0.2s; }
@@ -82,21 +85,24 @@
 
         @media (max-width:680px) {
             .head { padding:11px 14px; }
-            .tagline { font-size:10px; letter-spacing:2px; }
+            .wordmark { font-size:17px; }
             .banner-inner { padding:0 14px; gap:10px; }
             .banner-label { display:none; }
             .dock { flex-wrap:wrap; }
             .dock-app { flex:1 1 50%; min-height:52px; font-size:10px; letter-spacing:1px; }
             .dock-app:nth-child(2) { border-right:none; }
             .dock-app:nth-child(1), .dock-app:nth-child(2) { border-bottom:1px solid var(--line); }
-            img.cuceu-img { height:4rem; margin-right:4vw; }
+            img.cuceu-img { height:2.3rem; margin-right:3.5vw; }
         }
     </style>
 </head>
 <body>
 
     <div class="head">
-        <span class="tagline">Music × Visuals</span>
+        <div class="station-id">
+            <span class="wordmark">cuceu</span>
+            <span class="head-live-dot" id="head-live-dot" title="On air"></span>
+        </div>
         <div class="clock">
             <span class="cuceu-clock-text">FRI / 00.00.00</span>
             <button class="tog" id="theme-toggle-btn" aria-label="Toggle Theme">
@@ -149,17 +155,25 @@
         document.addEventListener('DOMContentLoaded', () => {
             CuceuTheme.bindToggle(document.getElementById('theme-toggle-btn'));
 
-            // Build marquee rows (graffiti tape) — alternating direction
+            // Build marquee rows (graffiti wall) — fill the whole stage, alternating direction
             const wrap = document.getElementById('logo-wrapper');
-            const ROWS = 7, PER_ROW = 16;
-            for (let r = 0; r < ROWS; r++) {
+            const region = wrap.parentElement;
+            const PER_ROW = 16;
+            function makeRow(r) {
                 const track = document.createElement('div');
                 track.className = 'marquee-track ' + (r % 2 === 0 ? 'track-right' : 'track-left');
                 let html = '';
                 for (let i = 0; i < PER_ROW; i++) html += '<img class="cuceu-img" src="cuceugrta.png" alt="CUCEU">';
                 track.innerHTML = html;
                 wrap.appendChild(track);
+                return track;
             }
+            let r = 0;
+            makeRow(r++);  // first row establishes the measurable row height
+            const gap = parseFloat(getComputedStyle(wrap).rowGap) || 0;
+            const rowH = wrap.firstElementChild.getBoundingClientRect().height + gap;
+            const target = region.getBoundingClientRect().height * 1.15;  // overfill, centre + clip
+            while (rowH > 0 && r * rowH < target) makeRow(r++);
 
             // Marquee animation with tape-deck spin-up
             const marqueeAnimations = [];
@@ -229,6 +243,7 @@
                     fmBadgeTextEl.innerText = "On Air";
                     fmBadgeEl.classList.add('visible');
                     liveDot.style.display = 'block';
+                    document.getElementById('head-live-dot').classList.add('visible');
                     document.getElementById('banner-track').textContent = title;
                     if (title !== lastBannerTitle) { lastBannerTitle = title; refreshBannerArt(); }
                     if (!bannerShown) {
@@ -241,6 +256,7 @@
                 fmBadgeTextEl.innerText = "Offline";
                 fmBadgeEl.classList.add('visible');
                 liveDot.style.display = 'none';
+                document.getElementById('head-live-dot').classList.remove('visible');
             }
         }
         checkStream();
