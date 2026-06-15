@@ -219,14 +219,20 @@
 
         /* ── MOBILE ──────────────────────────────────────── */
         @media (max-width: 768px) {
+            #app-container { height: 100dvh; }
+            .brand-header { margin-top: 8px; padding: 14px 16px 10px; }
             .cuceu-header-img { height: clamp(3rem, 10vw, 5rem); }
             .td-text { font-size: clamp(1.2rem, 4vw, 2.5rem); margin-left: -12px; }
             .td-window { margin: 0 10px 10px; }
-            #project-node   { left: calc(50vw - 180px); top: calc(50vh - 260px); width: 210px; }
-            #download-node  { left: calc(50vw + 50px);  top: calc(50vh - 190px); width: 110px; }
-            #project-node-2  { left: calc(50vw - 150px); top: calc(50vh - 40px); width: 210px; }
-            #download-node-2 { left: calc(50vw + 80px);  top: calc(50vh + 30px); width: 110px; }
+            /* Editor-relative layout: both projects fit on a phone, no panning needed */
+            #project-node    { left: 12px;  top: 20px;  width: 205px; }
+            #download-node   { left: 234px; top: 66px;  width: 116px; }
+            #project-node-2  { left: 12px;  top: 232px; width: 205px; }
+            #download-node-2 { left: 234px; top: 278px; width: 116px; }
             #project-node .node-viewer, #project-node-2 .node-viewer { height: 105px; }
+            #download-node .node-viewer, #download-node-2 .node-viewer { height: 64px; }
+            /* The pan/zoom pad covered a node on small screens — drop it (touch-drag still pans) */
+            .nav-controls { display: none; }
         }
     </style>
 </head>
