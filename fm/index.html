@@ -57,7 +57,7 @@
         .head {
             position:relative; z-index:3; flex-shrink:0; background:var(--bg);
             display:flex; align-items:center; justify-content:space-between;
-            padding:13px 24px; border-bottom:1px solid var(--line);
+            padding:13px 24px;
         }
         .back {
             font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:1px;
@@ -66,8 +66,8 @@
         }
         .back:hover { background:var(--ink); color:var(--bg); }
         .brand { display:flex; align-items:flex-end; user-select:none; }
-        .brand img { height:34px; }
-        .brand .fm { font-family:var(--mono); font-weight:700; font-size:18px; margin-left:3px; margin-bottom:2px; color:var(--ink); }
+        .brand img { height:46px; }
+        .brand .fm { font-family:var(--disp); font-weight:900; font-size:32px; letter-spacing:-.02em; margin-left:4px; margin-bottom:-3px; color:var(--ink); line-height:1; }
         .clock { display:flex; align-items:center; gap:16px; }
         .clock #rawclock { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim); white-space:nowrap; }
         .tog { width:28px; height:28px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s, color 0.2s; }
@@ -82,8 +82,9 @@
             display:grid; grid-template-columns:auto 1fr;
             opacity:0; pointer-events:none; transition:opacity 0.5s ease;
         }
-        body[data-active-mode="clean"] #stage { opacity:1; pointer-events:auto; }
-        .art-cell { border-right:1px solid var(--line); display:flex; align-items:center; justify-content:center; padding:clamp(20px,4vw,46px); }
+        body[data-active-mode="clean"] #stage,
+        body[data-active-mode="dvd"] #stage { opacity:1; pointer-events:auto; }
+        .art-cell { display:flex; align-items:center; justify-content:center; padding:clamp(20px,4vw,46px); }
         #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); }
         #now-art.swap { animation:artSwap 0.5s ease; }
         @keyframes artSwap { 0%{opacity:0.2} 100%{opacity:1} }
@@ -93,62 +94,65 @@
         .status #status-text { color:var(--acid); }
         .titles { display:flex; flex-direction:column; gap:2px; min-width:0; }
         .artist { font-weight:800; font-size:clamp(18px,3vw,34px); line-height:0.98; letter-spacing:-0.02em; text-transform:uppercase; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .track  { font-weight:900; font-size:clamp(38px,7vw,76px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow:hidden; }
+        .track  { font-weight:900; font-size:clamp(34px,5.4vw,64px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow-wrap:anywhere; }
 
-        /* ── DVD BOUNCE ──────────────────────────────── */
-        #dvd-box { position:absolute; top:0; left:0; width:clamp(110px,18vw,190px); opacity:0; will-change:transform; transition:opacity 0.6s ease; }
-        #bg-layer.mode-dvd #dvd-box { opacity:1; }
-        #dvd-artwork { display:block; width:100%; height:auto; border:1px solid rgba(255,255,255,0.25); }
-        #dvd-box.corner-pop { animation:dvdPop 0.6s ease; }
-        @keyframes dvdPop { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
-        .dvd-badge { position:absolute; top:-9px; right:-9px; min-width:22px; height:22px; padding:0 5px; background:var(--acid); color:#000; font-family:var(--mono); font-size:11px; font-weight:700; display:none; align-items:center; justify-content:center; }
-        .dvd-badge.show { display:flex; }
+        /* ── DVD MODE — real art breaks loose, text centres ── */
+        #dvd-box { display:none; }   /* legacy bouncer, unused */
+        #now-art.dvd-loose { position:absolute; left:0; top:0; margin:0; z-index:6; will-change:transform; }
+        body[data-active-mode="dvd"] .art-cell { width:0; min-width:0; padding:0; overflow:visible; }
+        body[data-active-mode="dvd"] .now { align-items:center; text-align:center; }
 
         /* ── CONSOLE (controls + modes) ──────────────── */
+        #body-row { display:flex; flex:1; min-height:0; }
         .console {
             position:relative; z-index:3; flex-shrink:0; background:var(--bg);
-            border-top:1px solid var(--line);
-            display:flex; align-items:stretch; flex-wrap:wrap;
+            border-left:1px solid var(--line);
+            width:64px; display:flex; flex-direction:column; align-items:stretch;
         }
+        .lab { display:none; }        /* labels hidden in the icon rail */
+        .m-only { display:none; }     /* text shown only on the mobile bar */
         .listen {
             background:var(--acid); color:#000; border:none;
-            font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:2px; text-transform:uppercase;
-            padding:0 26px; min-height:52px; cursor:pointer; display:flex; align-items:center; gap:9px;
-            transition:filter 0.2s;
+            font-family:var(--mono); font-weight:700; font-size:17px; letter-spacing:2px; text-transform:uppercase;
+            padding:0; min-height:64px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+            border-bottom:1px solid var(--line); transition:filter 0.2s;
         }
+        .listen .pic { font-size:16px; line-height:1; }
         .listen:hover { filter:brightness(1.1); }
         .listen:disabled { background:var(--line); color:var(--dim); cursor:not-allowed; filter:none; }
-        .ctl { display:flex; align-items:center; gap:11px; padding:0 22px; border-right:1px solid var(--line); }
+        .ctl { display:flex; align-items:center; justify-content:center; gap:11px; padding:14px 8px; border-bottom:1px solid var(--line); }
         .ctl .lab { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px; color:var(--dim); }
-        #vol-meter { display:flex; gap:3px; cursor:pointer; }
-        #vol-meter i { width:6px; height:20px; background:var(--line); display:block; transition:background 0.1s; }
+        #vol-meter { display:flex; flex-direction:column-reverse; gap:2px; cursor:pointer; align-items:center; }
+        #vol-meter i { width:24px; height:4px; background:var(--line); display:block; transition:background 0.1s; }
         #vol-meter i.on { background:var(--ink); }
-        .bass-segs { display:flex; gap:4px; }
-        .bass-seg { width:22px; height:22px; border:1px solid var(--dim); background:transparent; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--dim); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:background 0.15s, color 0.15s, border-color 0.15s; }
-        .bass-seg.on { background:var(--acid); border-color:var(--acid); color:#000; }
-        .spacer { flex:1; border-right:1px solid var(--line); min-width:12px; }
+        .bass-toggle { position:relative; width:44px; height:22px; border:1px solid var(--line); background:transparent; cursor:pointer; padding:0; transition:background .2s, border-color .2s; }
+        .bass-toggle .bt-knob { position:absolute; top:2px; left:2px; width:16px; height:16px; background:var(--dim); transition:transform .2s, background .2s; }
+        .bass-toggle.on { background:var(--acid); border-color:var(--acid); }
+        .bass-toggle.on .bt-knob { transform:translateX(22px); background:#000; }
+        .spacer { height:14px; }
 
-        .modes { display:flex; }
-        .mode-btn { background:transparent; border:none; border-right:1px solid var(--line); font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:0 20px; min-height:52px; color:var(--dim); cursor:pointer; transition:background 0.2s, color 0.2s; }
+        .modes { display:flex; flex-direction:column; }
+        .mode-btn { background:transparent; border:none; border-top:1px solid var(--line); font-family:var(--mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:0; min-height:48px; color:var(--dim); cursor:pointer; transition:background 0.2s, color 0.2s; display:flex; align-items:center; justify-content:center; }
         .mode-btn:hover { color:var(--ink); }
         .mode-btn.active { background:var(--ink); color:var(--bg); }
-        .viz-settings-btn { background:transparent; border:none; border-right:1px solid var(--line); color:var(--dim); cursor:pointer; width:0; padding:0; overflow:hidden; opacity:0; pointer-events:none; transition:width 0.25s, opacity 0.25s, color 0.2s; display:flex; align-items:center; justify-content:center; }
-        body[data-active-mode="aurora"] .viz-settings-btn { width:46px; opacity:1; pointer-events:auto; }
+        .viz-settings-btn { background:transparent; border:none; border-top:1px solid var(--line); color:var(--dim); cursor:pointer; height:0; padding:0; overflow:hidden; opacity:0; pointer-events:none; transition:height 0.25s, opacity 0.25s, color 0.2s; display:flex; align-items:center; justify-content:center; }
+        body[data-active-mode="aurora"] .viz-settings-btn { height:44px; opacity:1; pointer-events:auto; }
         .viz-settings-btn:hover { color:var(--ink); }
         .viz-settings-btn svg { width:15px; height:15px; }
-        .recent { background:transparent; border:none; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:0 22px; min-height:52px; color:var(--ink); cursor:pointer; display:flex; align-items:center; gap:8px; transition:background 0.2s, color 0.2s; }
+        .recent { background:transparent; border:none; border-top:1px solid var(--line); font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:0; min-height:50px; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s, color 0.2s; }
+        .recent svg { width:17px; height:17px; }
         .recent:hover { background:var(--ink); color:var(--bg); }
         body.recent-open .recent { background:var(--acid); color:#000; }
 
         /* Recently played — raw panel above the console */
         .recent-panel {
-            position:absolute; bottom:100%; right:0; width:min(420px, 100%);
-            background:var(--bg); border:1px solid var(--line); border-bottom:none;
-            max-height:min(50vh, 340px); overflow-y:auto;
-            transform:translateY(8px); opacity:0; pointer-events:none;
+            position:absolute; right:100%; bottom:0; width:340px;
+            background:var(--bg); border:1px solid var(--line); border-right:none;
+            max-height:min(70vh, 460px); overflow-y:auto;
+            transform:translateX(8px); opacity:0; pointer-events:none;
             transition:opacity 0.25s ease, transform 0.25s ease; z-index:5;
         }
-        body.recent-open .recent-panel { opacity:1; pointer-events:auto; transform:translateY(0); }
+        body.recent-open .recent-panel { opacity:1; pointer-events:auto; transform:translateX(0); }
         .recent-panel .rp-head { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--dim); padding:14px 16px 10px; border-bottom:1px solid var(--line); }
         #history-list { list-style:none; padding:0; margin:0; }
         .history-item { display:flex; align-items:baseline; gap:14px; font-family:var(--mono); font-size:12px; font-weight:400; letter-spacing:0.5px; text-transform:uppercase; padding:12px 16px; border-bottom:1px solid var(--line); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -157,7 +161,7 @@
 
         /* Aurora settings popup — raw */
         .viz-settings-popup {
-            position:absolute; bottom:100%; left:0; width:230px;
+            position:absolute; right:100%; bottom:0; width:230px;
             background:var(--bg); border:1px solid var(--line); border-bottom:none;
             padding:14px 16px; display:flex; flex-direction:column; gap:8px;
             transform:translateY(8px); opacity:0; pointer-events:none;
@@ -177,19 +181,29 @@
         /* ── MOBILE ──────────────────────────────────── */
         @media (max-width:680px) {
             .head { padding:11px 16px; }
-            .brand img { height:28px; } .brand .fm { font-size:15px; }
+            .brand img { height:36px; } .brand .fm { font-size:25px; margin-bottom:-2px; }
             #stage { grid-template-columns:1fr; }
-            .art-cell { border-right:none; border-bottom:1px solid var(--line); padding:22px; }
+            .art-cell { padding:22px; }
             #now-art { width:clamp(130px,34vw,180px); height:clamp(130px,34vw,180px); }
             .now { padding:20px; gap:12px; }
-            .console { flex-direction:column; align-items:stretch; }
-            .listen { min-height:50px; justify-content:center; }
-            .ctl { border-right:none; border-bottom:1px solid var(--line); padding:13px 18px; justify-content:space-between; }
+            .lab { display:inline; }
+            .m-only { display:inline; }
+            #body-row { flex-direction:column; }
+            .console { width:auto; border-left:none; border-top:1px solid var(--line); }
+            .listen { min-height:50px; font-size:13px; letter-spacing:2px; }
+            .ctl { padding:13px 18px; justify-content:space-between; }
+            #vol-meter { flex-direction:row; gap:3px; }
+            #vol-meter i { width:6px; height:20px; }
             .spacer { display:none; }
-            .modes { border-bottom:1px solid var(--line); }
-            .mode-btn { flex:1; padding:0 10px; min-height:46px; }
-            .recent { min-height:46px; justify-content:center; }
-            .recent-panel { width:100%; }
+            .modes { flex-direction:row; border-bottom:1px solid var(--line); }
+            .mode-btn { flex:1; padding:0 10px; min-height:46px; font-size:12px; letter-spacing:2px; border-top:none; border-right:1px solid var(--line); text-align:center; }
+            .viz-settings-btn { height:auto; width:0; border-top:none; border-right:1px solid var(--line); transition:width 0.25s, opacity 0.25s, color 0.2s; }
+            body[data-active-mode="aurora"] .viz-settings-btn { height:auto; width:46px; }
+            .recent { min-height:48px; justify-content:center; border-top:none; }
+            .recent svg { display:none; }
+            .recent-panel { right:auto; left:0; bottom:100%; width:100%; transform:translateY(8px); }
+            body.recent-open .recent-panel { transform:translateY(0); }
+            .viz-settings-popup { right:auto; left:0; bottom:100%; }
         }
     </style>
 </head>
@@ -210,6 +224,7 @@
             </div>
         </div>
 
+        <div id="body-row">
         <main id="main">
             <div id="stage">
                 <div class="art-cell"><img id="now-art" src="cuceugrta.png" alt="Now playing artwork"></div>
@@ -223,37 +238,36 @@
             </div>
         </main>
 
-        <div id="bg-layer">
-            <div id="dvd-box">
-                <img id="dvd-artwork" src="" alt="">
-                <span class="dvd-badge" id="dvd-badge">0</span>
-            </div>
-        </div>
-
         <div class="console">
-            <button class="listen" id="play-btn" disabled>▶ Listen</button>
+            <button class="listen" id="play-btn" disabled><span class="pic">▶</span><span class="m-only">Listen</span></button>
             <div class="ctl"><span class="lab">Vol</span><div id="vol-meter" role="slider" aria-label="Volume"></div></div>
-            <div class="ctl"><span class="lab">Bass</span>
-                <div class="bass-segs" id="bass-segs">
-                    <button class="bass-seg" data-level="1" aria-label="Bass 1">1</button>
-                    <button class="bass-seg" data-level="2" aria-label="Bass 2">2</button>
-                    <button class="bass-seg" data-level="3" aria-label="Bass 3">3</button>
-                </div>
+            <div class="ctl"><span class="lab">Bass boost</span>
+                <button class="bass-toggle" id="bass-toggle" role="switch" aria-checked="false" aria-label="Bass boost on/off">
+                    <span class="bt-knob"></span>
+                </button>
             </div>
             <div class="spacer"></div>
             <div class="modes" id="mode-toggle">
-                <button class="mode-btn active" data-mode="clean">Clean</button>
-                <button class="mode-btn" data-mode="dvd">DVD</button>
-                <button class="mode-btn" data-mode="aurora">Aurora</button>
+                <button class="mode-btn active" data-mode="clean" title="Clean">C<span class="m-only">lean</span></button>
+                <button class="mode-btn" data-mode="dvd" title="DVD">D<span class="m-only">VD</span></button>
+                <button class="mode-btn" data-mode="aurora" title="Aurora">A<span class="m-only">urora</span></button>
                 <button class="viz-settings-btn" id="viz-settings-btn" aria-label="Visualizer Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
                 <div class="viz-settings-popup" id="viz-settings-popup"><div id="viz-settings-mount"></div></div>
             </div>
-            <button class="recent" id="history-toggle" aria-expanded="false">Recent ↗</button>
+            <button class="recent" id="history-toggle" aria-expanded="false" title="Recently played"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><path d="M12 7v5l3 3"></path></svg><span class="m-only">Recent ↗</span></button>
             <div class="recent-panel">
                 <div class="rp-head">Recently Played</div>
                 <ul id="history-list"><li class="history-item">Loading…</li></ul>
+            </div>
+        </div>
+        </div>
+
+        <div id="bg-layer">
+            <div id="dvd-box">
+                <img id="dvd-artwork" src="" alt="">
+                <span class="dvd-badge" id="dvd-badge">0</span>
             </div>
         </div>
     </div>
@@ -317,7 +331,9 @@ function setNowPlaying(t) {
 }
 
 function renderPlayState() {
-    playBtn.innerHTML = playing ? '❚❚ Pause' : '▶ Listen';
+    playBtn.innerHTML = playing
+        ? '<span class="pic">❚❚</span><span class="m-only">Pause</span>'
+        : '<span class="pic">▶</span><span class="m-only">Listen</span>';
 }
 function updateAvailability() { playBtn.disabled = !(isOnline || playing); }
 
@@ -417,8 +433,8 @@ playBtn.addEventListener('click', togglePlay);
 
 // ── AUDIO GRAPH: source → bass (lowshelf) → analyser → out ────
 let audioCtx = null, analyser = null, bassFilter = null;
-const BASS_DB = [0, 6, 10, 14];
-let bassLevel = Math.min(3, Math.max(0, CuceuStore.get('cuceu-bass', 0)));
+const BASS_ON_DB = 10;
+let bassOn = !!CuceuStore.get('cuceu-bass', 0);
 const savedVolume = Math.min(1, Math.max(0, CuceuStore.get('cuceu-volume', 0.5)));
 player.volume = savedVolume;
 
@@ -430,7 +446,7 @@ function ensureAudio() {
     analyser.fftSize = 1024; analyser.smoothingTimeConstant = 0.8;
     bassFilter = audioCtx.createBiquadFilter();
     bassFilter.type = 'lowshelf'; bassFilter.frequency.value = 160;
-    bassFilter.gain.value = BASS_DB[bassLevel];
+    bassFilter.gain.value = bassOn ? BASS_ON_DB : 0;
     const src = audioCtx.createMediaElementSource(player);
     src.connect(bassFilter); bassFilter.connect(analyser); analyser.connect(audioCtx.destination);
 }
@@ -454,28 +470,27 @@ function renderVol() {
 }
 volMeter.addEventListener('click', (e) => {
     const rect = volMeter.getBoundingClientRect();
-    const v = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const ratio = rect.height > rect.width
+        ? (rect.bottom - e.clientY) / rect.height   // vertical rail: bottom = quiet
+        : (e.clientX - rect.left) / rect.width;     // horizontal mobile bar
+    const v = Math.min(1, Math.max(0, ratio));
     player.volume = v; CuceuStore.set('cuceu-volume', v); renderVol();
 });
 renderVol();
 
 // ── BASS boost (1·2·3, tap active level to step down) ─────────
-const bassSegs = document.getElementById('bass-segs');
+const bassToggle = document.getElementById('bass-toggle');
 function renderBass() {
-    bassSegs.querySelectorAll('.bass-seg').forEach(seg =>
-        seg.classList.toggle('on', parseInt(seg.dataset.level, 10) <= bassLevel));
+    bassToggle.classList.toggle('on', bassOn);
+    bassToggle.setAttribute('aria-checked', String(bassOn));
 }
-function setBass(level) {
-    bassLevel = level;
-    CuceuStore.set('cuceu-bass', level);
-    if (bassFilter) bassFilter.gain.value = BASS_DB[level];
+function setBass(on) {
+    bassOn = on;
+    CuceuStore.set('cuceu-bass', on ? 1 : 0);
+    if (bassFilter) bassFilter.gain.value = on ? BASS_ON_DB : 0;
     renderBass();
 }
-bassSegs.addEventListener('click', (e) => {
-    const seg = e.target.closest('.bass-seg'); if (!seg) return;
-    const n = parseInt(seg.dataset.level, 10);
-    setBass(n === bassLevel ? n - 1 : n);
-});
+bassToggle.addEventListener('click', () => setBass(!bassOn));
 renderBass();
 
 // ── POLLING ───────────────────────────────────────────────────
@@ -486,7 +501,7 @@ document.addEventListener("visibilitychange", () => {
         fetchSongData();
         clearInterval(fetchInterval);
         fetchInterval = setInterval(fetchSongData, 4000);
-        if (currentMode === 'dvd') resumeDvd();
+        if (currentMode === 'dvd') resumeBounce();
     } else {
         clearInterval(fetchInterval);
     }
@@ -512,22 +527,39 @@ const vizSettingsMount = document.getElementById('viz-settings-mount');
 
 function setMode(mode) {
     if (mode === currentMode) return;
-    stopDvd();
+    const leavingDvd = currentMode === 'dvd';
     CuceuViz.stop();
-    bgLayer.className = '';
-    currentMode = mode;
-    document.body.dataset.activeMode = mode;
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     vizSettingsPopup.classList.remove('visible');
     CuceuStore.set('cuceu-fm-mode', mode);
 
     if (mode === 'dvd') {
-        bgLayer.classList.add('mode-dvd');
-        startDvd();
-    } else if (ENGINE_MODES.includes(mode)) {
-        resumeAudioGraph();
-        CuceuViz.start(mode);
-        CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
+        const home = homePos();
+        const nowFirst = nowEl.getBoundingClientRect();   // text's clean position
+        nowArt.style.transition = 'none';                 // detach the real art, no jump
+        nowArt.classList.add('dvd-loose');
+        nowArt.style.transform = `translate(${home.x}px, ${home.y}px)`;
+        dvdHome = home;
+        currentMode = 'dvd';
+        document.body.dataset.activeMode = 'dvd';          // art-cell collapses, text centres
+        glide(nowEl, nowFirst, nowEl.getBoundingClientRect());  // glide text to centre
+        startBounce(home);
+    } else {
+        if (leavingDvd) {
+            const nowFirst = nowEl.getBoundingClientRect();   // text's centred position
+            retractDvd();                                     // art rushes back home
+            currentMode = mode;
+            document.body.dataset.activeMode = mode;
+            glide(nowEl, nowFirst, nowEl.getBoundingClientRect());  // glide text back
+        } else {
+            currentMode = mode;
+            document.body.dataset.activeMode = mode;
+        }
+        if (ENGINE_MODES.includes(mode)) {
+            resumeAudioGraph();
+            CuceuViz.start(mode);
+            CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
+        }
     }
 }
 modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
@@ -543,76 +575,72 @@ document.addEventListener('click', (e) => {
 });
 
 // ══════════════════════════════════════════════════════════════
-// DVD MODE — constant-speed diagonal bounce, confined to #main
+// DVD MODE — the real artwork breaks loose and bounces, text centres
 // ══════════════════════════════════════════════════════════════
-const dvdBox   = document.getElementById('dvd-box');
-const dvdArt   = document.getElementById('dvd-artwork');
-const dvdBadge = document.getElementById('dvd-badge');
+const nowEl = document.querySelector('.now');
+let dvdAnimId = null, bx = 0, by = 0, vx = 0, vy = 0, lastT = 0, dvdHome = { x: 0, y: 0 };
 
-let dvdAnimId = null, dvdX = 100, dvdY = 100, dvdVx = 0, dvdVy = 0, dvdLastT = 0;
-let dvdCorners = parseInt(sessionStorage.getItem('cuceu-dvd-corners') || '0', 10);
-
-function dvdBounds() {
-    const r = mainEl.getBoundingClientRect();
-    return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+// where #now-art sits in clean mode, relative to #main
+function homePos() {
+    const a = nowArt.getBoundingClientRect();
+    const m = mainEl.getBoundingClientRect();
+    return { x: a.left - m.left, y: a.top - m.top };
 }
-function setDvdArt(url) { dvdArt.src = url; }
-
-function celebrateCorner() {
-    dvdCorners++;
-    sessionStorage.setItem('cuceu-dvd-corners', String(dvdCorners));
-    dvdBadge.textContent = dvdCorners;
-    dvdBadge.classList.add('show');
-    dvdBox.classList.remove('corner-pop');
-    void dvdBox.offsetWidth;
-    dvdBox.classList.add('corner-pop');
+// FLIP: animate an element from its old box (first) to its new one (last)
+function glide(el, first, last) {
+    const dx = first.left - last.left, dy = first.top - last.top;
+    if (!dx && !dy) return;
+    el.style.transition = 'none';
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+    requestAnimationFrame(() => {
+        el.style.transition = 'transform .55s cubic-bezier(.5,0,.1,1)';
+        el.style.transform = 'translate(0, 0)';
+    });
 }
-function initDvdPosition() {
-    const b = dvdBounds();
-    const w = dvdBox.offsetWidth || 160, h = dvdBox.offsetHeight || 160;
-    dvdX = b.left + Math.random() * Math.max(1, b.right - b.left - w);
-    dvdY = b.top + Math.random() * Math.max(1, b.bottom - b.top - h);
+function startBounce(home) {
+    bx = home.x; by = home.y;
     const speed = (window.innerWidth < 600 ? 120 : 165) / Math.SQRT2;
-    dvdVx = (Math.random() < 0.5 ? -1 : 1) * speed;
-    dvdVy = (Math.random() < 0.5 ? -1 : 1) * speed;
+    vx = (Math.random() < .5 ? -1 : 1) * speed;
+    vy = (Math.random() < .5 ? -1 : 1) * speed;
+    lastT = performance.now();
+    cancelAnimationFrame(dvdAnimId);
+    dvdAnimId = requestAnimationFrame(dvdFrame);
 }
 function dvdFrame(now) {
     if (currentMode !== 'dvd') return;
-    const dt = Math.min((now - dvdLastT) / 1000, 0.05);
-    dvdLastT = now;
-    const b = dvdBounds();
-    const w = dvdBox.offsetWidth || 160, h = dvdBox.offsetHeight || 160;
-    dvdX += dvdVx * dt; dvdY += dvdVy * dt;
-    let hitX = false, hitY = false;
-    if (dvdX <= b.left)       { dvdX = b.left;       dvdVx = Math.abs(dvdVx);  hitX = true; }
-    if (dvdX + w >= b.right)  { dvdX = b.right - w;  dvdVx = -Math.abs(dvdVx); hitX = true; }
-    if (dvdY <= b.top)        { dvdY = b.top;        dvdVy = Math.abs(dvdVy);  hitY = true; }
-    if (dvdY + h >= b.bottom) { dvdY = b.bottom - h; dvdVy = -Math.abs(dvdVy); hitY = true; }
-    if (hitX && hitY) celebrateCorner();
-    dvdBox.style.transform = `translate(${dvdX}px, ${dvdY}px)`;
+    const dt = Math.min((now - lastT) / 1000, .05); lastT = now;
+    const mW = mainEl.clientWidth, mH = mainEl.clientHeight;
+    const aW = nowArt.offsetWidth, aH = nowArt.offsetHeight;
+    bx += vx * dt; by += vy * dt;
+    if (bx <= 0)       { bx = 0;       vx =  Math.abs(vx); }
+    if (bx + aW >= mW) { bx = mW - aW; vx = -Math.abs(vx); }
+    if (by <= 0)       { by = 0;       vy =  Math.abs(vy); }
+    if (by + aH >= mH) { by = mH - aH; vy = -Math.abs(vy); }
+    nowArt.style.transform = `translate(${bx}px, ${by}px)`;
     dvdAnimId = requestAnimationFrame(dvdFrame);
 }
-function startDvd() {
-    setDvdArt(currentArtUrl || 'cuceugrta.png');
-    if (dvdCorners > 0) { dvdBadge.textContent = dvdCorners; dvdBadge.classList.add('show'); }
-    const begin = () => { initDvdPosition(); dvdLastT = performance.now(); dvdAnimId = requestAnimationFrame(dvdFrame); };
-    if (dvdArt.complete && dvdArt.naturalWidth > 0) begin();
-    else dvdArt.onload = begin;
+function resumeBounce() {
+    if (currentMode === 'dvd' && nowArt.classList.contains('dvd-loose')) {
+        lastT = performance.now();
+        cancelAnimationFrame(dvdAnimId);
+        dvdAnimId = requestAnimationFrame(dvdFrame);
+    }
 }
-function resumeDvd() {
-    if (dvdAnimId) cancelAnimationFrame(dvdAnimId);
-    dvdLastT = performance.now();
-    dvdAnimId = requestAnimationFrame(dvdFrame);
+function retractDvd() {
+    cancelAnimationFrame(dvdAnimId); dvdAnimId = null;
+    if (!nowArt.classList.contains('dvd-loose')) return;
+    nowArt.style.transition = 'transform .55s cubic-bezier(.5,0,.1,1)';
+    nowArt.style.transform = `translate(${dvdHome.x}px, ${dvdHome.y}px)`;
+    const cleanup = () => {
+        if (!nowArt.classList.contains('dvd-loose')) return;
+        nowArt.classList.remove('dvd-loose');
+        nowArt.style.transition = '';
+        nowArt.style.transform = '';
+    };
+    nowArt.addEventListener('transitionend', cleanup, { once: true });
+    setTimeout(cleanup, 650);
 }
-function stopDvd() { if (dvdAnimId) { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; } }
-
-new ResizeObserver(() => {
-    if (currentMode !== 'dvd') return;
-    const b = dvdBounds();
-    const w = dvdBox.offsetWidth || 160, h = dvdBox.offsetHeight || 160;
-    dvdX = Math.min(Math.max(dvdX, b.left), b.right - w);
-    dvdY = Math.min(Math.max(dvdY, b.top), b.bottom - h);
-}).observe(mainEl);
+function setDvdArt() {}   // legacy no-op — artwork now lives on #now-art
 
 // ── RESTORE LAST MODE ─────────────────────────────────────────
 const savedMode = CuceuStore.get('cuceu-fm-mode', 'clean');
