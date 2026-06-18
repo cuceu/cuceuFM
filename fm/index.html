@@ -56,18 +56,17 @@
         /* ── HEADER ──────────────────────────────────── */
         .head {
             position:relative; z-index:3; flex-shrink:0; background:var(--bg);
-            display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
-            padding:13px 24px; transition:background 0.4s ease;
+            display:flex; align-items:center; justify-content:space-between;
+            min-height:62px; padding:8px 24px; transition:background 0.4s ease;
         }
-        .head .back { justify-self:start; }
-        .head .clock { justify-self:end; }
         .back {
             font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:1px;
             text-transform:uppercase; border:1px solid var(--ink); padding:7px 13px;
             color:var(--ink); text-decoration:none; transition:background 0.2s, color 0.2s;
         }
         .back:hover { background:var(--ink); color:var(--bg); }
-        .brand { display:flex; align-items:flex-end; user-select:none; }
+        /* logo centred over #main (the area left of the 64px dock), so it lines up with DVD's centre */
+        .brand { position:absolute; left:calc(50% - 32px); top:50%; transform:translate(-50%,-50%); display:flex; align-items:flex-end; user-select:none; }
         .brand img { height:46px; }
         .brand .fm { font-family:var(--disp); font-weight:900; font-size:32px; letter-spacing:-.02em; margin-left:4px; margin-bottom:-3px; color:var(--ink); line-height:1; }
         .clock { display:flex; align-items:center; gap:16px; }
@@ -91,7 +90,7 @@
         #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); transform-origin:0 0; transition:opacity .5s ease; }
         #now-art.swap { animation:artSwap 0.5s ease; }
         @keyframes artSwap { 0%{opacity:0.2} 100%{opacity:1} }
-        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; justify-self:start; width:fit-content; max-width:min(46vw,600px); transform-origin:0 0; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity .5s ease; }
+        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; justify-self:start; align-self:center; width:fit-content; max-width:min(46vw,600px); transform-origin:0 0; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity .5s ease; }
         .status { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--dim); }
         .status #status-dot { width:9px; height:9px; flex-shrink:0; background:var(--dim); }
         .status #status-text { color:var(--acid); }
@@ -105,6 +104,10 @@
         body[data-active-mode="dvd"] .head { background:transparent; }   /* art passes behind the logo */
         body[data-active-mode="dvd"] .art-cell,
         body[data-active-mode="aurora"] .art-cell { overflow:visible; }   /* art is loose; the cell is a frozen-width spacer */
+        /* DVD: centre the text lines themselves (the block is already slid to the middle) */
+        body[data-active-mode="dvd"] .now, body[data-active-mode="dvd"] .titles { align-items:center; }
+        body[data-active-mode="dvd"] .now { text-align:center; }
+        body[data-active-mode="dvd"] .status { justify-content:center; }
 
         /* ── AURORA — now-playing shrinks (pure transform) into the bottom-left; dims when idle ── */
         body.idle[data-active-mode="aurora"] .now,
@@ -186,7 +189,7 @@
         /* ── MOBILE ──────────────────────────────────── */
         @media (max-width:680px) {
             .head { padding:11px 16px; }
-            .brand img { height:36px; } .brand .fm { font-size:25px; margin-bottom:-2px; }
+            .brand { left:50%; } .brand img { height:36px; } .brand .fm { font-size:25px; margin-bottom:-2px; }
             #stage { grid-template-columns:1fr; }
             .art-cell { padding:22px; }
             #now-art { width:clamp(130px,34vw,180px); height:clamp(130px,34vw,180px); }
@@ -536,7 +539,7 @@ function measureRef() {                              // measured while the art i
 }
 const SCALE = 0.34, PAD = 24;
 const nowDvdT    = () => `translate(${ref.mW / 2 - (ref.nowX + ref.nowW / 2)}px, 0px)`;      // text → centre of #main
-const nowAuroraT = () => `translate(${PAD + ref.artW * SCALE + 12 - ref.nowX}px, ${(ref.mH - ref.nowH * SCALE - PAD) - ref.nowY}px) scale(${SCALE})`;  // text → bottom-left, beside the art
+const nowAuroraT = () => `translate(${PAD + ref.artW * SCALE + 12 - ref.nowX}px, ${(ref.mH - PAD - ref.artH * SCALE / 2 - ref.nowH * SCALE / 2) - ref.nowY}px) scale(${SCALE})`;  // text → bottom-left, vertically centred with the art
 const artCleanT  = () => `translate(${ref.artX}px, ${ref.artY}px)`;                          // art at its clean spot
 const artAuroraT = () => `translate(${PAD}px, ${ref.mTop + ref.mH - ref.artH * SCALE - PAD}px) scale(${SCALE})`;  // art → bottom-left corner
 function setT(el, t, animate) {
