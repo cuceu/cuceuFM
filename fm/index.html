@@ -82,7 +82,7 @@
         #stage {
             position:absolute; inset:0;
             display:grid; grid-template-columns:auto 1fr;
-            opacity:0; pointer-events:none; transition:opacity 0.5s ease, transform 0.56s cubic-bezier(.4,0,.12,1);
+            opacity:0; pointer-events:none; transition:opacity 0.5s ease;
         }
         body[data-active-mode="clean"] #stage,
         body[data-active-mode="dvd"] #stage { opacity:1; pointer-events:auto; }
@@ -100,14 +100,20 @@
 
         /* ── DVD MODE — real art bounces in the background, text centred & forward ── */
         #dvd-box { display:none; }   /* legacy bouncer, unused */
-        #now-art.dvd-loose { position:absolute; left:0; top:0; margin:0; will-change:transform; }
+        #now-art.dvd-loose { position:absolute; margin:0; will-change:left, top, transform; }
         body[data-active-mode="dvd"] .head { background:transparent; }   /* art passes behind the logo */
         body[data-active-mode="dvd"] .art-cell { width:0; min-width:0; padding:0; overflow:visible; }
         body[data-active-mode="dvd"] .now { align-items:center; text-align:center; }
 
-        /* ── AURORA — now-playing shrinks into the bottom-left, dims when idle ── */
-        body[data-active-mode="aurora"] #stage { opacity:1; pointer-events:none; transform:scale(0.34); transform-origin:bottom left; }
-        body.idle[data-active-mode="aurora"] #stage { opacity:0.4; }
+        /* ── AURORA — now-playing shrinks into a small card bottom-left, dims when idle ── */
+        body[data-active-mode="aurora"] #stage { opacity:1; pointer-events:none; display:flex; align-items:center; gap:13px; inset:auto auto clamp(16px,3vh,30px) clamp(16px,3vw,30px); width:auto; max-width:74%; }
+        body[data-active-mode="aurora"] .art-cell { width:auto; min-width:0; padding:0; }
+        body[data-active-mode="aurora"] #now-art { width:56px; height:56px; }
+        body[data-active-mode="aurora"] .now { padding:0; gap:4px; }
+        body[data-active-mode="aurora"] .status { font-size:10px; letter-spacing:1.5px; }
+        body[data-active-mode="aurora"] .artist { font-size:11px; }
+        body[data-active-mode="aurora"] .track { font-size:21px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw; }
+        body.idle[data-active-mode="aurora"] #stage { opacity:0.42; }
 
         /* ── CONSOLE (controls + modes) ──────────────── */
         #body-row { display:flex; flex:1; min-height:0; }
@@ -506,59 +512,52 @@ const vizSettingsBtn   = document.getElementById('viz-settings-btn');
 const vizSettingsPopup = document.getElementById('viz-settings-popup');
 const vizSettingsMount = document.getElementById('viz-settings-mount');
 
-const ROUTE_MS = 560, EASE = 'cubic-bezier(.4,0,.12,1)';
-let routeTimer = null;
+const DUR = 700, EASE = 'cubic-bezier(.4,0,.2,1)';
 
 function setMode(mode) {
-    if (mode === currentMode && !routeTimer) return;
-    clearTimeout(routeTimer); routeTimer = null;
+    if (mode === currentMode) return;
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     vizSettingsPopup.classList.remove('visible');
     CuceuStore.set('cuceu-fm-mode', mode);
-    // DVD <-> Aurora is routed through Clean, so every step is one cohesive move (no compounding transforms)
-    if ((currentMode === 'dvd' && mode === 'aurora') || (currentMode === 'aurora' && mode === 'dvd')) {
-        applyMode('clean');
-        routeTimer = setTimeout(() => { routeTimer = null; applyMode(mode); }, ROUTE_MS + 30);
-    } else {
-        applyMode(mode);
-    }
+    applyMode(mode);
 }
 
+// One unified transition: morph BOTH the artwork and the text from where they are right now
+// to their new-mode layout with a single FLIP each — no routing, no compounding transforms.
 function applyMode(mode) {
     if (mode === currentMode) return;
-    const leavingDvd = currentMode === 'dvd';
+    const from = currentMode;
     CuceuViz.stop();
+    stopBounce();
+
+    const artFirst = nowArt.getBoundingClientRect();   // where the picture is right now
+    const nowFirst = nowEl.getBoundingClientRect();    // where the text is right now
+    const c = container.getBoundingClientRect();
 
     if (mode === 'dvd') {
-        // enter DVD (always from Clean): art keeps its exact spot, then drifts off; text glides to centre & forward
-        const c = container.getBoundingClientRect(), a = nowArt.getBoundingClientRect();
-        const sx = a.left - c.left, sy = a.top - c.top;
-        const nowFirst = nowEl.getBoundingClientRect();
-        dvdHome = { x: sx, y: sy };
-        bgLayer.appendChild(nowArt);
-        nowArt.classList.add('dvd-loose');
-        nowArt.style.transition = 'none';
-        nowArt.style.transform = `translate(${sx}px, ${sy}px)`;
-        currentMode = 'dvd';
-        document.body.dataset.activeMode = 'dvd';
-        glide(nowEl, nowFirst);
-        startBounce(sx, sy);
-    } else {
-        if (leavingDvd) {
-            const nowFirst = nowEl.getBoundingClientRect();
-            currentMode = mode;
-            document.body.dataset.activeMode = mode;   // text + art-cell return to Clean
-            glide(nowEl, nowFirst);                    // text glides back into place
-            retractArt();                              // loose art glides home, then re-homes
-        } else {
-            currentMode = mode;
-            document.body.dataset.activeMode = mode;   // Clean <-> Aurora: #stage scales smoothly (CSS)
-        }
-        if (ENGINE_MODES.includes(mode)) {
-            resumeAudioGraph();
-            CuceuViz.start(mode);
-            CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
-        }
+        // picture breaks loose into the background layer, full size, exactly where it currently is
+        if (nowArt.parentElement !== bgLayer) { bgLayer.appendChild(nowArt); nowArt.classList.add('dvd-loose'); }
+        bx = artFirst.left - c.left; by = artFirst.top - c.top;
+        nowArt.style.left = bx + 'px'; nowArt.style.top = by + 'px';
+    } else if (nowArt.parentElement === bgLayer) {
+        // picture docks back into the art-cell (Clean grid or Aurora corner)
+        nowArt.classList.remove('dvd-loose');
+        nowArt.style.left = ''; nowArt.style.top = '';
+        artCell.appendChild(nowArt);
+    }
+    currentMode = mode;
+    document.body.dataset.activeMode = mode;
+
+    flip(nowArt, artFirst);   // picture morphs (translate + scale) to its new state
+    flip(nowEl, nowFirst);    // text morphs to its new state
+
+    if (mode === 'dvd') {
+        bounceTimer = setTimeout(() => { if (currentMode === 'dvd') startBounce(); }, from === 'aurora' ? DUR : 60);
+    }
+    if (ENGINE_MODES.includes(mode)) {
+        resumeAudioGraph();
+        CuceuViz.start(mode);
+        CuceuViz.buildSettingsPanel(mode, vizSettingsMount);
     }
 }
 modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
@@ -574,33 +573,35 @@ document.addEventListener('click', (e) => {
 });
 
 // ══════════════════════════════════════════════════════════════
-// DVD MODE — the real artwork breaks loose and bounces, text centres
+// FLIP morph + DVD bounce (the picture bounces via left/top so transform stays free for the morph)
 // ══════════════════════════════════════════════════════════════
 const nowEl = document.querySelector('.now');
 const artCell = document.querySelector('.art-cell');
-let dvdAnimId = null, bx = 0, by = 0, vx = 0, vy = 0, lastT = 0, dvdHome = { x: 0, y: 0 };
+let dvdAnimId = null, bounceTimer = null, bx = 0, by = 0, vx = 0, vy = 0, lastT = 0;
 
-// FLIP: glide an element from a previous box (first) to wherever it is now, then clean up after itself
-function glide(el, first) {
+// animate `el` from a previous rect (first) to its current layout — translate + scale — then self-clean
+function flip(el, first) {
     el.style.transition = 'none';
     el.style.transform = 'none';
+    el.style.transformOrigin = '0 0';
     const last = el.getBoundingClientRect();
+    if (!last.width || !last.height) { el.style.transition = ''; el.style.transformOrigin = ''; return; }
     const dx = first.left - last.left, dy = first.top - last.top;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) { el.style.transition = ''; return; }
-    el.style.transform = `translate(${dx}px, ${dy}px)`;
-    void el.offsetWidth;                                   // flush the start frame
-    el.style.transition = `transform ${ROUTE_MS}ms ${EASE}`;
+    const s = first.width / last.width;
+    if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(s - 1) < .004) { el.style.transition = ''; el.style.transformOrigin = ''; return; }
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+    void el.offsetWidth;
+    el.style.transition = `transform ${DUR}ms ${EASE}`;
     el.style.transform = 'none';
     const done = (e) => {
         if (e && e.propertyName !== 'transform') return;
-        el.style.transition = ''; el.style.transform = '';
+        el.style.transition = ''; el.style.transform = ''; el.style.transformOrigin = '';
         el.removeEventListener('transitionend', done);
     };
     el.addEventListener('transitionend', done);
-    setTimeout(done, ROUTE_MS + 90);
+    setTimeout(done, DUR + 100);
 }
-function startBounce(x, y) {
-    bx = x; by = y;
+function startBounce() {
     const speed = (window.innerWidth < 600 ? 120 : 165) / Math.SQRT2;
     vx = (Math.random() < .5 ? -1 : 1) * speed;
     vy = (Math.random() < .5 ? -1 : 1) * speed;
@@ -611,40 +612,23 @@ function startBounce(x, y) {
 function dvdFrame(now) {
     if (currentMode !== 'dvd' || !nowArt.classList.contains('dvd-loose')) return;
     const dt = Math.min((now - lastT) / 1000, .05); lastT = now;
-    const mW = mainEl.clientWidth;       // stay left of the dock
-    const cH = container.clientHeight;   // bounce between the marquee lines (top↔bottom ticker)
+    const mW = mainEl.clientWidth, cH = container.clientHeight;   // marquee-to-marquee, left of the dock
     const aW = nowArt.offsetWidth, aH = nowArt.offsetHeight;
     bx += vx * dt; by += vy * dt;
     if (bx <= 0)       { bx = 0;       vx =  Math.abs(vx); }
     if (bx + aW >= mW) { bx = mW - aW; vx = -Math.abs(vx); }
     if (by <= 0)       { by = 0;       vy =  Math.abs(vy); }
     if (by + aH >= cH) { by = cH - aH; vy = -Math.abs(vy); }
-    nowArt.style.transform = `translate(${bx}px, ${by}px)`;
+    nowArt.style.left = bx + 'px'; nowArt.style.top = by + 'px';
     dvdAnimId = requestAnimationFrame(dvdFrame);
 }
+function stopBounce() { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; clearTimeout(bounceTimer); }
 function resumeBounce() {
     if (currentMode === 'dvd' && nowArt.classList.contains('dvd-loose')) {
-        nowArt.style.transition = 'none';
         lastT = performance.now();
         cancelAnimationFrame(dvdAnimId);
         dvdAnimId = requestAnimationFrame(dvdFrame);
     }
-}
-// loose art glides from wherever it's bouncing back to its home slot, then re-parents into the art-cell
-function retractArt() {
-    cancelAnimationFrame(dvdAnimId); dvdAnimId = null;
-    if (!nowArt.classList.contains('dvd-loose')) return;
-    nowArt.style.transition = `transform ${ROUTE_MS}ms ${EASE}`;
-    void nowArt.offsetWidth;                              // commit current bounce position first
-    nowArt.style.transform = `translate(${dvdHome.x}px, ${dvdHome.y}px)`;
-    const home = () => {
-        if (!nowArt.classList.contains('dvd-loose')) return;
-        nowArt.classList.remove('dvd-loose');
-        nowArt.style.transition = ''; nowArt.style.transform = '';
-        artCell.appendChild(nowArt);
-    };
-    nowArt.addEventListener('transitionend', home, { once: true });
-    setTimeout(home, ROUTE_MS + 90);
 }
 function setDvdArt() {}   // legacy no-op — artwork now lives on #now-art
 
