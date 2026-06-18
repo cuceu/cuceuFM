@@ -85,35 +85,30 @@
             opacity:0; pointer-events:none; transition:opacity 0.5s ease;
         }
         body[data-active-mode="clean"] #stage,
-        body[data-active-mode="dvd"] #stage { opacity:1; pointer-events:auto; }
+        body[data-active-mode="dvd"] #stage,
+        body[data-active-mode="aurora"] #stage { opacity:1; pointer-events:auto; }
         .art-cell { display:flex; align-items:center; justify-content:center; padding:clamp(20px,4vw,46px); }
-        #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); }
+        #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); transform-origin:0 0; transition:opacity .5s ease; }
         #now-art.swap { animation:artSwap 0.5s ease; }
         @keyframes artSwap { 0%{opacity:0.2} 100%{opacity:1} }
-        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; }
+        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; justify-self:start; width:fit-content; max-width:min(46vw,600px); transform-origin:0 0; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity .5s ease; }
         .status { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--dim); }
         .status #status-dot { width:9px; height:9px; flex-shrink:0; background:var(--dim); }
         .status #status-text { color:var(--acid); }
         .titles { display:flex; flex-direction:column; gap:2px; min-width:0; }
         .artist { font-weight:800; font-size:clamp(18px,3vw,34px); line-height:0.98; letter-spacing:-0.02em; text-transform:uppercase; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .track  { font-weight:900; font-size:clamp(34px,5.4vw,64px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow-wrap:anywhere; }
+        .track  { font-weight:900; font-size:clamp(34px,5.4vw,64px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 
         /* ── DVD MODE — real art bounces in the background, text centred & forward ── */
         #dvd-box { display:none; }   /* legacy bouncer, unused */
-        #now-art.dvd-loose { position:absolute; margin:0; will-change:left, top, transform; }
+        #now-art.dvd-loose { position:absolute; left:0; top:0; margin:0; will-change:transform; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity .5s ease; }
         body[data-active-mode="dvd"] .head { background:transparent; }   /* art passes behind the logo */
-        body[data-active-mode="dvd"] .art-cell { width:0; min-width:0; padding:0; overflow:visible; }
-        body[data-active-mode="dvd"] .now { align-items:center; text-align:center; }
+        body[data-active-mode="dvd"] .art-cell,
+        body[data-active-mode="aurora"] .art-cell { overflow:visible; }   /* art is loose; the cell is a frozen-width spacer */
 
-        /* ── AURORA — now-playing shrinks into a small card bottom-left, dims when idle ── */
-        body[data-active-mode="aurora"] #stage { opacity:1; pointer-events:none; display:flex; align-items:center; gap:13px; inset:auto auto clamp(16px,3vh,30px) clamp(16px,3vw,30px); width:auto; max-width:74%; }
-        body[data-active-mode="aurora"] .art-cell { width:auto; min-width:0; padding:0; }
-        body[data-active-mode="aurora"] #now-art { width:56px; height:56px; }
-        body[data-active-mode="aurora"] .now { padding:0; gap:4px; }
-        body[data-active-mode="aurora"] .status { font-size:10px; letter-spacing:1.5px; }
-        body[data-active-mode="aurora"] .artist { font-size:11px; }
-        body[data-active-mode="aurora"] .track { font-size:21px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw; }
-        body.idle[data-active-mode="aurora"] #stage { opacity:0.42; }
+        /* ── AURORA — now-playing shrinks (pure transform) into the bottom-left; dims when idle ── */
+        body.idle[data-active-mode="aurora"] .now,
+        body.idle[data-active-mode="aurora"] #now-art { opacity:0.42; }
 
         /* ── CONSOLE (controls + modes) ──────────────── */
         #body-row { display:flex; flex:1; min-height:0; }
@@ -522,38 +517,72 @@ function setMode(mode) {
     applyMode(mode);
 }
 
-// One unified transition: morph BOTH the artwork and the text from where they are right now
-// to their new-mode layout with a single FLIP each — no routing, no compounding transforms.
+// The now-playing is ONE rigid block: the text never re-lays-out, it only translates/scales, and the
+// picture lives loose in #bg-layer (so it never collapses the text's column). Pure CSS-transitioned
+// transforms, computed from the clean-mode geometry → every switch is the same thing smoothly moving.
+const nowEl = document.querySelector('.now');
+const artCell = document.querySelector('.art-cell');
+let dvdAnimId = null, bounceTimer = null, bx = 0, by = 0, vx = 0, vy = 0, lastT = 0, ref = null;
+
+function measureRef() {                              // measured while the art is docked (clean)
+    const cr = container.getBoundingClientRect();
+    const mr = mainEl.getBoundingClientRect();
+    const ar = nowArt.getBoundingClientRect();
+    const acr = artCell.getBoundingClientRect();
+    const nr = nowEl.getBoundingClientRect();
+    ref = { artX: ar.left - cr.left, artY: ar.top - cr.top, artW: ar.width, artH: ar.height,
+            cellW: acr.width, mTop: mr.top - cr.top, mW: mr.width, mH: mr.height,
+            nowX: nr.left - mr.left, nowY: nr.top - mr.top, nowW: nr.width, nowH: nr.height };
+}
+const SCALE = 0.34, PAD = 24;
+const nowDvdT    = () => `translate(${ref.mW / 2 - (ref.nowX + ref.nowW / 2)}px, 0px)`;      // text → centre of #main
+const nowAuroraT = () => `translate(${PAD + ref.artW * SCALE + 12 - ref.nowX}px, ${(ref.mH - ref.nowH * SCALE - PAD) - ref.nowY}px) scale(${SCALE})`;  // text → bottom-left, beside the art
+const artCleanT  = () => `translate(${ref.artX}px, ${ref.artY}px)`;                          // art at its clean spot
+const artAuroraT = () => `translate(${PAD}px, ${ref.mTop + ref.mH - ref.artH * SCALE - PAD}px) scale(${SCALE})`;  // art → bottom-left corner
+function setT(el, t, animate) {
+    el.style.transition = animate ? `transform ${DUR}ms ${EASE}` : 'none';
+    el.style.transform = t;
+    if (!animate) void el.offsetWidth;              // commit instantly so the next change animates
+}
+
 function applyMode(mode) {
     if (mode === currentMode) return;
     const from = currentMode;
     CuceuViz.stop();
     stopBounce();
+    if (from === 'clean') measureRef();             // refresh geometry while the art is still docked
 
-    const artFirst = nowArt.getBoundingClientRect();   // where the picture is right now
-    const nowFirst = nowEl.getBoundingClientRect();    // where the text is right now
-    const c = container.getBoundingClientRect();
-
-    if (mode === 'dvd') {
-        // picture breaks loose into the background layer, full size, exactly where it currently is
-        if (nowArt.parentElement !== bgLayer) { bgLayer.appendChild(nowArt); nowArt.classList.add('dvd-loose'); }
-        bx = artFirst.left - c.left; by = artFirst.top - c.top;
-        nowArt.style.left = bx + 'px'; nowArt.style.top = by + 'px';
-    } else if (nowArt.parentElement === bgLayer) {
-        // picture docks back into the art-cell (Clean grid or Aurora corner)
-        nowArt.classList.remove('dvd-loose');
-        nowArt.style.left = ''; nowArt.style.top = '';
-        artCell.appendChild(nowArt);
+    if (from === 'clean' && mode !== 'clean') {     // un-dock the picture into the background layer
+        artCell.style.width = ref.cellW + 'px';     // freeze the cell so the text column never moves
+        bgLayer.appendChild(nowArt);
+        nowArt.classList.add('dvd-loose');
+        setT(nowArt, artCleanT(), false);           // sit exactly where it was — no jump, no flash
     }
     currentMode = mode;
     document.body.dataset.activeMode = mode;
 
-    flip(nowArt, artFirst);   // picture morphs (translate + scale) to its new state
-    flip(nowEl, nowFirst);    // text morphs to its new state
+    setT(nowEl, mode === 'dvd' ? nowDvdT() : mode === 'aurora' ? nowAuroraT() : 'none', true);   // text glides
 
     if (mode === 'dvd') {
-        bounceTimer = setTimeout(() => { if (currentMode === 'dvd') startBounce(); }, from === 'aurora' ? DUR : 60);
+        setT(nowArt, artCleanT(), true);            // settle full-size at the clean spot…
+        bounceTimer = setTimeout(() => { if (currentMode === 'dvd') startBounce(); }, from === 'aurora' ? DUR : 70);  // …then drift off
+    } else if (mode === 'aurora') {
+        setT(nowArt, artAuroraT(), true);           // shrink into the corner
+    } else {                                        // clean — glide the picture home, then dock it
+        setT(nowArt, artCleanT(), true);
+        const dock = (e) => {
+            if (e && e.propertyName !== 'transform') return;
+            nowArt.removeEventListener('transitionend', dock);
+            if (currentMode !== 'clean' || !nowArt.classList.contains('dvd-loose')) return;
+            nowArt.classList.remove('dvd-loose');
+            nowArt.style.transition = ''; nowArt.style.transform = '';
+            artCell.style.width = '';
+            artCell.appendChild(nowArt);
+        };
+        nowArt.addEventListener('transitionend', dock);
+        setTimeout(dock, DUR + 90);
     }
+
     if (ENGINE_MODES.includes(mode)) {
         resumeAudioGraph();
         CuceuViz.start(mode);
@@ -572,39 +601,13 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ══════════════════════════════════════════════════════════════
-// FLIP morph + DVD bounce (the picture bounces via left/top so transform stays free for the morph)
-// ══════════════════════════════════════════════════════════════
-const nowEl = document.querySelector('.now');
-const artCell = document.querySelector('.art-cell');
-let dvdAnimId = null, bounceTimer = null, bx = 0, by = 0, vx = 0, vy = 0, lastT = 0;
-
-// animate `el` from a previous rect (first) to its current layout — translate + scale — then self-clean
-function flip(el, first) {
-    el.style.transition = 'none';
-    el.style.transform = 'none';
-    el.style.transformOrigin = '0 0';
-    const last = el.getBoundingClientRect();
-    if (!last.width || !last.height) { el.style.transition = ''; el.style.transformOrigin = ''; return; }
-    const dx = first.left - last.left, dy = first.top - last.top;
-    const s = first.width / last.width;
-    if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(s - 1) < .004) { el.style.transition = ''; el.style.transformOrigin = ''; return; }
-    el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
-    void el.offsetWidth;
-    el.style.transition = `transform ${DUR}ms ${EASE}`;
-    el.style.transform = 'none';
-    const done = (e) => {
-        if (e && e.propertyName !== 'transform') return;
-        el.style.transition = ''; el.style.transform = ''; el.style.transformOrigin = '';
-        el.removeEventListener('transitionend', done);
-    };
-    el.addEventListener('transitionend', done);
-    setTimeout(done, DUR + 100);
-}
+// DVD bounce — the loose picture drifts via transform (transition off so each frame is instant)
 function startBounce() {
+    bx = ref.artX; by = ref.artY;
     const speed = (window.innerWidth < 600 ? 120 : 165) / Math.SQRT2;
     vx = (Math.random() < .5 ? -1 : 1) * speed;
     vy = (Math.random() < .5 ? -1 : 1) * speed;
+    nowArt.style.transition = 'none';
     lastT = performance.now();
     cancelAnimationFrame(dvdAnimId);
     dvdAnimId = requestAnimationFrame(dvdFrame);
@@ -619,12 +622,13 @@ function dvdFrame(now) {
     if (bx + aW >= mW) { bx = mW - aW; vx = -Math.abs(vx); }
     if (by <= 0)       { by = 0;       vy =  Math.abs(vy); }
     if (by + aH >= cH) { by = cH - aH; vy = -Math.abs(vy); }
-    nowArt.style.left = bx + 'px'; nowArt.style.top = by + 'px';
+    nowArt.style.transform = `translate(${bx}px, ${by}px)`;
     dvdAnimId = requestAnimationFrame(dvdFrame);
 }
 function stopBounce() { cancelAnimationFrame(dvdAnimId); dvdAnimId = null; clearTimeout(bounceTimer); }
 function resumeBounce() {
     if (currentMode === 'dvd' && nowArt.classList.contains('dvd-loose')) {
+        nowArt.style.transition = 'none';
         lastT = performance.now();
         cancelAnimationFrame(dvdAnimId);
         dvdAnimId = requestAnimationFrame(dvdFrame);
