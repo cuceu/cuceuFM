@@ -543,9 +543,15 @@ const nowAuroraT = () => `translate(${PAD + ref.artW * SCALE + 12 - ref.nowX}px,
 const artCleanT  = () => `translate(${ref.artX}px, ${ref.artY}px)`;                          // art at its clean spot
 const artAuroraT = () => `translate(${PAD}px, ${ref.mTop + ref.mH - ref.artH * SCALE - PAD}px) scale(${SCALE})`;  // art → bottom-left corner
 function setT(el, t, animate) {
-    el.style.transition = animate ? `transform ${DUR}ms ${EASE}` : 'none';
-    el.style.transform = t;
-    if (!animate) void el.offsetWidth;              // commit instantly so the next change animates
+    if (animate) {
+        el.style.transition = `transform ${DUR}ms ${EASE}`;
+        void el.offsetWidth;                        // flush so the transition is armed on the CURRENT transform
+        el.style.transform = t;                     // …now changing it actually animates (no snap/flash)
+    } else {
+        el.style.transition = 'none';
+        el.style.transform = t;
+        void el.offsetWidth;                        // commit instantly so the next change animates
+    }
 }
 
 function applyMode(mode) {
