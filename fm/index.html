@@ -594,9 +594,11 @@ function applyMode(mode) {
 
     if (from === 'clean' && mode !== 'clean') {     // un-dock the picture into the background layer
         artCell.style.width = ref.cellW + 'px';     // freeze the cell so the text column never moves
+        nowArt.style.visibility = 'hidden';          // hide during DOM move to prevent flash
         bgLayer.appendChild(nowArt);
         nowArt.classList.add('dvd-loose');
         setT(nowArt, artCleanT(), false);           // sit exactly where it was — no jump, no flash
+        nowArt.style.visibility = '';                // reveal now that transform is committed
     }
     currentMode = mode;
     document.body.dataset.activeMode = mode;
@@ -614,10 +616,13 @@ function applyMode(mode) {
             if (e && e.propertyName !== 'transform') return;
             nowArt.removeEventListener('transitionend', dock);
             if (currentMode !== 'clean' || !nowArt.classList.contains('dvd-loose')) return;
+            nowArt.style.visibility = 'hidden';      // hide during re-dock
             nowArt.classList.remove('dvd-loose');
             nowArt.style.transition = ''; nowArt.style.transform = '';
             artCell.style.width = '';
             artCell.appendChild(nowArt);
+            void nowArt.offsetWidth;                 // commit layout
+            nowArt.style.visibility = '';             // reveal in place
         };
         nowArt.addEventListener('transitionend', dock);
         setTimeout(dock, DUR + 90);
