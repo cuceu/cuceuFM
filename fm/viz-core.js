@@ -291,7 +291,7 @@ const CuceuViz = (() => {
         renderer.setClearColor(0x000000, 0);
         renderer.domElement.id = 'viz-canvas';
         renderer.domElement.style.cssText =
-            'position:absolute;inset:0;width:100%;height:100%;display:none;';
+            'position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;';
         container.appendChild(renderer.domElement);
 
         resizeObs = new ResizeObserver(() => {
@@ -337,7 +337,7 @@ const CuceuViz = (() => {
 
         const w = container.clientWidth, h = container.clientHeight;
         renderer.setSize(w, h);
-        renderer.domElement.style.display = 'block';
+        renderer.domElement.classList.add('visible');
 
         const ctx = {
             scene: new THREE.Scene(),
@@ -370,7 +370,7 @@ const CuceuViz = (() => {
             disposeScene(active.ctx.scene);
             active = null;
         }
-        if (renderer) renderer.domElement.style.display = 'none';
+        if (renderer) renderer.domElement.classList.remove('visible');
     }
 
     document.addEventListener('visibilitychange', () => {

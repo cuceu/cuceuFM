@@ -33,7 +33,8 @@
         .mono { font-family:var(--mono); }
 
         #app-container { position:relative; flex:1; display:flex; flex-direction:column; min-height:0; }
-        #viz-canvas { z-index:1; }
+        #viz-canvas { z-index:1; opacity:0; transition:opacity 0.6s ease; }
+        #viz-canvas.visible { opacity:1; }
         #bg-layer { position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
 
         /* ── TICKERS ─────────────────────────────────── */
@@ -47,7 +48,7 @@
         .ticker-bottom { border-bottom:none; }
         .marquee-wrapper { display:flex; white-space:nowrap; align-items:center; width:fit-content; animation:tickerScroll linear infinite; }
         @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        @keyframes trackRoll { 0%{opacity:0} 100%{opacity:1} }
+        @keyframes trackRoll { 0%{opacity:0.5; filter:blur(2px)} 100%{opacity:1; filter:blur(0)} }
         .ticker-item { display:inline-flex; align-items:center; }
         .ticker-art { height:30px; width:30px; object-fit:cover; margin:0 18px; opacity:0; border:1px solid var(--line); transition:opacity 0.4s ease; }
         .ticker-art.has-art { opacity:1; }
@@ -57,7 +58,7 @@
         .head {
             position:relative; z-index:3; flex-shrink:0; background:var(--bg);
             display:flex; align-items:center; justify-content:space-between;
-            min-height:62px; padding:8px 24px; transition:background 0.4s ease;
+            min-height:62px; padding:8px 24px; transition:background 0.6s ease;
         }
         .back {
             font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:1px;
@@ -87,16 +88,20 @@
         body[data-active-mode="dvd"] #stage,
         body[data-active-mode="aurora"] #stage { opacity:1; pointer-events:auto; }
         .art-cell { display:flex; align-items:center; justify-content:center; padding:clamp(20px,4vw,46px); }
-        #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); transform-origin:0 0; transition:opacity .5s ease; }
-        #now-art.swap { animation:artSwap 0.5s ease; }
-        @keyframes artSwap { 0%{opacity:0.2} 100%{opacity:1} }
-        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; justify-self:start; align-self:center; width:fit-content; max-width:min(46vw,600px); transform-origin:0 0; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity .5s ease; }
+        #now-art { width:clamp(180px, 30vh, 320px); height:clamp(180px, 30vh, 320px); object-fit:cover; border:1px solid var(--line); display:block; background:var(--line); transform-origin:0 0; transition:opacity 0.65s ease; }
+        #now-art.swap { animation:artSwap 0.65s ease; }
+        @keyframes artSwap { 0%{opacity:0.5; filter:blur(4px)} 60%{opacity:0.9; filter:blur(1px)} 100%{opacity:1; filter:blur(0)} }
+        .now { display:flex; flex-direction:column; justify-content:center; gap:16px; padding:clamp(24px,4vw,44px); min-width:0; justify-self:start; align-self:center; width:fit-content; max-width:min(46vw,600px); transform-origin:0 0; transition:transform 700ms cubic-bezier(.4,0,.2,1), opacity 0.6s ease; }
         .status { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--dim); }
-        .status #status-dot { width:9px; height:9px; flex-shrink:0; background:var(--dim); }
-        .status #status-text { color:var(--acid); }
-        .titles { display:flex; flex-direction:column; gap:2px; min-width:0; }
-        .artist { font-weight:800; font-size:clamp(18px,3vw,34px); line-height:0.98; letter-spacing:-0.02em; text-transform:uppercase; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .track  { font-weight:900; font-size:clamp(34px,5.4vw,64px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+        .status #status-dot { width:9px; height:9px; flex-shrink:0; background:var(--dim); transition:background 0.5s ease; }
+        .status #status-text { color:var(--acid); transition:color 0.4s ease; }
+        .titles { display:flex; flex-direction:column; gap:2px; min-width:0; position:relative; }
+        .artist { font-weight:800; font-size:clamp(18px,3vw,34px); line-height:0.98; letter-spacing:-0.02em; text-transform:uppercase; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity 0.4s ease, transform 0.4s ease; }
+        .artist.text-fade-out { opacity:0; transform:translateY(-6px); }
+        .artist.text-fade-in  { opacity:1; transform:translateY(0); }
+        .track  { font-weight:900; font-size:clamp(34px,5.4vw,64px); line-height:0.92; letter-spacing:-0.03em; text-transform:uppercase; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; transition:opacity 0.4s ease, transform 0.4s ease; }
+        .track.text-fade-out { opacity:0; transform:translateY(6px); }
+        .track.text-fade-in  { opacity:1; transform:translateY(0); }
 
         /* ── DVD MODE — real art bounces in the background, text centred & forward ── */
         #dvd-box { display:none; }   /* legacy bouncer, unused */
@@ -111,7 +116,7 @@
 
         /* ── AURORA — now-playing shrinks (pure transform) into the bottom-left; dims when idle ── */
         body.idle[data-active-mode="aurora"] .now,
-        body.idle[data-active-mode="aurora"] #now-art { opacity:0.42; }
+        body.idle[data-active-mode="aurora"] #now-art { opacity:0.42; transition:opacity 1.2s ease; }
 
         /* ── CONSOLE (controls + modes) ──────────────── */
         #body-row { display:flex; flex:1; min-height:0; }
@@ -139,7 +144,7 @@
         .spacer { flex:1; }
 
         .modes { display:flex; flex-direction:column; }
-        .mode-btn { background:transparent; border:none; border-top:1px solid var(--line); font-family:var(--mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:0; min-height:48px; color:var(--dim); cursor:pointer; transition:background 0.2s, color 0.2s; display:flex; align-items:center; justify-content:center; }
+        .mode-btn { background:transparent; border:none; border-top:1px solid var(--line); font-family:var(--mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:0; min-height:48px; color:var(--dim); cursor:pointer; transition:background 0.35s ease, color 0.35s ease; display:flex; align-items:center; justify-content:center; }
         .mode-btn:hover { color:var(--ink); }
         .mode-btn.active { background:var(--ink); color:var(--bg); }
         .mode-btn svg { width:20px; height:20px; }
@@ -330,9 +335,35 @@ function setStatus(text, kind) {
 }
 function setNowPlaying(t) {
     const sep = t.indexOf(' - ');
-    if (sep > 0) { nowArtist.textContent = t.slice(0, sep); nowTrack.textContent = t.slice(sep + 3); }
-    else { nowArtist.textContent = 'CUCEU.FM'; nowTrack.textContent = t; }
-    nowTrack.title = t;
+    const newArtist = sep > 0 ? t.slice(0, sep) : 'CUCEU.FM';
+    const newTrack  = sep > 0 ? t.slice(sep + 3) : t;
+
+    // If the text is the same, skip animation
+    if (nowArtist.textContent === newArtist && nowTrack.textContent === newTrack) {
+        nowTrack.title = t;
+        return;
+    }
+
+    // Fade out
+    nowArtist.classList.add('text-fade-out');
+    nowTrack.classList.add('text-fade-out');
+
+    // After fade-out completes, swap text and fade back in
+    setTimeout(() => {
+        nowArtist.textContent = newArtist;
+        nowTrack.textContent = newTrack;
+        nowTrack.title = t;
+        nowArtist.classList.remove('text-fade-out');
+        nowTrack.classList.remove('text-fade-out');
+        nowArtist.classList.add('text-fade-in');
+        nowTrack.classList.add('text-fade-in');
+
+        // Clean up the fade-in class after the transition
+        setTimeout(() => {
+            nowArtist.classList.remove('text-fade-in');
+            nowTrack.classList.remove('text-fade-in');
+        }, 420);
+    }, 400);
 }
 
 function renderPlayState() {
