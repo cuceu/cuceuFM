@@ -109,10 +109,6 @@
         body[data-active-mode="dvd"] .head { background:transparent; }   /* art passes behind the logo */
         body[data-active-mode="dvd"] .art-cell,
         body[data-active-mode="aurora"] .art-cell { overflow:visible; }   /* art is loose; the cell is a frozen-width spacer */
-        /* DVD: centre the text — applied via JS class after glide completes, removed before exit */
-        .dvd-centered.now, .dvd-centered .titles { align-items:center; }
-        .dvd-centered.now { text-align:center; }
-        .dvd-centered .status { justify-content:center; }
 
         /* ── AURORA — now-playing shrinks (pure transform) into the bottom-left; dims when idle ── */
         body.idle[data-active-mode="aurora"] .now,
@@ -605,16 +601,13 @@ function applyMode(mode) {
     currentMode = mode;
     document.body.dataset.activeMode = mode;
 
-    // Remove DVD centering BEFORE exit glide — the block is still centred on screen
-    // so the alignment shift is imperceptible, then the block glides away left-aligned
+    // Remove DVD centering before exit glide
     if (from === 'dvd') nowEl.classList.remove('dvd-centered');
 
     setT(nowEl, mode === 'dvd' ? nowDvdT() : mode === 'aurora' ? nowAuroraT() : 'none', true);   // text glides
 
     if (mode === 'dvd') {
         setT(nowArt, artCleanT(), true);            // settle full-size at the clean spot…
-        // Centre text AFTER glide arrives — block is in position, centering shift is minimal
-        setTimeout(() => { if (currentMode === 'dvd') nowEl.classList.add('dvd-centered'); }, DUR);
         bounceTimer = setTimeout(() => { if (currentMode === 'dvd') startBounce(); }, from === 'aurora' ? DUR : 70);  // …then drift off
     } else if (mode === 'aurora') {
         setT(nowArt, artAuroraT(), true);           // shrink into the corner
