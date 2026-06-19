@@ -432,6 +432,7 @@ async function fetchSongData() {
         if (t !== currentTitle) {
             currentTitle = t; fetchGlobalHistory(); await fetchArtwork();
             nowArt.classList.remove('swap'); void nowArt.offsetWidth; nowArt.classList.add('swap');
+            nowArt.addEventListener('animationend', () => nowArt.classList.remove('swap'), { once: true });
             setNowPlaying(t);
             currentTickerBase = `NOW PLAYING: ${t}`;
             updateTicker(currentTickerBase);
@@ -594,6 +595,7 @@ function applyMode(mode) {
 
     if (from === 'clean' && mode !== 'clean') {     // un-dock the picture into the background layer
         artCell.style.width = ref.cellW + 'px';     // freeze the cell so the text column never moves
+        nowArt.classList.remove('swap');              // kill any lingering artSwap animation before reparent
         nowArt.style.visibility = 'hidden';          // hide during DOM move to prevent flash
         bgLayer.appendChild(nowArt);
         nowArt.classList.add('dvd-loose');
@@ -616,6 +618,7 @@ function applyMode(mode) {
             if (e && e.propertyName !== 'transform') return;
             nowArt.removeEventListener('transitionend', dock);
             if (currentMode !== 'clean' || !nowArt.classList.contains('dvd-loose')) return;
+            nowArt.classList.remove('swap');          // prevent artSwap animation restart on reparent
             nowArt.style.visibility = 'hidden';      // hide during re-dock
             nowArt.classList.remove('dvd-loose');
             nowArt.style.transition = ''; nowArt.style.transform = '';
