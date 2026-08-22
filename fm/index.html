@@ -15,6 +15,7 @@
         :root {
             --paper:#f7f6f4; --ink:#141414; --dim:#8b877e; --line:#d9d6cd;
             --accent:#dc772b; --amber:#e0a11f;
+            --scrim-in:rgba(247,246,244,.56); --scrim-mid:rgba(247,246,244,.17);
             --mono:'Space Mono', ui-monospace, monospace;
             --disp:'Archivo', system-ui, sans-serif;
             --spring:cubic-bezier(.34,1.4,.5,1);
@@ -49,6 +50,22 @@
            outermost sliver of wall into the gap so it never ends on a hard
            edge. Same vertical scale + offset as the shot, so the seam lines
            up exactly; only the thin edge strip is stretched. */
+        /* Frosted pane that lifts the type off a busy wallpaper. Masked with a
+           radial so it fades out rather than ending on a rectangle edge; the
+           second gradient is the soft shadow that seats it. */
+        #scrim { position:absolute; z-index:1; display:none; pointer-events:none;
+            backdrop-filter:blur(11px) saturate(.86);
+            -webkit-backdrop-filter:blur(11px) saturate(.86);
+            background:
+                radial-gradient(ellipse at 50% 42%, var(--scrim-in) 0%, var(--scrim-mid) 46%, transparent 74%),
+                radial-gradient(ellipse at 50% 47%, rgba(0,0,0,.11) 36%, transparent 70%);
+            -webkit-mask-image:radial-gradient(ellipse at 50% 42%, #000 26%, rgba(0,0,0,.5) 50%, transparent 70%);
+            mask-image:radial-gradient(ellipse at 50% 42%, #000 26%, rgba(0,0,0,.5) 50%, transparent 70%); }
+        body.viz-on #scrim { display:block; }
+        body.viz-on .fm-suffix { text-shadow:0 1px 12px var(--scrim-in), 0 0 4px var(--scrim-in); }
+        body.viz-on .recent-toggle { text-shadow:0 1px 9px var(--scrim-in), 0 0 4px var(--scrim-in); }
+        body.viz-on #logo { filter:drop-shadow(0 2px 10px rgba(0,0,0,.30)) drop-shadow(0 0 18px var(--scrim-in)); }
+
         /* live wallpaper — sits under everything, replaces the shot */
         #viz { position:absolute; inset:0; width:100%; height:100%; z-index:0;
             display:none; pointer-events:none; }
@@ -236,6 +253,7 @@
         <div class="bleed" id="bleed-l"></div>
         <div class="bleed" id="bleed-r"></div>
         <img id="wall" src="IMG_1148.webp" alt="">
+        <div id="scrim"></div>
 
         <a class="back" href="/">← Back</a>
         <span id="clock">THURSDAY | 0:00 AM</span>
@@ -331,6 +349,7 @@ const WIN = { x: 0.216, y: 0.203, w: 0.588, h: 0.329 };
 let vizOn = false;      // hoisted: layout() reads this before the wallpaper block runs
 const stage = document.getElementById('stage');
 const wall = document.getElementById('wall');
+const scrim  = document.getElementById('scrim');
 const bleedL = document.getElementById('bleed-l');
 const bleedR = document.getElementById('bleed-r');
 const SLICE = 0.06;   // how much of the shot's width is taken as the edge strip
@@ -411,6 +430,15 @@ function layout() {
         y = oy + WIN.y * nh * s;
         w = WIN.w * nw * s;
         h = WIN.h * nh * s;
+    }
+    if (vizOn) {
+        const padX = w * 0.24;
+        const top  = Math.max(0, y - h * 0.42);
+        const bot  = Math.min(st.height, y + h + Math.min(200, st.height * 0.26));
+        scrim.style.left   = (x - padX) + 'px';
+        scrim.style.top    = top + 'px';
+        scrim.style.width  = (w + padX * 2) + 'px';
+        scrim.style.height = (bot - top) + 'px';
     }
     const cs = stage.style;
     cs.setProperty('--win-x', x + 'px');
