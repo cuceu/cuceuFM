@@ -17,6 +17,7 @@
     <style>
         :root {
             --bg:#000; --ink:#f2f0eb; --dim:#6b6b6b; --line:#262626; --acid:#ff4d00;
+            --logo-green:#0d3a02; --logo-orange:#a85f1c;
             --mono:'Space Mono', ui-monospace, monospace;
             --disp:'Archivo', system-ui, sans-serif;
         }
@@ -28,24 +29,11 @@
             display:flex; flex-direction:column;
             transition:background 0.4s ease, color 0.4s ease; }
 
-        /* ── MONO TICKERS (top + bottom rails) ───────── */
-        .ticker { flex-shrink:0; overflow:hidden; white-space:nowrap; background:var(--bg);
-            font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
-            text-transform:uppercase; color:var(--dim); padding:9px 0; z-index:30; }
-        .ticker-top { border-bottom:1px solid var(--line); }
-        .ticker-bottom { border-top:1px solid var(--line); }
-        .ticker-inner { display:inline-block; will-change:transform;
-            animation:slide 34s linear infinite; }
-        .ticker-bottom .ticker-inner { animation-direction:reverse; }
-        .ticker-inner span { padding:0 18px; }
-        .ticker-inner .hot { color:var(--acid); }
-        @keyframes slide { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-
         /* ── HEADER ──────────────────────────────────── */
         .head { flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
             padding:14px 24px; z-index:30; background:var(--bg); }
-        .wordmark { font-family:var(--disp); font-size:18px; font-weight:800;
-            letter-spacing:-0.6px; color:var(--ink); line-height:1; }
+        .brand { display:flex; align-items:center; user-select:none; }
+        .brand img { height:38px; width:auto; -webkit-user-drag:none; }
         .head-right { display:flex; align-items:center; gap:16px; }
         #clock { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px;
             color:var(--dim); white-space:nowrap; }
@@ -70,7 +58,8 @@
         /* Graffiti wall, dropped right back so it reads as texture only */
         #wall { position:absolute; inset:0; display:flex; flex-direction:column;
             justify-content:center; gap:0.4vw; overflow:hidden;
-            pointer-events:none; opacity:0.10; }
+            pointer-events:none; opacity:0.26; }
+        body:not(.dark-mode) #wall { opacity:0.10; }
         .wall-row { display:flex; flex-wrap:nowrap; width:max-content; will-change:transform;
             animation:drift 90s linear infinite; }
         .wall-row:nth-child(even) { animation-direction:reverse; }
@@ -84,19 +73,20 @@
         .status { display:flex; align-items:center; gap:9px; margin-bottom:22px;
             font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
             text-transform:uppercase; color:var(--dim); }
-        .status .dot { width:8px; height:8px; flex-shrink:0; background:var(--acid);
+        .status .dot { width:8px; height:8px; flex-shrink:0; background:var(--logo-orange);
             animation:blink 1.1s steps(2) infinite alternate; }
-        .status .hot { color:var(--acid); }
+        .status .hot { color:var(--logo-orange); }
         @keyframes blink { from{opacity:1} to{opacity:0.3} }
 
         h1 { font-family:var(--disp); font-weight:900;
             font-size:clamp(34px, min(11.2vw, 22vh), 168px); line-height:0.86;
             letter-spacing:-0.04em; text-transform:uppercase;
             overflow-wrap:anywhere; }
-        h1 .acid { color:var(--acid); }
+        h1 .under { color:var(--logo-green); }
+        h1 .maint { color:var(--logo-orange); }
 
         .blurb { margin-top:26px; max-width:44ch;
-            font-family:var(--mono); font-size:13px; line-height:1.75; color:var(--dim); }
+            font-family:var(--mono); font-size:16px; line-height:1.7; color:var(--dim); }
         .blurb b { color:var(--ink); font-weight:700; }
 
         .actions { margin-top:32px; display:flex; flex-wrap:wrap; gap:10px; }
@@ -112,10 +102,11 @@
 
         @media (max-width:680px) {
             .head { padding:11px 14px; }
-            .wordmark { font-size:17px; }
+            .brand img { height:30px; }
             .panel { padding:22px 14px; }
-            .ticker { font-size:10px; letter-spacing:1.5px; padding:8px 0; }
-            .blurb { margin-top:20px; font-size:12px; }
+            .status { font-size:9px; letter-spacing:1.2px; gap:7px; margin-bottom:18px; }
+            .status .dot { width:6px; height:6px; }
+            .blurb { margin-top:20px; font-size:14px; }
             .actions { margin-top:26px; }
             .btn { flex:1 1 100%; justify-content:center; }
             #wall img { height:2.3rem; margin-right:3.5vw; }
@@ -132,7 +123,7 @@
         }
 
         @media (prefers-reduced-motion:reduce) {
-            .ticker-inner, .wall-row, .status .dot { animation:none; }
+            .wall-row, .status .dot { animation:none; }
         }
     </style>
 </head>
@@ -149,10 +140,8 @@
     })();
 </script>
 
-    <div class="ticker ticker-top" aria-hidden="true"><div class="ticker-inner" id="ticker-a"></div></div>
-
     <header class="head">
-        <span class="wordmark">cuceu</span>
+        <span class="brand"><img src="cuceugrta.png" alt="CUCEU"></span>
         <div class="head-right">
             <span id="clock">SAT / 00.00.00</span>
             <button class="tog" id="theme-toggle" aria-label="Toggle theme">
@@ -169,25 +158,16 @@
         <div class="panel">
             <p class="status"><span class="dot"></span> Status <span class="hot">/ Offline</span> / Maintenance</p>
 
-            <h1>Under<br><span class="acid">Maintenance</span></h1>
+            <h1><span class="under">Under</span><br><span class="maint">Maintenance</span></h1>
 
-            <p class="blurb">
-                We're reworking things behind the scenes.
-                <b>cuceu.co.uk</b> will be back shortly.
-            </p>
+            <p class="blurb"><b>cuceu.co.uk</b> will be back shortly.</p>
 
             <div class="actions">
-                <a class="btn" href="https://www.instagram.com/cuceuuu/" target="_blank" rel="noopener">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                    Updates ↗
-                </a>
                 <button class="btn ghost" id="retry">Retry</button>
             </div>
         </div>
         </div>
     </main>
-
-    <div class="ticker ticker-bottom" aria-hidden="true"><div class="ticker-inner" id="ticker-b"></div></div>
 
 <script>
     'use strict';
@@ -210,14 +190,6 @@
     };
     tick();
     setInterval(tick, 1000);
-
-    /* ── TICKERS ──────────────────────────────────────── */
-    // Content is duplicated so the -50% translate loops seamlessly.
-    const MSG = ['Under Maintenance', 'Back Soon', 'cuceu.co.uk', 'Under Maintenance', 'Stay Tuned'];
-    const unit = MSG.map((m, i) => `<span${i % 2 ? ' class="hot"' : ''}>${m}</span><span>—</span>`).join('');
-    const half = unit.repeat(6);
-    document.getElementById('ticker-a').innerHTML = half + half;
-    document.getElementById('ticker-b').innerHTML = half + half;
 
     /* ── GRAFFITI WALL ────────────────────────────────── */
     // Measure one row, then append until the stage is overfilled (same trick as home).
