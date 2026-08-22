@@ -44,6 +44,14 @@
         #wall { position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover;
             user-select:none; -webkit-user-drag:none; pointer-events:none;
             animation:wallIn .8s ease both; }
+        /* Photo bleed — when the shot is scaled down to leave room for the
+           controls it stops covering the stage sideways. These stretch its
+           outermost sliver of wall into the gap so it never ends on a hard
+           edge. Same vertical scale + offset as the shot, so the seam lines
+           up exactly; only the thin edge strip is stretched. */
+        .bleed { position:absolute; z-index:0; display:none; pointer-events:none;
+            background-image:url(IMG_1148.webp); background-repeat:no-repeat;
+            animation:wallIn .8s ease both; }
 
         /* chrome pinned to the wall corners */
         .back { position:absolute; top:18px; left:20px; z-index:5;
@@ -183,6 +191,8 @@
     <div class="tick top"><div class="marquee-wrapper" id="top-marquee"></div></div>
 
     <main id="stage">
+        <div class="bleed" id="bleed-l"></div>
+        <div class="bleed" id="bleed-r"></div>
         <img id="wall" src="IMG_1148.webp" alt="">
 
         <a class="back" href="/">← Back</a>
@@ -245,12 +255,33 @@ const Store = {
 const WIN = { x: 0.216, y: 0.203, w: 0.588, h: 0.329 };
 const stage = document.getElementById('stage');
 const wall = document.getElementById('wall');
+const bleedL = document.getElementById('bleed-l');
+const bleedR = document.getElementById('bleed-r');
+const SLICE = 0.06;   // how much of the shot's width is taken as the edge strip
+
+/* Stretch the shot's edge strip across a `gap`-wide band beside it. The
+   background is blown up horizontally so that SLICE of the image spans the
+   gap, and anchored to that edge; vertical scale/offset match the shot
+   exactly, so nothing shifts across the seam. */
+function setBleed(el, side, gap, wt, wh, wr, stH) {
+    if (gap <= 0.5) { el.style.display = 'none'; return; }
+    const left = side === 'left';
+    el.style.display = 'block';
+    el.style.left = left ? '0px' : wr + 'px';
+    el.style.width = gap + 'px';
+    el.style.top = '0px';
+    el.style.height = stH + 'px';
+    el.style.backgroundSize = `${gap / SLICE}px ${wh}px`;
+    el.style.backgroundPosition = `${left ? '0%' : '100%'} ${wt}px`;
+}
+function hideBleeds() { bleedL.style.display = bleedR.style.display = 'none'; }
 
 function layout() {
     const st = stage.getBoundingClientRect();
     let x, y, w, h;
     if (window.innerWidth < 760) {
         wall.style.left = wall.style.top = wall.style.width = wall.style.height = '';
+        hideBleeds();
         const r = wall.getBoundingClientRect();
         x = (r.left - st.left) + WIN.x * r.width;
         y = (r.top - st.top) + WIN.y * r.height;
@@ -274,10 +305,15 @@ function layout() {
         const winTop = oy + WIN.y * nh * s;
         const winTopMax = st.height - WIN.h * nh * s - (RESERVE - 26);
         if (winTop > winTopMax) oy -= winTop - Math.max(12, winTopMax);
+        // …and never so far that the shot lifts off the bottom of the stage —
+        // a blank band reads as broken, while --recent-max below just adapts
+        oy = Math.max(st.height - nh * s, Math.min(0, oy));
         wall.style.left = ox + 'px';
         wall.style.top = oy + 'px';
         wall.style.width = nw * s + 'px';
         wall.style.height = nh * s + 'px';
+        setBleed(bleedL, 'left',  ox, oy, nh * s, ox + nw * s, st.height);
+        setBleed(bleedR, 'right', st.width - (ox + nw * s), oy, nh * s, ox + nw * s, st.height);
         x = ox + WIN.x * nw * s;
         y = oy + WIN.y * nh * s;
         w = WIN.w * nw * s;
