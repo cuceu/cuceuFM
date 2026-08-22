@@ -93,7 +93,7 @@
             display:flex; flex-direction:column; align-items:center; gap:13px;
             animation:rise .6s var(--spring) .72s both; }
 
-        .listen-row { display:flex; align-items:center; gap:14px; }
+        .listen-row { display:flex; flex-direction:column; align-items:center; }
         .listen { display:inline-flex; align-items:center; gap:11px; border:none; cursor:pointer;
             background:#0b0b0b; color:#fff; padding:13px 30px;
             font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:3px;
@@ -106,9 +106,12 @@
         body.offline:not(.playing) .listen-row { display:none; }
 
         /* tucked-away volume — appears only while playing */
-        #vol { display:flex; gap:3px; cursor:pointer; opacity:0; transform:translateX(-8px);
-            transition:opacity .35s ease, transform .35s ease; pointer-events:none; }
-        body.playing #vol { opacity:1; transform:translateX(0); pointer-events:auto; }
+        #vol { display:flex; gap:3px; cursor:pointer; opacity:0; pointer-events:none;
+            height:0; margin-top:0; overflow:hidden; transform:translateY(-8px);
+            transition:opacity .3s ease, transform .4s var(--spring),
+                       height .4s var(--spring), margin-top .4s var(--spring); }
+        body.playing #vol { opacity:1; height:17px; margin-top:14px;
+            transform:translateY(0); pointer-events:auto; }
         #vol i { width:5px; height:17px; background:var(--line); transition:background .1s; }
         #vol i.on { background:var(--ink); }
 
