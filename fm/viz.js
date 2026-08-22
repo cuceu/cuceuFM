@@ -202,7 +202,9 @@ let W=0,H=0,bw=0,bh=0, sceneA,sceneB,bloomA,bloomB;
 function resize(){
   if(!gl) return;
   const dpr = Math.min(1.5, window.devicePixelRatio||1);
-  const w = Math.max(2,Math.round(innerWidth*dpr)), h = Math.max(2,Math.round(innerHeight*dpr));
+  const r = cvs.getBoundingClientRect();
+  const w = Math.max(2,Math.round((r.width ||innerWidth )*dpr)),
+        h = Math.max(2,Math.round((r.height||innerHeight)*dpr));
   if(w===W&&h===H) return;
   W=w; H=h; cvs.width=W; cvs.height=H;
   bw=Math.max(2,W>>2); bh=Math.max(2,H>>2);
@@ -541,8 +543,9 @@ function frame(now){
   const t=sceneA; sceneA=sceneB; sceneB=t;      // ping-pong
 }
 document.addEventListener('visibilitychange',()=>{
-  if(!started) return;
-  running = !document.hidden && wanted; last=performance.now();
+  // only reset the clock — rAF throttling already handles a hidden tab, and
+  // trusting document.hidden here can leave the loop permanently parked
+  if(started) last=performance.now();
 });
 /* ═══ PUBLIC API ════════════════════════════════════════════════════ */
 function init(canvas){
@@ -558,6 +561,7 @@ function init(canvas){
   emptyVao=gl.createVertexArray();
   buildStrands();
   resize();
+  if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cvs);
   started=true;
   requestAnimationFrame(frame);
   return true;
@@ -581,8 +585,8 @@ function attachAudio(el){
 global.CuceuViz = {
   init, attachAudio,
   supported(){ try{ return !!document.createElement('canvas').getContext('webgl2'); }catch(e){ return false; } },
-  running(){ return started && wanted; },
-  start(){ wanted=true; running=!document.hidden; last=performance.now(); if(actx&&actx.state==='suspended') actx.resume(); },
+  running(){ return started && running; },
+  start(){ wanted=true; running=true; last=performance.now(); if(actx&&actx.state==='suspended') actx.resume(); },
   stop(){ wanted=false; running=false; },
   /* 'live' while the stream is actually sounding, 'idle' off-air — idle has
      no kick at all, just the smooth drift. */
