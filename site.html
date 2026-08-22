@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cuceu</title>
+    <meta name="description" content="CUCEU — Music, Visuals, Creative Studio. Live radio, TouchDesigner visuals, and creative experiments.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared.css">
+    <style>
+        html, body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh; height: 100dvh;
+            overflow: hidden;
+            background: var(--c-bg); /* Fallback while loading */
+        }
+        #app-frame {
+            width: 100%; height: 100%;
+            border: none; display: block;
+        }
+
+        /* ── PERSISTENT MINI PLAYER ──────────────────────────────── */
+        #persistent-player {
+            position: fixed;
+            bottom: 24px; left: 50%;
+            width: calc(100% - 48px); max-width: 320px;
+            border-radius: var(--r-pill);
+            padding: 12px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            z-index: 99999;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
+            transform: translate(-50%, 20px);
+        }
+        #persistent-player.visible {
+            opacity: 1; pointer-events: auto; transform: translate(-50%, 0);
+        }
+
+        .pp-left {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .pp-play-btn {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .pp-play-icon { width: 18px; height: 18px; fill: currentColor; position: relative; z-index: 1; }
+
+        .pp-info {
+            display: flex; flex-direction: column;
+        }
+        .pp-title {
+            font-size: 11px; font-weight: var(--fw-black); letter-spacing: 1px;
+            color: var(--c-text); text-transform: uppercase;
+        }
+        .pp-status {
+            font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 1.5px;
+            color: var(--c-amber); display: flex; align-items: center; gap: 5px;
+        }
+        .pp-dot {
+            width: 6px; height: 6px;
+            animation: aero-pulse 1.4s ease-in-out infinite;
+        }
+        .pp-dot.buffering {
+            --dot-c: #ffcc00;
+            animation: aero-blink 0.8s infinite alternate;
+        }
+
+        .pp-close-btn {
+            background: transparent; border: none; color: #888;
+            cursor: pointer; padding: 4px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.2s, background 0.2s;
+        }
+        .pp-close-btn:hover { color: var(--c-text); background: rgba(0,0,0,0.05); }
+        body.dark-mode .pp-close-btn:hover { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content loaded via iframe -->
+    <iframe id="app-frame" src=""></iframe>
+
+    <!-- Persistent Global Audio Player -->
+    <div id="persistent-player" class="aero-panel">
+        <div class="pp-left">
+            <button class="pp-play-btn aero-gel" id="pp-play-btn" aria-label="Play/Pause">
+                <svg class="pp-play-icon play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="pp-play-icon pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <div class="pp-info">
+                <span class="pp-title">cuceu.fm</span>
+                <span class="pp-status"><div class="pp-dot aero-dot" id="pp-dot"></div> <span id="pp-status-text">LIVE</span></span>
+            </div>
+        </div>
+        <button class="pp-close-btn" id="pp-close-btn" aria-label="Hide Player">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <audio id="global-player" preload="none" crossorigin="anonymous"></audio>
+
+    <script src="/shared.js"></script>
+    <script>
+        // ── INIT THEME ──
+        CuceuTheme.apply();
+
+        // ── IFRAME ROUTER ──
+        const frame = document.getElementById('app-frame');
+        
+        // Check if we arrived via a redirect like `/?path=/fm`
+        const urlParams = new URLSearchParams(window.location.search);
+        let targetPath = urlParams.get('path');
+        
+        // If there's a target path, strip it from the URL bar immediately so it looks clean
+        if (targetPath) {
+            // Clean up the URL bar
+            window.history.replaceState(null, '', targetPath);
+            // Fix trailing slashes / /index.html logic if needed
+            if (targetPath === '/' || targetPath === '') targetPath = '/home.html';
+            frame.src = targetPath;
+        } else {
+            // Normal load: check pathname
+            let path = window.location.pathname;
+            if (path === '/' || path === '') path = '/home.html';
+            frame.src = path;
+        }
+
+        // Sync URL bar when iframe navigates internally
+        frame.addEventListener('load', () => {
+            try {
+                const iframePath = frame.contentWindow.location.pathname;
+                // If the iframe is at /home.html, show / in the top URL bar
+                const displayPath = iframePath.replace(/\/home\.html$/, '/');
+                if (window.location.pathname !== displayPath) {
+                    window.history.pushState(null, '', displayPath);
+                }
+            } catch (e) {
+                // Cross-origin issues (should not happen since it's same domain)
+                console.warn("Could not sync URL due to cross-origin policies");
+            }
+        });
+
+        // Handle browser Back/Forward buttons
+        window.addEventListener('popstate', () => {
+            let path = window.location.pathname;
+            if (path === '/' || path === '') path = '/home.html';
+            frame.src = path;
+        });
+
+
+        // ── PERSISTENT PLAYER LOGIC ──
+        const STREAM_BASE = "https://stream.cuceu.co.uk";
+        const player = document.getElementById('global-player');
+        const pp = document.getElementById('persistent-player');
+        const playBtn = document.getElementById('pp-play-btn');
+        const closeBtn = document.getElementById('pp-close-btn');
+        const playIcon = playBtn.querySelector('.play');
+        const pauseIcon = playBtn.querySelector('.pause');
+        const statusText = document.getElementById('pp-status-text');
+        const dot = document.getElementById('pp-dot');
+        
+        let isPlaying = false;
+        let isManuallyClosed = false;
+
+        function updateUI() {
+            if (isPlaying) {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                pp.classList.add('visible');
+            } else {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
+                player.play().catch(e => console.error(e));
+                statusText.innerText = 'BUFFERING';
+                dot.classList.add('buffering');
+                isPlaying = true;
+                isManuallyClosed = false;
+            } else {
+                player.pause();
+                player.src = '';
+                statusText.innerText = 'LIVE';
+                dot.classList.remove('buffering');
+                isPlaying = false;
+            }
+            updateUI();
+        });
+
+        player.onplaying = () => {
+            if (isPlaying) {
+                statusText.innerText = 'ON AIR';
+                dot.classList.remove('buffering');
+            }
+        };
+
+        closeBtn.addEventListener('click', () => {
+            pp.classList.remove('visible');
+            isManuallyClosed = true;
+        });
+
+        // --- WEB AUDIO API (Hosted in Parent) ---
+        let audioCtx, analyser, audioSource;
+
+        function initWebAudio() {
+            if (audioCtx) return;
+            const AC = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AC();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 1024;
+            analyser.smoothingTimeConstant = 0.8;
+            
+            // Allow CORS audio processing
+            player.crossOrigin = "anonymous";
+            
+            audioSource = audioCtx.createMediaElementSource(player);
+            audioSource.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        }
+
+        // --- GLOBAL API FOR IFRAME PAGES ---
+        // Expose a global object so `fm/index.html` can control this player
+        window.CuceuGlobalPlayer = {
+            play: () => {
+                if (!isPlaying) playBtn.click();
+            },
+            pause: () => {
+                if (isPlaying) playBtn.click();
+            },
+            isPlaying: () => isPlaying,
+            getAudioElement: () => player,
+            showMiniPlayer: () => {
+                if (isPlaying && !isManuallyClosed) {
+                    pp.classList.add('visible');
+                }
+            },
+            hideMiniPlayer: () => {
+                pp.classList.remove('visible');
+            },
+            resumeAudioContext: () => {
+                initWebAudio();
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            },
+            getFrequencyData: (array) => {
+                initWebAudio();
+                if (analyser) {
+                    analyser.getByteFrequencyData(array);
+                }
+            },
+            getSampleRate: () => {
+                initWebAudio();
+                return audioCtx ? audioCtx.sampleRate : 44100;
+            },
+            getFrequencyBinCount: () => {
+                initWebAudio();
+                return analyser ? analyser.frequencyBinCount : 512;
+            }
+        };
+    </script>
+</body>
+</html>

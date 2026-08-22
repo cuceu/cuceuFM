@@ -3,269 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cuceu</title>
-    <meta name="description" content="CUCEU — Music, Visuals, Creative Studio. Live radio, TouchDesigner visuals, and creative experiments.">
+    <title>cuceu — under maintenance</title>
+    <meta name="description" content="CUCEU is under maintenance. Back shortly.">
+    <meta name="robots" content="noindex">
+    <meta property="og:title" content="CUCEU — Under Maintenance">
+    <meta property="og:description" content="Reworking things behind the scenes. Back shortly.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cuceu.co.uk">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 font-weight=%22900%22 font-family=%22Helvetica, Arial, sans-serif%22>C</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/shared.css">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        html, body {
-            margin: 0; padding: 0;
-            width: 100vw; height: 100vh; height: 100dvh;
-            overflow: hidden;
-            background: var(--c-bg); /* Fallback while loading */
+        :root {
+            --bg:#000; --ink:#f2f0eb; --dim:#6b6b6b; --line:#262626; --acid:#ff4d00;
+            --mono:'Space Mono', ui-monospace, monospace;
+            --disp:'Archivo', system-ui, sans-serif;
         }
-        #app-frame {
-            width: 100%; height: 100%;
-            border: none; display: block;
+        body:not(.dark-mode) { --bg:#f4f2ec; --ink:#14110d; --dim:#8a857a; --line:#d8d4ca; --acid:#f23c00; }
+
+        * { box-sizing:border-box; margin:0; }
+        html, body { height:100dvh; overflow:hidden; }
+        body { background:var(--bg); color:var(--ink); font-family:var(--disp);
+            display:flex; flex-direction:column;
+            transition:background 0.4s ease, color 0.4s ease; }
+
+        /* ── MONO TICKERS (top + bottom rails) ───────── */
+        .ticker { flex-shrink:0; overflow:hidden; white-space:nowrap; background:var(--bg);
+            font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
+            text-transform:uppercase; color:var(--dim); padding:9px 0; z-index:30; }
+        .ticker-top { border-bottom:1px solid var(--line); }
+        .ticker-bottom { border-top:1px solid var(--line); }
+        .ticker-inner { display:inline-block; will-change:transform;
+            animation:slide 34s linear infinite; }
+        .ticker-bottom .ticker-inner { animation-direction:reverse; }
+        .ticker-inner span { padding:0 18px; }
+        .ticker-inner .hot { color:var(--acid); }
+        @keyframes slide { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+        /* ── HEADER ──────────────────────────────────── */
+        .head { flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+            padding:14px 24px; z-index:30; background:var(--bg); }
+        .wordmark { font-family:var(--disp); font-size:18px; font-weight:800;
+            letter-spacing:-0.6px; color:var(--ink); line-height:1; }
+        .head-right { display:flex; align-items:center; gap:16px; }
+        #clock { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:1px;
+            color:var(--dim); white-space:nowrap; }
+        .tog { width:28px; height:28px; border:1px solid var(--line); background:transparent;
+            color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background 0.2s, color 0.2s; }
+        .tog:hover { background:var(--ink); color:var(--bg); }
+        .tog svg { width:15px; height:15px; }
+        .tog .icon-sun { display:none; }
+        body.dark-mode .tog .icon-sun { display:block; }
+        body.dark-mode .tog .icon-moon { display:none; }
+
+        /* ── STAGE ───────────────────────────────────── */
+        #main { flex:1; position:relative; min-height:0; overflow:hidden; }
+
+        /* The copy scrolls in its own layer above the fixed wall, so cramped
+           viewports (landscape phones) never clip the buttons.
+           `margin:auto 0` centres it but collapses to 0 once it overflows. */
+        #scroller { position:absolute; inset:0; z-index:2; overflow-y:auto;
+            display:flex; flex-direction:column; }
+
+        /* Graffiti wall, dropped right back so it reads as texture only */
+        #wall { position:absolute; inset:0; display:flex; flex-direction:column;
+            justify-content:center; gap:0.4vw; overflow:hidden;
+            pointer-events:none; opacity:0.10; }
+        .wall-row { display:flex; flex-wrap:nowrap; width:max-content; will-change:transform;
+            animation:drift 90s linear infinite; }
+        .wall-row:nth-child(even) { animation-direction:reverse; }
+        .wall-row:nth-child(even) img { transform:rotate(180deg); }
+        .wall-row img { height:clamp(3rem, 4.6vw, 6rem); width:auto; margin-right:1.4vw;
+            flex-shrink:0; user-select:none; -webkit-user-drag:none; }
+        @keyframes drift { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+        .panel { margin:auto 0; width:100%; padding:22px 24px; }
+
+        .status { display:flex; align-items:center; gap:9px; margin-bottom:22px;
+            font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
+            text-transform:uppercase; color:var(--dim); }
+        .status .dot { width:8px; height:8px; flex-shrink:0; background:var(--acid);
+            animation:blink 1.1s steps(2) infinite alternate; }
+        .status .hot { color:var(--acid); }
+        @keyframes blink { from{opacity:1} to{opacity:0.3} }
+
+        h1 { font-family:var(--disp); font-weight:900;
+            font-size:clamp(34px, min(11.2vw, 22vh), 168px); line-height:0.86;
+            letter-spacing:-0.04em; text-transform:uppercase;
+            overflow-wrap:anywhere; }
+        h1 .acid { color:var(--acid); }
+
+        .blurb { margin-top:26px; max-width:44ch;
+            font-family:var(--mono); font-size:13px; line-height:1.75; color:var(--dim); }
+        .blurb b { color:var(--ink); font-weight:700; }
+
+        .actions { margin-top:32px; display:flex; flex-wrap:wrap; gap:10px; }
+        .btn { display:inline-flex; align-items:center; gap:9px;
+            font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
+            text-transform:uppercase; text-decoration:none; padding:12px 20px;
+            background:var(--acid); color:#000; transition:filter 0.2s; }
+        .btn:hover { filter:brightness(1.12); }
+        .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line);
+            transition:background 0.2s, color 0.2s; }
+        .btn.ghost:hover { background:var(--ink); color:var(--bg); filter:none; }
+        .btn svg { width:14px; height:14px; }
+
+        @media (max-width:680px) {
+            .head { padding:11px 14px; }
+            .wordmark { font-size:17px; }
+            .panel { padding:22px 14px; }
+            .ticker { font-size:10px; letter-spacing:1.5px; padding:8px 0; }
+            .blurb { margin-top:20px; font-size:12px; }
+            .actions { margin-top:26px; }
+            .btn { flex:1 1 100%; justify-content:center; }
+            #wall img { height:2.3rem; margin-right:3.5vw; }
         }
 
-        /* ── PERSISTENT MINI PLAYER ──────────────────────────────── */
-        #persistent-player {
-            position: fixed;
-            bottom: 24px; left: 50%;
-            width: calc(100% - 48px); max-width: 320px;
-            border-radius: var(--r-pill);
-            padding: 12px 20px;
-            display: flex; align-items: center; justify-content: space-between;
-            z-index: 99999;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
-            transform: translate(-50%, 20px);
-        }
-        #persistent-player.visible {
-            opacity: 1; pointer-events: auto; transform: translate(-50%, 0);
+        /* Landscape phones / short windows — tighten the whole stack. */
+        @media (max-height:560px) {
+            h1 { font-size:clamp(30px, min(9vw, 15vh), 92px); }
+            .panel { padding-top:12px; padding-bottom:12px; }
+            .status { margin-bottom:10px; }
+            .blurb { margin-top:10px; line-height:1.6; }
+            .actions { margin-top:12px; }
+            .btn { padding:10px 18px; }
         }
 
-        .pp-left {
-            display: flex; align-items: center; gap: 12px;
+        @media (prefers-reduced-motion:reduce) {
+            .ticker-inner, .wall-row, .status .dot { animation:none; }
         }
-        .pp-play-btn {
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .pp-play-icon { width: 18px; height: 18px; fill: currentColor; position: relative; z-index: 1; }
-
-        .pp-info {
-            display: flex; flex-direction: column;
-        }
-        .pp-title {
-            font-size: 11px; font-weight: var(--fw-black); letter-spacing: 1px;
-            color: var(--c-text); text-transform: uppercase;
-        }
-        .pp-status {
-            font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 1.5px;
-            color: var(--c-amber); display: flex; align-items: center; gap: 5px;
-        }
-        .pp-dot {
-            width: 6px; height: 6px;
-            animation: aero-pulse 1.4s ease-in-out infinite;
-        }
-        .pp-dot.buffering {
-            --dot-c: #ffcc00;
-            animation: aero-blink 0.8s infinite alternate;
-        }
-
-        .pp-close-btn {
-            background: transparent; border: none; color: #888;
-            cursor: pointer; padding: 4px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            transition: color 0.2s, background 0.2s;
-        }
-        .pp-close-btn:hover { color: var(--c-text); background: rgba(0,0,0,0.05); }
-        body.dark-mode .pp-close-btn:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
+<script>
+    // Applied before paint so the page never flashes the wrong theme.
+    // Same contract as CuceuTheme in shared.js: localStorage 'cuceu-theme', else system.
+    (() => {
+        const saved = localStorage.getItem('cuceu-theme');
+        const dark = saved === 'dark' ? true
+                   : saved === 'light' ? false
+                   : window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true;
+        document.body.classList.toggle('dark-mode', dark);
+    })();
+</script>
 
-    <!-- Main Content loaded via iframe -->
-    <iframe id="app-frame" src=""></iframe>
+    <div class="ticker ticker-top" aria-hidden="true"><div class="ticker-inner" id="ticker-a"></div></div>
 
-    <!-- Persistent Global Audio Player -->
-    <div id="persistent-player" class="aero-panel">
-        <div class="pp-left">
-            <button class="pp-play-btn aero-gel" id="pp-play-btn" aria-label="Play/Pause">
-                <svg class="pp-play-icon play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <svg class="pp-play-icon pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    <header class="head">
+        <span class="wordmark">cuceu</span>
+        <div class="head-right">
+            <span id="clock">SAT / 00.00.00</span>
+            <button class="tog" id="theme-toggle" aria-label="Toggle theme">
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
-            <div class="pp-info">
-                <span class="pp-title">cuceu.fm</span>
-                <span class="pp-status"><div class="pp-dot aero-dot" id="pp-dot"></div> <span id="pp-status-text">LIVE</span></span>
+        </div>
+    </header>
+
+    <main id="main">
+        <div id="wall" aria-hidden="true"></div>
+
+        <div id="scroller">
+        <div class="panel">
+            <p class="status"><span class="dot"></span> Status <span class="hot">/ Offline</span> / Maintenance</p>
+
+            <h1>Under<br><span class="acid">Maintenance</span></h1>
+
+            <p class="blurb">
+                We're reworking things behind the scenes.
+                <b>cuceu.co.uk</b> will be back shortly.
+            </p>
+
+            <div class="actions">
+                <a class="btn" href="https://www.instagram.com/cuceuuu/" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    Updates ↗
+                </a>
+                <button class="btn ghost" id="retry">Retry</button>
             </div>
         </div>
-        <button class="pp-close-btn" id="pp-close-btn" aria-label="Hide Player">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-    </div>
+        </div>
+    </main>
 
-    <audio id="global-player" preload="none" crossorigin="anonymous"></audio>
+    <div class="ticker ticker-bottom" aria-hidden="true"><div class="ticker-inner" id="ticker-b"></div></div>
 
-    <script src="/shared.js"></script>
-    <script>
-        // ── INIT THEME ──
-        CuceuTheme.apply();
+<script>
+    'use strict';
 
-        // ── IFRAME ROUTER ──
-        const frame = document.getElementById('app-frame');
-        
-        // Check if we arrived via a redirect like `/?path=/fm`
-        const urlParams = new URLSearchParams(window.location.search);
-        let targetPath = urlParams.get('path');
-        
-        // If there's a target path, strip it from the URL bar immediately so it looks clean
-        if (targetPath) {
-            // Clean up the URL bar
-            window.history.replaceState(null, '', targetPath);
-            // Fix trailing slashes / /index.html logic if needed
-            if (targetPath === '/' || targetPath === '') targetPath = '/home.html';
-            frame.src = targetPath;
-        } else {
-            // Normal load: check pathname
-            let path = window.location.pathname;
-            if (path === '/' || path === '') path = '/home.html';
-            frame.src = path;
-        }
+    /* ── THEME TOGGLE ─────────────────────────────────── */
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        const nowDark = !document.body.classList.contains('dark-mode');
+        document.body.classList.toggle('dark-mode', nowDark);
+        localStorage.setItem('cuceu-theme', nowDark ? 'dark' : 'light');
+    });
 
-        // Sync URL bar when iframe navigates internally
-        frame.addEventListener('load', () => {
-            try {
-                const iframePath = frame.contentWindow.location.pathname;
-                // If the iframe is at /home.html, show / in the top URL bar
-                const displayPath = iframePath.replace(/\/home\.html$/, '/');
-                if (window.location.pathname !== displayPath) {
-                    window.history.pushState(null, '', displayPath);
-                }
-            } catch (e) {
-                // Cross-origin issues (should not happen since it's same domain)
-                console.warn("Could not sync URL due to cross-origin policies");
-            }
-        });
+    /* ── RAW CLOCK (matches CuceuClock's site-wide format) ── */
+    const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const clockEl = document.getElementById('clock');
+    const pad = n => String(n).padStart(2, '0');
+    const tick = () => {
+        const d = new Date();
+        const time = `${pad(d.getHours())}.${pad(d.getMinutes())}.${pad(d.getSeconds())}`;
+        clockEl.textContent = window.innerWidth < 680 ? time : `${DAYS[d.getDay()]} / ${time}`;
+    };
+    tick();
+    setInterval(tick, 1000);
 
-        // Handle browser Back/Forward buttons
-        window.addEventListener('popstate', () => {
-            let path = window.location.pathname;
-            if (path === '/' || path === '') path = '/home.html';
-            frame.src = path;
-        });
+    /* ── TICKERS ──────────────────────────────────────── */
+    // Content is duplicated so the -50% translate loops seamlessly.
+    const MSG = ['Under Maintenance', 'Back Soon', 'cuceu.co.uk', 'Under Maintenance', 'Stay Tuned'];
+    const unit = MSG.map((m, i) => `<span${i % 2 ? ' class="hot"' : ''}>${m}</span><span>—</span>`).join('');
+    const half = unit.repeat(6);
+    document.getElementById('ticker-a').innerHTML = half + half;
+    document.getElementById('ticker-b').innerHTML = half + half;
 
+    /* ── GRAFFITI WALL ────────────────────────────────── */
+    // Measure one row, then append until the stage is overfilled (same trick as home).
+    const wall = document.getElementById('wall');
+    const PER_ROW = 14; // duplicated below, so -50% drift loops seamlessly
+    const buildRow = () => {
+        const row = document.createElement('div');
+        row.className = 'wall-row';
+        row.innerHTML = `<img src="cuceugrta.png" alt="">`.repeat(PER_ROW * 2);
+        return row;
+    };
+    const fillWall = () => {
+        wall.innerHTML = '';
+        const probe = buildRow();
+        wall.appendChild(probe);
+        const rowH = probe.getBoundingClientRect().height || 60;
+        const need = Math.max(3, Math.ceil((wall.clientHeight * 1.15) / rowH));
+        for (let i = 1; i < need; i++) wall.appendChild(buildRow());
+    };
+    fillWall();
+    addEventListener('resize', () => { fillWall(); tick(); });
 
-        // ── PERSISTENT PLAYER LOGIC ──
-        const STREAM_BASE = "https://stream.cuceu.co.uk";
-        const player = document.getElementById('global-player');
-        const pp = document.getElementById('persistent-player');
-        const playBtn = document.getElementById('pp-play-btn');
-        const closeBtn = document.getElementById('pp-close-btn');
-        const playIcon = playBtn.querySelector('.play');
-        const pauseIcon = playBtn.querySelector('.pause');
-        const statusText = document.getElementById('pp-status-text');
-        const dot = document.getElementById('pp-dot');
-        
-        let isPlaying = false;
-        let isManuallyClosed = false;
-
-        function updateUI() {
-            if (isPlaying) {
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-                pp.classList.add('visible');
-            } else {
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
-            }
-        }
-
-        playBtn.addEventListener('click', () => {
-            if (!isPlaying) {
-                player.src = `${STREAM_BASE}/stream.mp3?t=${Date.now()}`;
-                player.play().catch(e => console.error(e));
-                statusText.innerText = 'BUFFERING';
-                dot.classList.add('buffering');
-                isPlaying = true;
-                isManuallyClosed = false;
-            } else {
-                player.pause();
-                player.src = '';
-                statusText.innerText = 'LIVE';
-                dot.classList.remove('buffering');
-                isPlaying = false;
-            }
-            updateUI();
-        });
-
-        player.onplaying = () => {
-            if (isPlaying) {
-                statusText.innerText = 'ON AIR';
-                dot.classList.remove('buffering');
-            }
-        };
-
-        closeBtn.addEventListener('click', () => {
-            pp.classList.remove('visible');
-            isManuallyClosed = true;
-        });
-
-        // --- WEB AUDIO API (Hosted in Parent) ---
-        let audioCtx, analyser, audioSource;
-
-        function initWebAudio() {
-            if (audioCtx) return;
-            const AC = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AC();
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 1024;
-            analyser.smoothingTimeConstant = 0.8;
-            
-            // Allow CORS audio processing
-            player.crossOrigin = "anonymous";
-            
-            audioSource = audioCtx.createMediaElementSource(player);
-            audioSource.connect(analyser);
-            analyser.connect(audioCtx.destination);
-        }
-
-        // --- GLOBAL API FOR IFRAME PAGES ---
-        // Expose a global object so `fm/index.html` can control this player
-        window.CuceuGlobalPlayer = {
-            play: () => {
-                if (!isPlaying) playBtn.click();
-            },
-            pause: () => {
-                if (isPlaying) playBtn.click();
-            },
-            isPlaying: () => isPlaying,
-            getAudioElement: () => player,
-            showMiniPlayer: () => {
-                if (isPlaying && !isManuallyClosed) {
-                    pp.classList.add('visible');
-                }
-            },
-            hideMiniPlayer: () => {
-                pp.classList.remove('visible');
-            },
-            resumeAudioContext: () => {
-                initWebAudio();
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            },
-            getFrequencyData: (array) => {
-                initWebAudio();
-                if (analyser) {
-                    analyser.getByteFrequencyData(array);
-                }
-            },
-            getSampleRate: () => {
-                initWebAudio();
-                return audioCtx ? audioCtx.sampleRate : 44100;
-            },
-            getFrequencyBinCount: () => {
-                initWebAudio();
-                return analyser ? analyser.frequencyBinCount : 512;
-            }
-        };
-    </script>
+    /* ── RETRY ────────────────────────────────────────── */
+    document.getElementById('retry').addEventListener('click', () => location.reload());
+</script>
 </body>
 </html>
