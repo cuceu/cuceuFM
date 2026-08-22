@@ -1,0 +1,604 @@
+(function(global){
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════
+   cuceu.fm — visualiser draft
+
+   Ported from the shape of the TD networks rather than their pixels:
+
+     select → math → lag → speed → null
+       band energy sets a RATE, integrated into a phase. Nothing is ever
+       positioned by the music directly, so motion accelerates and coasts
+       instead of snapping. `lag` = the attack/release envelope below.
+
+     chopto → displace
+       the spectrum is geometry: strand i owns log-band i, so different
+       frequencies genuinely drive different parts of the image.
+
+     feedback → displace → lookup(ramp) → bloom
+       colour arrives LATE, via ramp lookup on a monochrome field, exactly
+       like lookup1/ramp1. Feedback closes the loop for the layering.
+   ═══════════════════════════════════════════════════════════════════ */
+
+let cvs=null, gl=null, started=false;
+
+/* ── params ───────────────────────────────────────────────────────── */
+const P = { flow:2, swirl:.29, react:1.8, smooth:.95, kick:.67, random:.35,
+            decay:.829, zoom:-.02, rot:.007, disp:.023,
+            line:0, pts:4, bloom:2, grain:.3, chrom:4, str:160 };
+const DEFAULTS = Object.assign({}, P);
+
+const PALETTES = {
+  /* Light grounds composite SUBTRACTIVELY, so their stops are stored as
+     1-ink: what gets taken out of the paper. Dark grounds add light. */
+  paper: {
+    day:   { bg:[0.968,0.963,0.956], a:[0.922,0.922,0.922], b:[0.137,0.533,0.831], c:[0.647,0.671,0.686], inv:1 },
+    night: { bg:[0.043,0.043,0.047], a:[0.45,0.44,0.41],    b:[0.863,0.467,0.169], c:[0.98,0.97,0.90],    inv:0 }
+  },
+  mono: {
+    day:   { bg:[0.968,0.963,0.956], a:[0.90,0.90,0.90],    b:[0.68,0.68,0.68],    c:[0.45,0.45,0.45],    inv:1 },
+    night: { bg:[0.020,0.020,0.020], a:[0.30,0.30,0.32],    b:[0.72,0.72,0.70],    c:[1.00,0.99,0.94],    inv:0 }
+  }
+};
+let palName='paper', theme='day';
+let pal = PALETTES[palName][theme];
+
+/* ═══ SHADERS ═══════════════════════════════════════════════════════ */
+const VS_QUAD = `#version 300 es
+out vec2 vUv;
+void main(){
+  vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2) * 2.0 - 1.0;
+  vUv = p*0.5+0.5;
+  gl_Position = vec4(p,0.,1.);
+}`;
+
+/* feedback — the loop that gives the layering. prev frame is zoomed,
+   rotated and noise-displaced a hair each frame, then decayed. */
+const FS_FEED = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPrev;
+uniform float uDecay,uZoom,uRot,uDisp,uTime,uPhase;
+uniform vec2 uRes;
+float h21(vec2 p){ p=mod(p,512.0); p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+float vn(vec2 p){
+  vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y);
+}
+void main(){
+  float asp = uRes.x/uRes.y;
+  vec2 uv = vUv-0.5; uv.x*=asp;
+  float s=sin(uRot), c=cos(uRot);
+  uv = mat2(c,-s,s,c)*uv;
+  uv /= (1.0+uZoom);
+  vec2 n = vec2(vn(uv*2.6+uPhase*0.6), vn(uv*2.6-uPhase*0.5+31.7))-0.5;
+  uv += n*uDisp*2.0;
+  uv.x/=asp; uv+=0.5;
+  if(any(isnan(uv))||any(isinf(uv))) uv = vUv;
+  float inside = step(0.,uv.x)*step(uv.x,1.)*step(0.,uv.y)*step(uv.y,1.);
+  vec4 prev = texture(uPrev,clamp(uv,0.,1.))*inside;
+  o = prev*uDecay;
+  // one NaN entering a feedback loop is permanent — it survives *0
+  if(any(isnan(o))||any(isinf(o))) o = vec4(0.);
+}`;
+
+/* strand lines — colour comes from the strand's own frequency */
+const VS_LINE = `#version 300 es
+in vec2 aPos; in float aEnergy; in vec2 aMeta;   // meta.x=age 0..1, meta.y=freq 0..1
+out float vAge; out float vFreq; out float vE;
+uniform float uPtScale;
+void main(){
+  vAge=aMeta.x; vFreq=aMeta.y; vE=aEnergy;
+  gl_Position = vec4(aPos,0.,1.);
+  gl_PointSize = max(1.0, uPtScale*(0.35+aEnergy*2.2)*(0.25+aMeta.x*0.9));
+}`;
+
+const FS_LINE = `#version 300 es
+precision highp float;
+in float vAge; in float vFreq; in float vE;
+out vec4 o;
+uniform vec3 uA,uB,uC; uniform float uInt; uniform int uIsPoint;
+void main(){
+  float a = pow(vAge,1.6)*(0.10+vE*1.35)*uInt;
+  if(uIsPoint==1){
+    vec2 d = gl_PointCoord-0.5;
+    float r = dot(d,d);
+    if(r>0.25) discard;
+    a *= smoothstep(0.25,0.0,r);
+  }
+  vec3 col = vFreq<0.5 ? mix(uA,uB,vFreq*2.0) : mix(uB,uC,(vFreq-0.5)*2.0);
+  o = vec4(col*a, a);
+}`;
+
+/* bright-pass downsample, then separable blur — the bloom half of "glassy" */
+const FS_BRIGHT = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform float uThresh;
+void main(){
+  vec3 c = texture(uSrc,vUv).rgb;
+  float l = dot(c,vec3(0.2126,0.7152,0.0722));
+  o = vec4(c*smoothstep(uThresh,uThresh+0.35,l),1.);
+  if(any(isnan(o))||any(isinf(o))) o = vec4(0.,0.,0.,1.);
+}`;
+
+const FS_BLUR = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform vec2 uDir;
+void main(){
+  vec3 s = texture(uSrc,vUv).rgb*0.227;
+  s += (texture(uSrc,vUv+uDir*1.385).rgb + texture(uSrc,vUv-uDir*1.385).rgb)*0.316;
+  s += (texture(uSrc,vUv+uDir*3.231).rgb + texture(uSrc,vUv-uDir*3.231).rgb)*0.070;
+  if(any(isnan(s))||any(isinf(s))) s = vec3(0.);
+  o = vec4(s,1.);
+}`;
+
+/* composite — chromatic split (glass), grain (grit), vignette */
+const FS_COMP = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uScene,uBloom;
+uniform vec3 uBg;
+uniform float uBloomAmt,uGrain,uChrom,uTime,uInv;
+uniform vec2 uRes;
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+void main(){
+  vec2 d = (vUv-0.5);
+  vec2 off = d*uChrom/uRes.x*6.0;
+  vec3 sc;
+  sc.r = texture(uScene,vUv+off).r;
+  sc.g = texture(uScene,vUv).g;
+  sc.b = texture(uScene,vUv-off).b;
+  vec3 bl = texture(uBloom,vUv).rgb;
+  vec3 lit = sc + bl*uBloomAmt;
+  // additive on a dark ground, subtractive on a light one
+  vec3 col = mix(uBg + lit, uBg - lit, uInv);
+  float g = h21(gl_FragCoord.xy+fract(uTime)*311.7)-0.5;
+  col += g*uGrain;
+  col *= 1.0 - dot(d,d)*0.55;
+  if(any(isnan(col))||any(isinf(col))) col = uBg;
+  o = vec4(col,1.);
+}`;
+
+/* ═══ GL PLUMBING ═══════════════════════════════════════════════════ */
+function sh(type,src){
+  const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)+'\n'+src);
+  return s;
+}
+function prog(vs,fs,attribs){
+  const p=gl.createProgram();
+  gl.attachShader(p,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs));
+  // must happen before link — relinking afterwards would invalidate uniform locations
+  if(attribs) attribs.forEach((n,i)=>gl.bindAttribLocation(p,i,n));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u={}; const n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);
+  for(let i=0;i<n;i++){ const nm=gl.getActiveUniform(p,i).name; u[nm]=gl.getUniformLocation(p,nm); }
+  return {p,u};
+}
+let pFeed,pLine,pBright,pBlur,pComp;
+
+let emptyVao=null;
+
+function makeFBO(w,h){
+  const t=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const f=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  return {t,f,w,h};
+}
+
+
+let W=0,H=0,bw=0,bh=0, sceneA,sceneB,bloomA,bloomB;
+function resize(){
+  if(!gl) return;
+  const dpr = Math.min(1.5, window.devicePixelRatio||1);
+  const w = Math.max(2,Math.round(innerWidth*dpr)), h = Math.max(2,Math.round(innerHeight*dpr));
+  if(w===W&&h===H) return;
+  W=w; H=h; cvs.width=W; cvs.height=H;
+  bw=Math.max(2,W>>2); bh=Math.max(2,H>>2);
+  [sceneA,sceneB,bloomA,bloomB].forEach(o=>{ if(o){ gl.deleteTexture(o.t); gl.deleteFramebuffer(o.f);} });
+  sceneA=makeFBO(W,H); sceneB=makeFBO(W,H); bloomA=makeFBO(bw,bh); bloomB=makeFBO(bw,bh);
+  [sceneA,sceneB,bloomA,bloomB].forEach(o=>{
+    gl.bindFramebuffer(gl.FRAMEBUFFER,o.f); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+  });
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+}
+addEventListener('resize',()=>resize());
+
+/* ═══ STRANDS ═══════════════════════════════════════════════════════
+   S strands × L history samples. Each frame advances only the HEAD of
+   each strand through the flow field (S noise evals, not S*L) and the
+   trail is just its own history — that is what keeps it cheap. */
+let S=P.str|0; const L=64;
+let posBuf, metaBuf, enBuf, idxBuf, vao, aPosB, aEnB, aMetaB, headX, headY, seedA, seedSpd, seedAng, seedAmp;
+
+function buildStrands(){
+  S = P.str|0;
+  headX=new Float32Array(S); headY=new Float32Array(S); seedA=new Float32Array(S);
+  seedSpd=new Float32Array(S); seedAng=new Float32Array(S); seedAmp=new Float32Array(S);
+  posBuf=new Float32Array(S*L*2); enBuf=new Float32Array(S*L); metaBuf=new Float32Array(S*L*2);
+  for(let s=0;s<S;s++){
+    const f=s/(S-1);
+    const ang=f*Math.PI*2*3.0 + Math.random()*0.4;
+    const rad=0.18+Math.random()*0.72;
+    headX[s]=Math.cos(ang)*rad; headY[s]=Math.sin(ang)*rad*0.82;
+    seedA[s]=Math.random()*100;
+    seedSpd[s]=Math.random(); seedAng[s]=Math.random(); seedAmp[s]=Math.random();
+    for(let i=0;i<L;i++){
+      const o=(s*L+i);
+      posBuf[o*2]=headX[s]; posBuf[o*2+1]=headY[s];
+      metaBuf[o*2]=i/(L-1);        // age — 1 at the head
+      metaBuf[o*2+1]=f;            // this strand's frequency band
+    }
+  }
+  const idx=new Uint32Array(S*(L+1));
+  let k=0;
+  for(let s=0;s<S;s++){ for(let i=0;i<L;i++) idx[k++]=s*L+i; idx[k++]=0xFFFFFFFF; }
+
+  if(vao) gl.deleteVertexArray(vao);
+  vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+  aPosB=aPosB||gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,aPosB); gl.bufferData(gl.ARRAY_BUFFER,posBuf,gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  aEnB=aEnB||gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,aEnB); gl.bufferData(gl.ARRAY_BUFFER,enBuf,gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,1,gl.FLOAT,false,0,0);
+  aMetaB=aMetaB||gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,aMetaB); gl.bufferData(gl.ARRAY_BUFFER,metaBuf,gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,0,0);
+  idxBuf=idxBuf||gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,idxBuf); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,idx,gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+}
+/* value noise on the CPU for the flow field */
+function h2(x,y){ let n=Math.sin(x*127.1+y*311.7)*43758.5453; return n-Math.floor(n); }
+function vnoise(x,y){
+  const ix=Math.floor(x), iy=Math.floor(y), fx=x-ix, fy=y-iy;
+  const ux=fx*fx*(3-2*fx), uy=fy*fy*(3-2*fy);
+  const a=h2(ix,iy), b=h2(ix+1,iy), c=h2(ix,iy+1), d=h2(ix+1,iy+1);
+  return (a*(1-ux)+b*ux)*(1-uy) + (c*(1-ux)+d*ux)*uy;
+}
+
+/* ═══ AUDIO ═════════════════════════════════════════════════════════ */
+let actx=null, analyser=null, freqData=null, srcNode=null, mediaEl=null;
+let srcKind='idle';   // idle | demo | file | live  — 'idle' is what visitors see off-air
+const NB=160;                                   // log bands
+const band=new Float32Array(NB), bandEnv=new Float32Array(NB);
+let kickEnv=0, kickAvg=0.001, beat=0;
+let phFlow=0, phSwirl=0, phFeed=0;               // the `speed` integrators
+let eLow=0, eMid=0, eHigh=0;
+
+function ensureCtx(){
+  if(!actx){
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    analyser=actx.createAnalyser();
+    analyser.fftSize=4096; analyser.smoothingTimeConstant=0.0;
+    freqData=new Uint8Array(analyser.frequencyBinCount);
+    analyser.connect(actx.destination);
+  }
+  if(actx.state==='suspended') actx.resume();
+  return actx;
+}
+function disconnectSrc(){
+  if(srcNode){ try{srcNode.disconnect();}catch(e){} srcNode=null; }
+  if(mediaEl){ try{mediaEl.pause();}catch(e){} mediaEl=null; }
+}
+
+function useFile(file){
+  ensureCtx(); disconnectSrc(); srcKind='file';
+  file.arrayBuffer().then(b=>actx.decodeAudioData(b)).then(buf=>{
+    const s=actx.createBufferSource(); s.buffer=buf; s.loop=true;
+    s.connect(analyser); s.start(); srcNode=s;
+    (document.getElementById('drop')||{}).textContent='▶ '+file.name.slice(0,26);
+  }).catch(e=>{ (document.getElementById('drop')||{}).textContent='✕ could not decode'; srcKind='idle'; });
+}
+function useLive(){
+  ensureCtx(); disconnectSrc(); srcKind='live';
+  const a=new Audio(); a.crossOrigin='anonymous'; a.preload='none';
+  a.src='https://stream.cuceu.co.uk/stream.mp3?t='+Date.now();
+  a.play().then(()=>{
+    const s=actx.createMediaElementSource(a); s.connect(analyser); srcNode=s; mediaEl=a;
+  }).catch(e=>{ srcKind='idle'; });
+}
+
+/* demo spectrum — enough structure to judge the reaction without
+   touching the live stream (a tab playing it hijacks macOS Now Playing) */
+let dphase=0;
+function demoSpectrum(dt){
+  dphase+=dt;
+  const bpm=124, beatT=60/bpm;
+  const kb=(dphase%beatT)/beatT;
+  const kick=Math.exp(-kb*11)*0.95;
+  const snare=((dphase%(beatT*2))/(beatT*2)>0.5)?Math.exp(-(((dphase%beatT)/beatT))*7)*0.4:0;
+  for(let i=0;i<NB;i++){
+    const f=i/(NB-1);
+    let v = Math.exp(-f*2.3)*0.34;
+    v += kick*Math.exp(-f*13)*1.5;
+    v += snare*Math.exp(-Math.pow((f-0.42)*4.2,2))*0.9;
+    v += (0.10+0.09*Math.sin(dphase*0.55+f*9.0))*Math.exp(-Math.pow((f-0.30-0.11*Math.sin(dphase*0.31))*5.2,2));
+    v += 0.07*Math.exp(-Math.pow((f-0.66-0.10*Math.sin(dphase*0.22+2.1))*7.0,2));
+    v *= 0.72+0.42*vnoise(f*11+dphase*1.5, dphase*0.7);
+    band[i]=Math.max(0,Math.min(1.6,v));
+  }
+}
+/* Off-air. Deliberately transient-free: a slow drift across the bands so the
+   motion keeps breathing without anything to punch it. */
+function idleSpectrum(dt){
+  dphase+=dt;
+  for(let i=0;i<NB;i++){
+    const f=i/(NB-1);
+    let v = Math.exp(-f*1.9)*0.30;
+    v *= 0.75+0.35*vnoise(f*5.0+dphase*0.25, dphase*0.18);
+    v += 0.05*Math.exp(-Math.pow((f-0.35-0.16*Math.sin(dphase*0.11))*4.0,2));
+    band[i]=Math.max(0,v);
+  }
+}
+function realSpectrum(){
+  analyser.getByteFrequencyData(freqData);
+  const nyq=actx.sampleRate/2, n=freqData.length;
+  const f0=28, f1=Math.min(16000,nyq);
+  let silent=true;
+  for(let i=0;i<NB;i++){
+    const lo=f0*Math.pow(f1/f0, i/NB), hi=f0*Math.pow(f1/f0,(i+1)/NB);
+    let a=Math.floor(lo/nyq*n), b=Math.ceil(hi/nyq*n);
+    if(b<=a) b=a+1; if(b>n) b=n;
+    let sum=0; for(let k=a;k<b;k++) sum+=freqData[k];
+    const v=(sum/(b-a))/255;
+    if(v>0.02) silent=false;
+    band[i]=Math.pow(v,1.35)*2.1;
+  }
+  return !silent;
+}
+
+function analyse(dt){
+  let ok=false;
+  if((srcKind==='live'||srcKind==='file') && analyser) ok=realSpectrum();
+  // a dead stream falls through to the smooth idle, never to the kicky demo
+  if(!ok) (srcKind==='demo' ? demoSpectrum : idleSpectrum)(dt);
+  const playing = ok || srcKind==='demo';
+
+  /* the `lag` CHOP — fast attack, slow release. Release is what
+     `smoothing` lengthens, so smoothing can never kill reactivity. */
+  const atk=0.55, rel=0.035+ (1-P.smooth)*0.28;
+  let sLow=0,sMid=0,sHigh=0;
+  for(let i=0;i<NB;i++){
+    const t=band[i];
+    bandEnv[i] += (t>bandEnv[i]? atk : rel)*(t-bandEnv[i]);
+    const f=i/(NB-1);
+    if(f<0.09) sLow+=bandEnv[i];
+    else if(f<0.42) sMid+=bandEnv[i];
+    else sHigh+=bandEnv[i];
+  }
+  eLow=sLow/(NB*0.09); eMid=sMid/(NB*0.33); eHigh=sHigh/(NB*0.58);
+
+  /* kick + beat gate off the bottom bands — only while something is on air.
+     Off-air there is no punch at all, just the steady drift above. */
+  if(playing){
+    let k=0; for(let i=0;i<6;i++) k+=bandEnv[i]; k/=6;
+    kickEnv += (k>kickEnv?0.7:0.1)*(k-kickEnv);
+    kickAvg += 0.02*(kickEnv-kickAvg);
+    beat *= 0.90;
+    if(kickEnv > kickAvg*1.45 && kickEnv>0.10) beat = Math.min(1, beat+0.7);
+  } else {
+    kickEnv=0; kickAvg=0.001; beat=0;
+  }
+
+  /* ── the speed1 pattern: energy sets a RATE, integrated into phase ── */
+  phFlow  += dt*(0.10 + eMid *P.react*0.95)*P.flow;
+  phSwirl += dt*(0.06 + eHigh*P.react*1.25)*P.swirl;
+  phFeed  += dt*(0.20 + eLow *P.react*0.60);
+  // integrators run forever — wrap them on the noise lattice period so the
+  // hashes never leave float precision (512 is seamless for value noise)
+  if(phFlow >512.) phFlow -=512.;
+  if(phSwirl>512.) phSwirl-=512.;
+  if(phFeed >512.) phFeed -=512.;
+}
+
+/* ═══ FRAME ═════════════════════════════════════════════════════════ */
+function stepStrands(dt){
+  const asp=W/H;
+  const push=beat*P.kick;   // beat is pinned to 0 whenever nothing is playing
+  for(let s=0;s<S;s++){
+    const f=s/(S-1);
+    const bi=Math.min(NB-1, (f*NB)|0);
+    const e=bandEnv[bi]*(1 - P.random*0.45*seedAmp[s]);
+
+    let x=headX[s], y=headY[s];
+    /* curl-ish flow: two noise samples offset, rotated by the swirl phase */
+    const sc=1.6+f*2.4;
+    const n1=vnoise(x*sc*asp+phFlow*0.9, y*sc-phFlow*0.7+seedA[s]*0.01);
+    const n2=vnoise(x*sc*asp-phFlow*0.6+19.3, y*sc+phFlow*0.8+seedA[s]*0.01);
+    let ang=(n1-0.5)*6.2831*1.9 + (n2-0.5)*2.6 + phSwirl*(0.12+f*0.34) + seedA[s]*0.0628
+              + (seedAng[s]-0.5)*6.2831*P.random;
+    // randomness spreads speed around 1x — never below a crawl
+    const rmul=Math.max(0.15, 1 + (seedSpd[s]-0.5)*2.8*P.random);
+    const spd=(0.030 + e*P.react*0.17)*dt*2.2*rmul;
+    x+=Math.cos(ang)*spd; y+=Math.sin(ang)*spd;
+
+    /* kick shoves everything outward — low end owns radial motion */
+    if(push>0.001){
+      const r=Math.hypot(x,y)+1e-4;
+      x+=(x/r)*push*0.030*dt*60/60; y+=(y/r)*push*0.030;
+    }
+    /* high end owns the grit — per-point jitter */
+    const j=eHigh*P.react*0.010;
+    x+=(h2(s*3.7, phFlow*40+s)-0.5)*j; y+=(h2(s*7.1+5, phFlow*40+s)-0.5)*j;
+
+    /* soft wrap so strands never pile up on the edge */
+    const base=s*L*2;
+    const r2=Math.hypot(x,y);
+    if(r2>1.32){
+      const ordAng=f*6.2831*3.0, ordR=0.30+f*0.80;
+      const a =ordAng + (Math.random()-0.5)*6.2831*P.random;
+      const rr=Math.max(0.05, ordR + (Math.sqrt(Math.random())*1.15-ordR)*P.random);
+      x=Math.cos(a)*rr; y=Math.sin(a)*rr;
+      // collapse the whole trail onto the new head, otherwise the LINE_STRIP
+      // joins the old trail to the teleport and streaks across the screen
+      for(let i=0;i<L;i++){ posBuf[base+i*2]=x; posBuf[base+i*2+1]=y; }
+      headX[s]=x; headY[s]=y;
+      const eb0=s*L; for(let i=0;i<L;i++) enBuf[eb0+i]=0;
+      continue;
+    }
+    headX[s]=x; headY[s]=y;
+
+    /* shift the trail one sample and write the new head at the end */
+    posBuf.copyWithin(base, base+2, base+L*2);
+    posBuf[base+(L-1)*2]=x; posBuf[base+(L-1)*2+1]=y;
+    const eb=s*L;
+    enBuf.copyWithin(eb, eb+1, eb+L);
+    enBuf[eb+L-1]=e;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER,aPosB); gl.bufferSubData(gl.ARRAY_BUFFER,0,posBuf);
+  gl.bindBuffer(gl.ARRAY_BUFFER,aEnB);  gl.bufferSubData(gl.ARRAY_BUFFER,0,enBuf);
+}
+
+function blitQuad(){ gl.bindVertexArray(emptyVao); gl.drawArrays(gl.TRIANGLES,0,3); }
+
+let last=performance.now(), tsec=0, running=false, wanted=false;
+function frame(now){
+  requestAnimationFrame(frame);
+  if(!running) return;
+  let dt=Math.min(0.05,(now-last)/1000); last=now; tsec+=dt;
+  resize();
+  analyse(dt);
+  stepStrands(dt);
+
+  /* 1 ── feedback: prev → current, decayed and displaced */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,sceneA.f);
+  gl.viewport(0,0,W,H);
+  gl.disable(gl.BLEND);
+  gl.useProgram(pFeed.p);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sceneB.t);
+  gl.uniform1i(pFeed.u.uPrev,0);
+  gl.uniform1f(pFeed.u.uDecay,P.decay);
+  gl.uniform1f(pFeed.u.uZoom,P.zoom*(1.0+eLow*P.react*1.6));
+  gl.uniform1f(pFeed.u.uRot,P.rot*(1.0+eMid*P.react*1.2));
+  gl.uniform1f(pFeed.u.uDisp,P.disp*(0.5+eHigh*P.react*1.8));
+  gl.uniform1f(pFeed.u.uTime,tsec);
+  gl.uniform1f(pFeed.u.uPhase,phFeed);
+  gl.uniform2f(pFeed.u.uRes,W,H);
+  blitQuad();
+
+  /* 2 ── strands drawn additively on top */
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE);
+  gl.useProgram(pLine.p);
+  gl.uniform3fv(pLine.u.uA,pal.a); gl.uniform3fv(pLine.u.uB,pal.b); gl.uniform3fv(pLine.u.uC,pal.c);
+  gl.bindVertexArray(vao);
+  gl.uniform1f(pLine.u.uInt,P.line*1.15);
+  gl.uniform1i(pLine.u.uIsPoint,0);
+  gl.uniform1f(pLine.u.uPtScale,0.0);
+  gl.drawElements(gl.LINE_STRIP,S*(L+1),gl.UNSIGNED_INT,0);
+  if(P.pts>0.01){
+    gl.uniform1f(pLine.u.uInt,P.pts*0.55);
+    gl.uniform1i(pLine.u.uIsPoint,1);
+    gl.uniform1f(pLine.u.uPtScale,P.pts*1.7*Math.min(1.5,window.devicePixelRatio||1));
+    gl.drawArrays(gl.POINTS,0,S*L);
+  }
+  gl.bindVertexArray(null);
+  gl.disable(gl.BLEND);
+
+  /* 3 ── bloom */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,bloomA.f); gl.viewport(0,0,bw,bh);
+  gl.useProgram(pBright.p);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sceneA.t);
+  gl.uniform1i(pBright.u.uSrc,0); gl.uniform1f(pBright.u.uThresh,0.16);
+  blitQuad();
+  gl.useProgram(pBlur.p);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,bloomB.f);
+  gl.bindTexture(gl.TEXTURE_2D,bloomA.t);
+  gl.uniform1i(pBlur.u.uSrc,0); gl.uniform2f(pBlur.u.uDir,1/bw,0);
+  blitQuad();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,bloomA.f);
+  gl.bindTexture(gl.TEXTURE_2D,bloomB.t);
+  gl.uniform2f(pBlur.u.uDir,0,1/bh);
+  blitQuad();
+
+  /* 4 ── composite */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H);
+  gl.useProgram(pComp.p);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sceneA.t);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,bloomA.t);
+  gl.uniform1i(pComp.u.uScene,0); gl.uniform1i(pComp.u.uBloom,1);
+  gl.uniform3fv(pComp.u.uBg,pal.bg);
+  gl.uniform1f(pComp.u.uBloomAmt,P.bloom);
+  gl.uniform1f(pComp.u.uGrain,P.grain);
+  gl.uniform1f(pComp.u.uChrom,P.chrom);
+  gl.uniform1f(pComp.u.uInv,pal.inv||0);
+  gl.uniform1f(pComp.u.uTime,tsec);
+  gl.uniform2f(pComp.u.uRes,W,H);
+  blitQuad();
+
+  const t=sceneA; sceneA=sceneB; sceneB=t;      // ping-pong
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!started) return;
+  running = !document.hidden && wanted; last=performance.now();
+});
+/* ═══ PUBLIC API ════════════════════════════════════════════════════ */
+function init(canvas){
+  if(started) return true;
+  cvs = canvas;
+  gl = cvs.getContext('webgl2',{ alpha:false, antialias:false, depth:false, powerPreference:'high-performance' });
+  if(!gl) return false;
+  gl.getExtension('EXT_color_buffer_float');
+  gl.getExtension('OES_texture_float_linear');
+  pFeed=prog(VS_QUAD,FS_FEED);
+  pLine=prog(VS_LINE,FS_LINE,['aPos','aEnergy','aMeta']);
+  pBright=prog(VS_QUAD,FS_BRIGHT); pBlur=prog(VS_QUAD,FS_BLUR); pComp=prog(VS_QUAD,FS_COMP);
+  emptyVao=gl.createVertexArray();
+  buildStrands();
+  resize();
+  started=true;
+  requestAnimationFrame(frame);
+  return true;
+}
+
+/* Route the page's <audio> through an analyser. Once a media element is
+   tapped it only sounds through the graph, so the analyser MUST reach the
+   destination or the stream goes silent. Can only ever be done once. */
+let attached=false;
+function attachAudio(el){
+  if(attached) return true;
+  try{
+    ensureCtx();
+    const src=actx.createMediaElementSource(el);
+    src.connect(analyser);
+    srcNode=src; mediaEl=el; attached=true;
+    return true;
+  }catch(e){ return false; }
+}
+
+global.CuceuViz = {
+  init, attachAudio,
+  supported(){ try{ return !!document.createElement('canvas').getContext('webgl2'); }catch(e){ return false; } },
+  running(){ return started && wanted; },
+  start(){ wanted=true; running=!document.hidden; last=performance.now(); if(actx&&actx.state==='suspended') actx.resume(); },
+  stop(){ wanted=false; running=false; },
+  /* 'live' while the stream is actually sounding, 'idle' off-air — idle has
+     no kick at all, just the smooth drift. */
+  setSource(k){ srcKind=k; },
+  setPalette(name,th){
+    if(PALETTES[name]) palName=name;
+    if(th) theme=th;
+    pal=PALETTES[palName][theme];
+  },
+  palette(){ return {palette:palName, theme:theme}; },
+  setParams(o){
+    let rebuild=false;
+    for(const k in o){ if(k in P){ if(k==='str'&&(o[k]|0)!==(P[k]|0)) rebuild=true; P[k]=o[k]; } }
+    if(rebuild && started) buildStrands();
+  },
+  params(){ return Object.assign({},P); },
+  defaults(){ return Object.assign({},DEFAULTS); }
+};
+})(window);
