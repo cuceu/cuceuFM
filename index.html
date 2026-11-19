@@ -3,6 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        /* ── OWNER GATE ──────────────────────────────────────
+           GitHub Pages can't do real auth, so this is a doorman, not a lock:
+           it keeps visitors here while the owner, once logged in on this
+           browser, goes straight through to the real site (site.html).
+           The salt + PBKDF2-SHA256 hash below are written by the password
+           one-liner; an empty hash means no password has been set. */
+        const OWNER = { salt: 'f7f81c34f74374a266518c4fcea5cff9', hash: '31b444c5039f322f235bb1112d61ca2b4fa9bf713f3325adc897958ca54631f4', iter: 250000 };
+        const OWNER_KEY = 'cuceu-owner';
+        (() => {
+            const q = new URLSearchParams(location.search);
+            if (q.has('logout')) {
+                try { localStorage.removeItem(OWNER_KEY); } catch {}
+                history.replaceState(null, '', '/');
+                return;
+            }
+            let owner = false;
+            try { owner = !!OWNER.hash && localStorage.getItem(OWNER_KEY) === OWNER.hash; } catch {}
+            if (!owner) return;
+            // Hide this page for the instant before the hop lands.
+            document.documentElement.classList.add('owner-pass');
+            // Already inside the router (td "← Home", bin close): just show home.
+            if (window !== window.top) { location.replace('/home.html'); return; }
+            location.replace('/site.html?path=' + encodeURIComponent(q.get('path') || '/'));
+        })();
+    </script>
     <title>cuceu — under maintenance</title>
     <meta name="description" content="CUCEU is under maintenance. Back shortly.">
     <meta name="robots" content="noindex">
@@ -24,6 +50,8 @@
         body:not(.dark-mode) { --bg:#f4f2ec; --ink:#14110d; --dim:#8a857a; --line:#d8d4ca; --acid:#f23c00; }
 
         * { box-sizing:border-box; margin:0; }
+        [hidden] { display:none !important; }
+        .owner-pass body { visibility:hidden; }
         html, body { height:100dvh; overflow:hidden; }
         body { background:var(--bg); color:var(--ink); font-family:var(--disp);
             display:flex; flex-direction:column;
@@ -100,6 +128,22 @@
         .btn.ghost:hover { background:var(--ink); color:var(--bg); filter:none; }
         .btn svg { width:14px; height:14px; }
 
+        /* ── OWNER LOGIN ─────────────────────────────── */
+        .login { margin-top:32px; max-width:440px; display:flex; flex-wrap:wrap; gap:10px; }
+        .login-pass { flex:1 1 200px; min-width:0; padding:11px 14px; border:1px solid var(--line);
+            border-radius:0; background:var(--bg); color:var(--ink);
+            font-family:var(--mono); font-size:16px; letter-spacing:2px; /* 16px stops iOS zoom */
+            transition:border-color 0.2s; }
+        .login-pass::placeholder { color:var(--dim); font-size:11px; font-weight:700; letter-spacing:2px; }
+        .login-pass:focus { outline:none; border-color:var(--ink); }
+        .login .btn { border:0; cursor:pointer; }
+        .login .btn:disabled { opacity:0.5; cursor:wait; }
+        .login-msg { flex-basis:100%; min-height:1.4em; font-family:var(--mono); font-size:11px;
+            font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--dim); }
+        .login-msg.bad { color:var(--acid); }
+        .vh { position:absolute; width:1px; height:1px; overflow:hidden;
+            clip-path:inset(50%); white-space:nowrap; }
+
         @media (max-width:680px) {
             .head { padding:11px 14px; }
             .brand img { height:30px; }
@@ -107,7 +151,7 @@
             .status { font-size:9px; letter-spacing:1.2px; gap:7px; margin-bottom:18px; }
             .status .dot { width:6px; height:6px; }
             .blurb { margin-top:20px; font-size:14px; }
-            .actions { margin-top:26px; }
+            .actions, .login { margin-top:26px; }
             .btn { flex:1 1 100%; justify-content:center; }
             #wall img { height:2.3rem; margin-right:3.5vw; }
         }
@@ -118,7 +162,7 @@
             .panel { padding-top:12px; padding-bottom:12px; }
             .status { margin-bottom:10px; }
             .blurb { margin-top:10px; line-height:1.6; }
-            .actions { margin-top:12px; }
+            .actions, .login { margin-top:12px; }
             .btn { padding:10px 18px; }
         }
 
@@ -144,6 +188,9 @@
         <span class="brand"><img src="cuceugrta.png" alt="CUCEU"></span>
         <div class="head-right">
             <span id="clock">SAT / 00.00.00</span>
+            <button class="tog" id="login-toggle" aria-label="Owner login" aria-expanded="false" aria-controls="login">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect x="4" y="11" width="16" height="10"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+            </button>
             <button class="tog" id="theme-toggle" aria-label="Toggle theme">
                 <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -165,6 +212,16 @@
             <div class="actions">
                 <button class="btn ghost" id="retry">Retry</button>
             </div>
+
+            <form class="login" id="login" hidden>
+                <!-- Lets password managers file the login under a name. -->
+                <input class="vh" type="text" name="username" autocomplete="username" value="cuceu" tabindex="-1" aria-hidden="true">
+                <label class="vh" for="login-pass">Password</label>
+                <input class="login-pass" id="login-pass" type="password" name="password"
+                       autocomplete="current-password" placeholder="PASSWORD" required>
+                <button class="btn" type="submit">Enter</button>
+                <p class="login-msg" id="login-msg" role="status" aria-live="polite"></p>
+            </form>
         </div>
         </div>
     </main>
@@ -214,6 +271,61 @@
 
     /* ── RETRY ────────────────────────────────────────── */
     document.getElementById('retry').addEventListener('click', () => location.reload());
+
+    /* ── OWNER LOGIN ──────────────────────────────────── */
+    const loginToggle = document.getElementById('login-toggle');
+    const loginForm = document.getElementById('login');
+    const passEl = document.getElementById('login-pass');
+    const msgEl = document.getElementById('login-msg');
+    const enterBtn = loginForm.querySelector('button[type="submit"]');
+    const actionsEl = document.querySelector('.actions');
+
+    const say = (text, bad = false) => {
+        msgEl.textContent = text;
+        msgEl.classList.toggle('bad', bad);
+    };
+
+    const setLoginOpen = open => {
+        loginForm.hidden = !open;
+        actionsEl.hidden = open;
+        loginToggle.setAttribute('aria-expanded', String(open));
+        if (open) { passEl.focus(); } else { passEl.value = ''; say(''); }
+    };
+    loginToggle.addEventListener('click', () => setLoginOpen(loginForm.hidden));
+    addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !loginForm.hidden) setLoginOpen(false);
+    });
+
+    // PBKDF2-SHA256 with the same salt + iterations the password one-liner used.
+    const derive = async pass => {
+        const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+        const salt = Uint8Array.from(OWNER.salt.match(/../g), h => parseInt(h, 16));
+        const bits = await crypto.subtle.deriveBits(
+            { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: OWNER.iter }, raw, 256);
+        return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    loginForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!OWNER.hash) return say('No password set yet', true);
+        if (!window.crypto?.subtle) return say('Login needs https', true);
+
+        enterBtn.disabled = true;
+        say('Checking…');
+        const ok = (await derive(passEl.value)) === OWNER.hash;
+        enterBtn.disabled = false;
+        if (!ok) {
+            say('Wrong password', true);
+            passEl.select();
+            return;
+        }
+        try { localStorage.setItem(OWNER_KEY, OWNER.hash); }
+        catch { return say('Browser storage is blocked', true); }
+
+        say('Access granted');
+        const path = new URLSearchParams(location.search).get('path') || '/';
+        location.replace('/site.html?path=' + encodeURIComponent(path));
+    });
 </script>
 </body>
 </html>

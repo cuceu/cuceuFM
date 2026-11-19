@@ -111,22 +111,26 @@
         // ── IFRAME ROUTER ──
         const frame = document.getElementById('app-frame');
         
-        // Check if we arrived via a redirect like `/?path=/fm`
-        const urlParams = new URLSearchParams(window.location.search);
-        let targetPath = urlParams.get('path');
-        
-        // If there's a target path, strip it from the URL bar immediately so it looks clean
+        // Map a requested path to the page the frame should load. Only same-site
+        // paths are allowed, and the root, the maintenance page and this router
+        // all mean home (loading the router into its own frame would nest it).
+        const toFramePath = (p) => {
+            if (!p || !/^\/(?![\/\\])/.test(p)) return '/home.html';
+            if (p === '/' || /^\/(index|site)\.html$/.test(p)) return '/home.html';
+            return p;
+        };
+
+        // Check if we arrived via a redirect like `/?path=/td/`
+        const targetPath = new URLSearchParams(window.location.search).get('path');
+
         if (targetPath) {
-            // Clean up the URL bar
-            window.history.replaceState(null, '', targetPath);
-            // Fix trailing slashes / /index.html logic if needed
-            if (targetPath === '/' || targetPath === '') targetPath = '/home.html';
-            frame.src = targetPath;
+            const framePath = toFramePath(targetPath);
+            // Strip the query from the URL bar immediately so it looks clean
+            window.history.replaceState(null, '', framePath.replace(/\/home\.html$/, '/'));
+            frame.src = framePath;
         } else {
             // Normal load: check pathname
-            let path = window.location.pathname;
-            if (path === '/' || path === '') path = '/home.html';
-            frame.src = path;
+            frame.src = toFramePath(window.location.pathname);
         }
 
         // Sync URL bar when iframe navigates internally
@@ -146,9 +150,7 @@
 
         // Handle browser Back/Forward buttons
         window.addEventListener('popstate', () => {
-            let path = window.location.pathname;
-            if (path === '/' || path === '') path = '/home.html';
-            frame.src = path;
+            frame.src = toFramePath(window.location.pathname);
         });
 
 
